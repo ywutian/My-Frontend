@@ -64,20 +64,20 @@ export function useTranslation() {
   }, [isTranslating]);
 
   const translateText = useCallback(async (text) => {
-    if (!text) return '';
-    
-    // 添加调试日志
-    console.log('Translation requested for:', text);
-    
-    // 检查是否需要节流
+    // 检查是否在短时间内翻译过相同的文本
     const now = Date.now();
     if (
       text === lastTranslationRef.current.text && 
       now - lastTranslationRef.current.timestamp < THROTTLE_TIME
     ) {
-      console.log('Using cached translation');
+      // 如果是相同文本且在节流时间内，直接返回缓存的翻译
       return lastTranslationRef.current.translation;
     }
+    
+    if (!text) return '';
+    
+    // 添加调试日志
+    console.log('Translation requested for:', text);
     
     try {
       const response = await fetch('http://localhost:5001/translate', {

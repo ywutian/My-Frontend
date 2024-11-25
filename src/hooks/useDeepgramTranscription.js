@@ -108,12 +108,15 @@ export function useDeepgramTranscription() {
       const options = {
         language: 'en',
         smart_format: true,
-        model: 'nova',
+        model: 'nova-2', // 使用更新的模型
         interim_results: true,
         punctuate: true,
         endpointing: true,
         encoding: 'linear16',
-        sample_rate: audioContextRef.current.sampleRate
+        sample_rate: audioContextRef.current.sampleRate,
+        numerals: true, 
+        filler_words: true,  
+        keywords: true,
       };
 
       console.log('Initializing Deepgram live connection...');
@@ -225,9 +228,9 @@ export function useDeepgramTranscription() {
 
       // 音频处理逻辑
       let audioProcessingCount = 0;
-      const BUFFER_DURATION = 250; // 降低缓冲区时长从500ms到250ms
+      const BUFFER_DURATION = 180; // 降低缓冲区时长从500ms到250ms
       const SILENCE_THRESHOLD = 0.005; // 降低静音检测阈值，使其更敏感
-      const MIN_SAMPLES_FOR_PROCESSING = 2048; // 最小处理样本数
+      const MIN_SAMPLES_FOR_PROCESSING = 1536; // 最小处理样本数
 
       processorRef.current.onaudioprocess = (e) => {
         if (!deepgramRef.current) return;
