@@ -203,7 +203,7 @@ export function useDeepgramTranscription() {
         onTranscriptReceived(transcriptData);
 
         // 处理翻译（如果启用）
-        if (onNewTranscriptForTranslation && data.is_final) {
+        if (onNewTranscriptForTranslation && (data.is_final||transcriptSegment.isStable)) {
           onNewTranscriptForTranslation({
             id: transcriptSegment.id,
             text: transcriptSegment.text,
