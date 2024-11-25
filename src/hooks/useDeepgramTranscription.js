@@ -12,14 +12,13 @@ export function useDeepgramTranscription() {
   const lastSendTimeRef = useRef(0);
   const transcriptBufferRef = useRef('');
   const lastCompleteTranscriptRef = useRef('');
-  const TRANSCRIPT_STABILITY_THRESHOLD = 3; // 连续稳定的次数阈值
+  const TRANSCRIPT_STABILITY_THRESHOLD = 3; 
 
-  // 添加新的 refs 来更好地管理转录状态
-  const stableTranscriptRef = useRef('');     // 存储稳定的转录文本
-  const transcriptHistoryRef = useRef([]);    // 存储最近几次的转录结果
-  const stabilityCounterRef = useRef(0);      // 稳定性计数器
-  const HISTORY_SIZE = 5;                     // 保留的历史记录数量
-  const STABILITY_THRESHOLD = 3;              // 稳定性阈值
+  const stableTranscriptRef = useRef('');     
+  const transcriptHistoryRef = useRef([]);    
+  const stabilityCounterRef = useRef(0);      
+  const HISTORY_SIZE = 5;                     
+  const STABILITY_THRESHOLD = 3;              
 
   // 新增：用于管理句子的 ref
   const currentSentenceRef = useRef({
@@ -210,7 +209,7 @@ export function useDeepgramTranscription() {
         onTranscriptReceived(transcriptData);
 
         // 如果是最终结果且启用了翻译，调用翻译回调
-        if ((isFinal || speechFinal) && onNewTranscriptForTranslation) {
+        if (onNewTranscriptForTranslation) {
           onNewTranscriptForTranslation({
             id: transcriptSegment.id,
             text: transcriptSegment.text,
