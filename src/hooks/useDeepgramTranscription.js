@@ -205,8 +205,7 @@ export function useDeepgramTranscription() {
         // 调用转录回调
         onTranscriptReceived(transcriptData);
 
-        // 处理翻译（如果启用）
-        if (onNewTranscriptForTranslation && (data.is_final||transcriptSegment.isStable)) {
+        if (onNewTranscriptForTranslation && (data.is_final || transcriptSegment.isStable)) {
           onNewTranscriptForTranslation({
             id: transcriptSegment.id,
             text: transcriptSegment.text,
@@ -215,7 +214,6 @@ export function useDeepgramTranscription() {
             endTime: transcriptSegment.endTime,
             words: transcriptSegment.words,
             onTranslationComplete: (id, translation) => {
-              // 翻译完成后的回调
               onTranscriptReceived({
                 ...transcriptData,
                 translation,
@@ -228,9 +226,9 @@ export function useDeepgramTranscription() {
 
       // 音频处理逻辑
       let audioProcessingCount = 0;
-      const BUFFER_DURATION = 180; // 降低缓冲区时长从500ms到250ms
+      const BUFFER_DURATION = 250; // 降低缓冲区时长从500ms到250ms
       const SILENCE_THRESHOLD = 0.005; // 降低静音检测阈值，使其更敏感
-      const MIN_SAMPLES_FOR_PROCESSING = 1536; // 最小处理样本数
+      const MIN_SAMPLES_FOR_PROCESSING = 2048; // 最小处理样本数
 
       processorRef.current.onaudioprocess = (e) => {
         if (!deepgramRef.current) return;

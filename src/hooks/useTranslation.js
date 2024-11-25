@@ -21,7 +21,7 @@ export function useTranslation() {
     }
   }, [isTranslating]);
 
-  // 处理翻译队列
+  
   const processTranslationQueue = useCallback(async () => {
     if (isProcessingRef.current || !isTranslating) return;
 
@@ -29,7 +29,6 @@ export function useTranslation() {
     console.log('Processing translation queue...');
 
     try {
-      // 从上次翻译的位置继续
       const nextIndex = lastTranslatedIndexRef.current + 1;
       
       while (nextIndex < translationQueueRef.current.length) {
@@ -70,7 +69,6 @@ export function useTranslation() {
       text === lastTranslationRef.current.text && 
       now - lastTranslationRef.current.timestamp < THROTTLE_TIME
     ) {
-      // 如果是相同文本且在节流时间内，直接返回缓存的翻译
       return lastTranslationRef.current.translation;
     }
     
@@ -122,33 +120,37 @@ export function useTranslation() {
     }, [isTranslating, addToTranslationQueue]);
 
  const toggleTranslation = useCallback(async (existingTranscripts = []) => {
-    setIsTranslating(prev => {
-      const newState = !prev;
-      
-      if (newState) {
-        // 将现有转录添加到队列
-        existingTranscripts.forEach(transcript => {
-          if (!transcript.translation && transcript.text) {
-            addToTranslationQueue({
-              id: transcript.id,
-              text: transcript.text,
-              timestamp: transcript.timestamp,
-              onTranslationComplete: transcript.onTranslationComplete
-            });
-          }
-        });
-        
-        // 开始处理队列
+    const newState = !isTranslating;
+    
+    // 如果要开启翻译，先处理现有转录
+    if (newState && existingTranscripts.length > 0) {
+      existingTranscripts.forEach(transcript => {
+        if (!transcript.translation && transcript.text) {
+          addToTranslationQueue({
+            id: transcript.id,
+            text: transcript.text,
+            timestamp: transcript.timestamp,
+            onTranslationComplete: transcript.onTranslationComplete
+          });
+        }
+      });
+    }
+    
+    // 更新状态
+    setIsTranslating(newState);
+    
+    // 如果开启翻译，确保队列开始处理
+    if (newState) {
+      setTimeout(() => {
         processTranslationQueue();
-      } else {
-        // 重置翻译状态
-        lastTranslatedIndexRef.current = -1;
-        isProcessingRef.current = false;
-      }
-      
-      return newState;
-    });
-  }, [addToTranslationQueue, processTranslationQueue]);
+      }, 0);
+    } else {
+      // 重置翻译状态
+      lastTranslatedIndexRef.current = -1;
+      isProcessingRef.current = false;
+      translationQueueRef.current = [];
+    }
+  }, [isTranslating, addToTranslationQueue, processTranslationQueue]);
 
   // 清理队列的方法
   const clearTranslationQueue = useCallback(() => {

@@ -11,11 +11,10 @@ export function useTranscripts() {
     }
 
     const transcriptData = data.channel.alternatives[0];
-    const transcript = transcriptData.transcript;
+    const transcript = transcriptData.transcript.trim();
     const isFinal = data.is_final;
-    const speechFinal = data.speech_final;
 
-    if (!transcript.trim()) return;
+    if (!transcript) return;
 
     console.log('Processing transcript:', {
       text: transcript,
@@ -25,83 +24,66 @@ export function useTranscripts() {
     });
 
     if (!isFinal) {
-      const interimData = {
+      setInterimResult({
         text: transcript,
         timestamp: new Date(),
         translation: null
-      };
-
-      setInterimResult(interimData);
+      });
 
       if (isTranslating && translateText) {
-        console.log('Translating interim result:', transcript);
-        translateText(transcript)
-          .then(translation => {
-            console.log('Interim translation received:', translation);
-            setInterimResult(current => 
-              current?.text === transcript ? { ...current, translation } : current
-            );
-          })
-          .catch(error => {
-            console.error('Interim translation error:', error);
-          });
+        translateText(transcript).then(translation => {
+          setInterimResult(current => 
+            current?.text === transcript ? { ...current, translation } : current
+          );
+        });
       }
-      return;
-    }
+    } else {
+      if (!interimResult || interimResult.text !== transcript) {
+        setTranscripts(prev => {
+          const newTranscript = {
+            id: Date.now(),
+            text: transcript,
+            timestamp: new Date(),
+            translation: null
+          };
 
-    setTranscripts(prev => {
-      const newTranscript = {
-        id: Date.now(),
-        text: transcript,
-        timestamp: new Date(),
-        translation: null,
-        isFinal,
-        speechFinal
-      };
+          if (isTranslating && translateText) {
+            translateText(transcript).then(translation => {
+              setTranscripts(current => 
+                current.map(t => 
+                  t.id === newTranscript.id ? { ...t, translation } : t
+                )
+              );
+            });
+          }
 
-      if (isTranslating && translateText) {
-        console.log('Translating final result:', transcript);
-        translateText(transcript)
-          .then(translation => {
-            console.log('Final translation received:', translation);
-            setTranscripts(current => 
-              current.map(t => 
-                t.id === newTranscript.id ? { ...t, translation } : t
-              )
-            );
-          })
-          .catch(error => {
-            console.error('Final translation error:', error);
-          });
+          return [...prev, newTranscript];
+        });
       }
-
       setInterimResult(null);
-      return [...prev, newTranscript];
-    });
-  }, []);
+    }
+  }, [interimResult]);
 
   const updateTranscriptTranslations = useCallback(async (translateText) => {
-    if (!translateText || transcripts.length === 0) return;
+    // 遍历所有转录记录
+    const updatedTranscripts = await Promise.all(
+      transcripts.map(async (transcript) => {
+        // 如果已经有翻译，就跳过
+        if (transcript.translation) return transcript;
+        
+        // 翻译文本
+        const translation = await translateText(transcript.text);
+        
+        // 返回更新后的转录对象
+        return {
+          ...transcript,
+          translation
+        };
+      })
+    );
 
-    console.log('Translating existing transcripts...');
-    
-    const updatedTranscripts = [...transcripts];
-    
-    for (let i = 0; i < updatedTranscripts.length; i++) {
-      const transcript = updatedTranscripts[i];
-      if (!transcript.translation && transcript.text) {
-        try {
-          const translation = await translateText(transcript.text);
-          setTranscripts(current => 
-            current.map((t, index) => 
-              index === i ? { ...t, translation } : t
-            )
-          );
-        } catch (error) {
-          console.error('Translation error for text:', transcript.text, error);
-        }
-      }
-    }
+    // 更新状态
+    setTranscripts(updatedTranscripts);
   }, [transcripts]);
 
   return {

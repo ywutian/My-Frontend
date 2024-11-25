@@ -32,14 +32,10 @@ function LiveTranscription({ onTranscript }) {
   };
 
   const handleTranslationToggle = useCallback(async () => {
-    toggleTranslation();
+    const willEnableTranslation = !isTranslating;
     
-    if (!isTranslating && transcripts.length > 0) {
-      setTimeout(async () => {
-        await updateTranscriptTranslations(translateText);
-      }, 0);
-    }
-  }, [isTranslating, transcripts, updateTranscriptTranslations, translateText, toggleTranslation]);
+    toggleTranslation(transcripts);
+  }, [isTranslating, transcripts, toggleTranslation]);
 
   return (
     <div className="relative min-h-screen p-4">
