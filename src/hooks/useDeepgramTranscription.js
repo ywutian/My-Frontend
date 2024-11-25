@@ -28,6 +28,14 @@ export function useDeepgramTranscription() {
     confidence: 0
   });
 
+  // 添加新的状态管理
+  const timelineWordsRef = useRef(new Map()); // 存储时间轴上的词: key是时间戳, value是词对象
+  const CONFIDENCE_THRESHOLDS = {
+    HIGH: 0.60,
+    MEDIUM: 0.40,
+    LOW: 0.20
+  };
+
   const cleanup = useCallback(() => {
     console.log('Cleaning up resources...');
     if (deepgramRef.current) {
@@ -137,63 +145,49 @@ export function useDeepgramTranscription() {
 
       deepgramRef.current.on(LiveTranscriptionEvents.Transcript, (data) => {
         const transcript = data?.channel?.alternatives?.[0];
-        const isFinal = data?.is_final;
-        const speechFinal = data?.speech_final;
-        
-        if (!transcript) return;
+        if (!transcript?.words?.length) return;
 
-        // 处理当前转录段落
-        const processTranscriptSegment = () => {
-          const { text, words, confidence } = transcript;
-          
-          // 如果是新的语音段落开始
-          if (speechFinal || words[0]?.start > (currentSentenceRef.current.words[currentSentenceRef.current.words.length - 1]?.end || 0) + 1) {
-            // 完成当前句子
-            if (currentSentenceRef.current.text) {
-              const completedSentence = {
-                id: Date.now(),
-                text: currentSentenceRef.current.text,
-                words: currentSentenceRef.current.words,
-                confidence: currentSentenceRef.current.confidence,
-                startTime: currentSentenceRef.current.startTime,
-                endTime: currentSentenceRef.current.words[currentSentenceRef.current.words.length - 1]?.end,
-                isFinal: true
-              };
+        // 处理新的词序列
+        const processWords = (words) => {
+          words.forEach(word => {
+            const timeKey = word.start.toFixed(2); // 使用开始时间作为key
+            const existingWord = timelineWordsRef.current.get(timeKey);
 
-              // 重置当前句子
-              currentSentenceRef.current = {
-                text: text,
-                words: words,
-                startTime: words[0]?.start,
-                confidence: confidence
-              };
+            // 判断是否需要更新这个时间点的词
+            const shouldUpdate = !existingWord || 
+              word.confidence > CONFIDENCE_THRESHOLDS.LOW || 
+              data.is_final;
 
-              return completedSentence;
+            if (shouldUpdate) {
+              timelineWordsRef.current.set(timeKey, {
+                ...word,
+                isConfirmed: data.is_final
+              });
             }
-          }
+          });
 
-          // 更新当前句子
-          if (!currentSentenceRef.current.startTime) {
-            currentSentenceRef.current.startTime = words[0]?.start;
-          }
-          
-          currentSentenceRef.current.text = text;
-          currentSentenceRef.current.words = words;
-          currentSentenceRef.current.confidence = confidence;
+          // 构建当前的转录状态
+          const sortedWords = Array.from(timelineWordsRef.current.entries())
+            .sort(([timeA], [timeB]) => parseFloat(timeA) - parseFloat(timeB))
+            .map(([_, word]) => word);
 
-          return {
+          // 准备转录数据
+          const transcriptSegment = {
             id: Date.now(),
-            text: currentSentenceRef.current.text,
-            words: currentSentenceRef.current.words,
-            confidence: currentSentenceRef.current.confidence,
-            startTime: currentSentenceRef.current.startTime,
-            isFinal: false
+            words: sortedWords,
+            text: sortedWords.map(w => w.punctuated_word || w.word).join(' '),
+            confidence: sortedWords.reduce((acc, w) => acc + w.confidence, 0) / sortedWords.length,
+            startTime: sortedWords[0]?.start,
+            endTime: sortedWords[sortedWords.length - 1]?.end,
+            isFinal: data.is_final
           };
+
+          return transcriptSegment;
         };
 
-        const transcriptSegment = processTranscriptSegment();
+        const transcriptSegment = processWords(transcript.words);
 
-        // 准备发送给回调的数据
+        // 准备完整的转录数据
         const transcriptData = {
           ...data,
           channel: {
@@ -205,18 +199,20 @@ export function useDeepgramTranscription() {
           }
         };
 
-        // 调用主要的转录回调
+        // 调用转录回调
         onTranscriptReceived(transcriptData);
 
-        // 如果是最终结果且启用了翻译，调用翻译回调
-        if (onNewTranscriptForTranslation) {
+        // 处理翻译（如果启用）
+        if (onNewTranscriptForTranslation && data.is_final) {
           onNewTranscriptForTranslation({
             id: transcriptSegment.id,
             text: transcriptSegment.text,
             confidence: transcriptSegment.confidence,
             startTime: transcriptSegment.startTime,
             endTime: transcriptSegment.endTime,
+            words: transcriptSegment.words,
             onTranslationComplete: (id, translation) => {
+              // 翻译完成后的回调
               onTranscriptReceived({
                 ...transcriptData,
                 translation,
@@ -229,8 +225,9 @@ export function useDeepgramTranscription() {
 
       // 音频处理逻辑
       let audioProcessingCount = 0;
-      const BUFFER_DURATION = 500; // 缓冲区时长（毫秒）
-      const SILENCE_THRESHOLD = 0.01; // 静音检测阈值
+      const BUFFER_DURATION = 250; // 降低缓冲区时长从500ms到250ms
+      const SILENCE_THRESHOLD = 0.005; // 降低静音检测阈值，使其更敏感
+      const MIN_SAMPLES_FOR_PROCESSING = 2048; // 最小处理样本数
 
       processorRef.current.onaudioprocess = (e) => {
         if (!deepgramRef.current) return;
@@ -238,28 +235,36 @@ export function useDeepgramTranscription() {
         const inputData = e.inputBuffer.getChannelData(0);
         audioProcessingCount++;
 
-        // 改进的静音检测
-        const rms = Math.sqrt(inputData.reduce((sum, sample) => sum + sample * sample, 0) / inputData.length);
-        if (rms < SILENCE_THRESHOLD) {
-          return;
+        // 优化的静音检测 - 使用分段检测
+        const chunkSize = 1024;
+        let hasSound = false;
+        for (let i = 0; i < inputData.length; i += chunkSize) {
+          const chunk = inputData.slice(i, i + chunkSize);
+          const rms = Math.sqrt(chunk.reduce((sum, sample) => sum + sample * sample, 0) / chunk.length);
+          if (rms > SILENCE_THRESHOLD) {
+            hasSound = true;
+            break;
+          }
         }
 
-        // 将数据添加到缓冲区
-        audioBufferRef.current.push(...convertFloat32ToInt16(inputData));
+        if (!hasSound) return;
 
-        // 检查是否需要发送数据
+        // 优化的数据处理
+        const processedData = convertFloat32ToInt16(inputData);
+        audioBufferRef.current.push(...processedData);
+
+        // 更积极的数据发送策略
         const currentTime = Date.now();
-        if (currentTime - lastSendTimeRef.current >= BUFFER_DURATION && audioBufferRef.current.length > 0) {
+        const shouldSendData = 
+          currentTime - lastSendTimeRef.current >= BUFFER_DURATION || 
+          audioBufferRef.current.length >= MIN_SAMPLES_FOR_PROCESSING;
+
+        if (shouldSendData && audioBufferRef.current.length > 0) {
           try {
             const bufferToSend = new Int16Array(audioBufferRef.current);
-            
-            if (audioProcessingCount % 10 === 0) {
-              console.log(`Sending buffered audio: length=${bufferToSend.length}, timestamp=${currentTime}`);
-            }
-
             deepgramRef.current.send(bufferToSend);
             
-            // 清空缓冲区并更新发送时间
+            // 立即清空缓冲区
             audioBufferRef.current = [];
             lastSendTimeRef.current = currentTime;
           } catch (sendError) {

@@ -1,7 +1,7 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-export function TranscriptList({ transcripts, interimResult, isRecording, isTranslating }) {
+export function TranscriptList({ transcripts, isRecording, isTranslating }) {
   // 将所有文字连接成一个字符串
   const combinedText = transcripts.map(t => t.text).join(' ');
   const latestTranscript = transcripts[transcripts.length - 1];
@@ -18,27 +18,19 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
         {/* 连续显示的文字 */}
         <div className="text-gray-800 text-left">
           {combinedText}
-          {interimResult && (
-            <span className="text-gray-800"> {interimResult.text}</span>
-          )}
         </div>
 
         {/* 翻译 */}
         {isTranslating && (
           <div className="mt-2 text-gray-600 border-t border-gray-200 pt-2 text-left">
             {transcripts.map(t => t.translation).filter(Boolean).join(' ')}
-            {interimResult?.translation && (
-              <span> {interimResult.translation}</span>
-            )}
           </div>
         )}
 
         {/* 时间戳 */}
-        {(latestTranscript || interimResult) && (
+        {latestTranscript && (
           <div className="mt-2 text-xs text-gray-500">
-            {new Date(
-              (latestTranscript || interimResult).timestamp
-            ).toLocaleTimeString()}
+            {new Date(latestTranscript.timestamp).toLocaleTimeString()}
           </div>
         )}
       </motion.div>
