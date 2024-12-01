@@ -10,10 +10,36 @@ function SettingsModal({ isOpen, onClose }) {
     { id: 'billing', label: 'Billing' },
   ];
 
-  const plans = [
-    { id: 'weekly', name: 'Weekly', price: '$4.99', period: 'week' },
-    { id: 'monthly', name: 'Monthly', price: '$14.99', period: 'month', popular: true },
-    { id: 'yearly', name: 'Yearly', price: '$149.99', period: 'year', discount: '17% off' },
+  const billingPlans = [
+    {
+      id: 'weekly',
+      name: 'Weekly Plan',
+      price: '$4.99',
+      period: 'week',
+      features: ['Basic features', '100 minutes/week']
+    },
+    {
+      id: 'monthly',
+      name: 'Monthly Plan',
+      price: '$14.99',
+      period: 'month',
+      popular: true,
+      features: ['All features', '500 minutes/month']
+    },
+    {
+      id: 'yearly',
+      name: 'Yearly Plan',
+      price: '$149.99',
+      period: 'year',
+      discount: '17% off',
+      features: ['All features', 'Unlimited minutes']
+    },
+    {
+      id: 'booster',
+      name: 'Minutes Booster',
+      price: '$9.99',
+      features: ['Additional 200 minutes', 'Never expires']
+    }
   ];
 
   return (
@@ -100,7 +126,7 @@ function SettingsModal({ isOpen, onClose }) {
               <div className="space-y-6">
                 <h3 className="text-lg font-medium">Subscription Plans</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {plans.map((plan) => (
+                  {billingPlans.map((plan) => (
                     <div 
                       key={plan.id}
                       className={`

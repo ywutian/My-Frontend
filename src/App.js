@@ -1,13 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './store/AuthContext';
-import Home from './pages/Home';
+import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
+import FolderPage from './pages/FolderPage';
 import Login from './pages/Login';
-import VideoDetail from './components/video/VideoDetail';
-import './App.css';
+import Notes from './pages/Notes';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import Toast from './components/common/Toast';
-import { useToast } from './hooks/useToast';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -15,44 +13,7 @@ const ProtectedRoute = ({ children }) => {
   if (!auth.isAuthenticated) {
     return <Navigate to="/login" />;
   }
-  return children;
-};
-
-// Main content component
-const AppContent = () => {
-  const { toast, showToast } = useToast();
-  
-  return (
-    <div className="App">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/video/:id" 
-          element={
-            <ProtectedRoute>
-              <VideoDetail />
-            </ProtectedRoute>
-          } 
-        />
-      </Routes>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => showToast(null)}
-        />
-      )}
-    </div>
-  );
+  return <Layout>{children}</Layout>;
 };
 
 function App() {
@@ -60,7 +21,41 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Router>
-          <AppContent />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notes" 
+              element={
+                <ProtectedRoute>
+                  <Notes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/folders/:id" 
+              element={
+                <ProtectedRoute>
+                  <FolderPage />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
         </Router>
       </AuthProvider>
     </ErrorBoundary>
