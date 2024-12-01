@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiEdit2, FiShare2, FiPlus, FiDownload, FiArrowLeft, FiSend, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
+import { FiEdit2, FiShare2, FiPlus, FiDownload, FiArrowLeft, FiSend, FiChevronRight, FiChevronLeft, FiSave } from 'react-icons/fi';
 import QuizPanel from '../components/quiz/QuizPanel';
 import FlashcardPanel from '../components/flashcards/FlashcardPanel';
+import { db } from '../db/db';
+import React from 'react';
+import MarkdownViewer from '../components/MarkdownViewer';
 
 function NoteDetail() {
   const { noteId } = useParams();
@@ -22,50 +25,71 @@ function NoteDetail() {
   const [isResizing, setIsResizing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const COLLAPSE_THRESHOLD = 100; // 收起阈值
-  const COLLAPSED_WIDTH = 40; // 收起后的宽度
+  const COLLAPSED_WIDTH = 40; // 收起后宽度
   const MIN_WIDTH = 280; // 最小展开宽度
   const MAX_WIDTH = 800; // 最大宽度
+  const [isLoading, setIsLoading] = useState(true);
+  const [editContent, setEditContent] = useState('');
+  const [shouldRender, setShouldRender] = useState(true);
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Podcast', 'Mindmap', 'About'];
 
-  // 模拟从后端获取笔记数据
+  // 从数据库获取笔记
   useEffect(() => {
-    // 这里应该是从API获取数据，现在先用模拟数据
-    const mockNote = {
-      id: noteId,
-      title: "Meeting Notes - Product Review",
-      content: `# Product Review Meeting Notes
-
-## Attendees
-- Product Manager
-- Development Team
-- Design Team
-- QA Team
-
-## Agenda Items
-1. Current Progress Review
-2. Feature Requirements Discussion
-3. Timeline Planning
-4. Next Steps
-
-## Discussion Points
-- New feature requirements were presented
-- Timeline adjustments were made
-- Resource allocation was discussed
-- Quality metrics were reviewed
-
-## Action Items
-- [ ] Update project timeline
-- [ ] Schedule follow-up meetings
-- [ ] Prepare technical specifications
-- [ ] Begin design mockups`,
-      date: "2024-03-20",
-      subject: "Work",
-      source: "Meeting Recording",
-      lastModified: "2024-03-20T10:30:00Z"
+    const fetchNote = async () => {
+      setIsLoading(true);
+      try {
+        const noteData = await db.notes.get(parseInt(noteId));
+        if (noteData) {
+          setNote(noteData);
+        } else {
+          console.error('Note not found');
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error fetching note:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setNote(mockNote);
-  }, [noteId]);
+
+    fetchNote();
+  }, [noteId, navigate]);
+
+  // 当进入编辑模式时，初始化编辑内容
+  useEffect(() => {
+    if (isEditing && note) {
+      setEditContent(note.content || '');
+    }
+  }, [isEditing, note]);
+
+  // 修改笔记更新函数
+  const handleNoteUpdate = async () => {
+    try {
+      const updatedNote = {
+        ...note,
+        content: editContent,
+        lastModified: new Date().toISOString()
+      };
+      
+      // 1. 先退出编辑模式
+      setIsEditing(false);
+      
+      // 2. 清空内容
+      setNote(prev => ({ ...prev, content: '' }));
+      
+      // 3. 更新数据库
+      await db.notes.update(note.id, updatedNote);
+      
+      // 4. 更新状态
+      requestAnimationFrame(() => {
+        setNote(updatedNote);
+      });
+      
+    } catch (error) {
+      console.error('Error updating note:', error);
+    }
+  };
 
   const handleResizeStart = (e) => {
     e.preventDefault();
@@ -103,7 +127,7 @@ function NoteDetail() {
   };
 
   const handleShare = () => {
-    // 实现分享功能
+    // 实现分享能
     const shareUrl = `${window.location.origin}/notes/${noteId}`;
     navigator.clipboard.writeText(shareUrl);
     alert('Note link copied to clipboard!');
@@ -155,7 +179,17 @@ function NoteDetail() {
     }
   };
 
-  if (!note) {
+  // 添加一个安全的内容获取函数
+  const getSafeContent = () => {
+    try {
+      return note?.content || '';
+    } catch (error) {
+      console.error('Error getting note content:', error);
+      return '';
+    }
+  };
+
+  if (isLoading || !note) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
@@ -180,10 +214,18 @@ function NoteDetail() {
           </div>
           <div className="flex gap-2">
             <button 
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={isEditing ? handleNoteUpdate : () => setIsEditing(true)}
               className="btn-primary flex items-center gap-1 px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600"
             >
-              <FiEdit2 /> Edit
+              {isEditing ? (
+                <>
+                  <FiSave /> Save
+                </>
+              ) : (
+                <>
+                  <FiEdit2 /> Edit
+                </>
+              )}
             </button>
             <button 
               onClick={handleShare}
@@ -227,16 +269,18 @@ function NoteDetail() {
         {/* Content Area */}
         <div className="flex-1 overflow-auto bg-gray-50">
           {activeTab === 'Note' && (
-            <div className="max-w-4xl mx-auto p-6">
-              <div className="prose max-w-none bg-white p-6 rounded-lg shadow-sm">
+            <div className="h-full p-6">
+              <div className="h-full bg-white p-6 rounded-lg shadow-sm">
                 {isEditing ? (
                   <textarea
-                    className="w-full h-[500px] p-4 border rounded-lg"
-                    value={note.content}
-                    onChange={(e) => setNote({ ...note, content: e.target.value })}
+                    className="w-full h-full p-4 border rounded-lg font-mono"
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
                   />
                 ) : (
-                  <div className="markdown-content">{note.content}</div>
+                  <div className="h-full overflow-auto">
+                    <MarkdownViewer key={note.lastModified} content={note.content} />
+                  </div>
                 )}
               </div>
             </div>
@@ -244,7 +288,10 @@ function NoteDetail() {
           
           {activeTab === 'Quiz' && (
             <div className="h-full">
-              <QuizPanel />
+              <QuizPanel 
+                noteContent={note.content} 
+                noteId={note.id}
+              />
             </div>
           )}
           
@@ -255,8 +302,8 @@ function NoteDetail() {
           )}
           
           {activeTab === 'Podcast' && (
-            <div className="max-w-4xl mx-auto p-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="h-full p-6">
+              <div className="h-full bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Podcast Information</h2>
                 <div className="space-y-4">
                   <div>
@@ -281,8 +328,8 @@ function NoteDetail() {
           )}
           
           {activeTab === 'Mindmap' && (
-            <div className="max-w-4xl mx-auto p-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="h-full p-6">
+              <div className="h-full bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Mindmap Information</h2>
                 <div className="space-y-4">
                   <div>
@@ -307,8 +354,8 @@ function NoteDetail() {
           )}
           
           {activeTab === 'About' && (
-            <div className="max-w-4xl mx-auto p-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="h-full p-6">
+              <div className="h-full bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Note Information</h2>
                 <div className="space-y-4">
                   <div>

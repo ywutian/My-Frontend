@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VideoUpload from '../components/video/VideoUpload';
 import SubjectSelectionModal from '../components/subject/SubjectSelectionModal';
 import ErrorBoundary from '../components/common/ErrorBoundary';
@@ -7,13 +7,40 @@ import SettingsModal from '../components/settings/SettingsModal';
 import NoteCard from '../components/notes/NoteCard';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import CreateNoteModal from '../components/notes/CreateNoteModal';
+import { transcribeAudio } from '../services/transcriptionService';
+import { generateNote, saveNote } from '../services/noteGenerationService';
+import { db } from '../db/db';
+
 function Dashboard() {
   const [selectedInput, setSelectedInput] = useState(null);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [showLiveTranscription, setShowLiveTranscription] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCreateNote, setShowCreateNote] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [recentNotes, setRecentNotes] = useState([]);
+
+  useEffect(() => {
+    const loadRecentNotes = async () => {
+      try {
+        const notes = await db.notes
+          .orderBy('date')
+          .reverse()
+          .limit(10)
+          .toArray();
+
+        setRecentNotes(notes);
+      } catch (error) {
+        console.error('Error loading recent notes:', error);
+      }
+    };
+
+    loadRecentNotes();
+  }, []);
 
   const handleSubjectSelect = (subjectId) => {
     try {
@@ -28,12 +55,68 @@ function Dashboard() {
   const handleInputSelect = (optionId) => {
     console.log('Input selected:', optionId);
     if (optionId === 'audio') {
-      setShowSubjectModal(true);
+      setShowCreateNote(true);
     } else if (optionId === 'lecture') {
       setShowLiveTranscription(true);
       setSelectedInput('lecture');
     } else {
       setSelectedInput(optionId);
+    }
+  };
+
+  const handleCreateNote = async (formData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const audioFile = formData.get('audio');
+      const audioLanguage = formData.get('audioLanguage');
+      const noteLanguage = formData.get('noteLanguage');
+      const title = formData.get('title');
+      const subject = formData.get('subject');
+
+      console.log('Creating note with data:', {
+        title,
+        subject,
+        audioLanguage,
+        noteLanguage
+      });
+
+      // 1. 转录音频
+      const transcript = await transcribeAudio(audioFile, audioLanguage);
+
+      // 2. 生成笔记
+      const noteContent = await generateNote(transcript, noteLanguage);
+
+      // 3. 保存笔记
+      const noteData = {
+        title: title || new Date().toLocaleDateString(),
+        subject: subject || 'General',
+        content: noteContent,
+        audioLanguage,
+        noteLanguage,
+        transcript
+      };
+
+      const noteId = await saveNote(noteData);
+      console.log('Note created successfully:', noteId);
+
+      // 刷新最近笔记列表
+      const notes = await db.notes
+        .orderBy('date')
+        .reverse()
+        .limit(10)
+        .toArray();
+      setRecentNotes(notes);
+
+      setShowCreateNote(false);
+      setIsLoading(false);
+      
+      return noteId;
+    } catch (error) {
+      console.error('Error creating note:', error);
+      setError(error.message);
+      setIsLoading(false);
     }
   };
 
@@ -66,30 +149,6 @@ function Dashboard() {
       title: 'Document Upload',
       subtitle: 'PDF,PPT,WORD,EXCEL,CSV,TXT',
       bgColor: 'bg-green-500'
-    }
-  ];
-
-  const recentNotes = [
-    {
-      id: 1,
-      title: "Meeting Notes - Product Review",
-      date: "2024-03-20",
-      preview: "Discussed new feature requirements and timeline...",
-      subject: "Work"
-    },
-    {
-      id: 2,
-      title: "Physics Study Notes",
-      date: "2024-03-19",
-      preview: "Chapter 5: Quantum Mechanics fundamentals...",
-      subject: "Study Notes"
-    },
-    {
-      id: 3,
-      title: "Project Planning",
-      date: "2024-03-18",
-      preview: "Q2 objectives and key milestones...",
-      subject: "Work"
     }
   ];
 
@@ -127,13 +186,25 @@ function Dashboard() {
               <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4 text-[#1e3d58]">Recent Notes</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentNotes.map((note) => (
-                    <NoteCard
-                      key={note.id}
-                      note={note}
-                      onClick={() => navigate(`/notes/${note.id}`)}
-                    />
-                  ))}
+                  {recentNotes.length > 0 ? (
+                    recentNotes.map((note) => (
+                      <NoteCard
+                        key={note.id}
+                        note={{
+                          id: note.id,
+                          title: note.title,
+                          date: new Date(note.date).toLocaleDateString(),
+                          preview: note.content.substring(0, 100) + '...',
+                          subject: note.subject
+                        }}
+                        onClick={() => navigate(`/notes/${note.id}`)}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-center text-gray-500 py-8">
+                      No notes yet. Create your first note by clicking on "Record or Upload Audio"!
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -159,6 +230,12 @@ function Dashboard() {
       <SettingsModal 
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+      />
+
+      <CreateNoteModal
+        isOpen={showCreateNote}
+        onClose={() => setShowCreateNote(false)}
+        onSubmit={handleCreateNote}
       />
     </ErrorBoundary>
   );

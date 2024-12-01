@@ -4,25 +4,28 @@ import { api } from '../services/api';
 export const db = new Dexie('notesApp');
 
 db.version(1).stores({
-  notes: '++id, title, content, date, subject, lastModified, syncStatus',
+  notes: '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage',
   flashcards: '++id, noteId, front, back, syncStatus',
-  syncQueue: '++id, operation, data, timestamp'
+  syncQueue: '++id, operation, data, timestamp',
+  quizzes: '++id, noteId, questions, userAnswers, date, score'
 });
 
-// 增强的保存函数
-export const saveNote = async (note) => {
+export const saveNote = async (noteData) => {
   try {
-    // 先保存到本地
-    const id = await db.notes.put({
-      ...note,
-      syncStatus: 'pending',
-      lastModified: new Date().toISOString()
-    });
+    // 准备笔记数据
+    const note = {
+      ...noteData,
+      date: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      syncStatus: 'pending'
+    };
+
+    // 保存到本地数据库
+    const id = await db.notes.put(note);
 
     // 尝试同步到服务器
     try {
       await api.saveNoteToServer(note);
-      // 更新同步状态
       await db.notes.update(id, { syncStatus: 'synced' });
     } catch (error) {
       // 如果服务器同步失败，将操作加入同步队列
