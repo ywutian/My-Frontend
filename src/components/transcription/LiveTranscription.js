@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useDeepgramTranscription } from '../../hooks/useDeepgramTranscription';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTranscripts } from '../../hooks/useTranscripts';
@@ -15,27 +15,84 @@ function LiveTranscription({ onTranscript }) {
     updateTranscriptTranslations 
   } = useTranscripts();
 
-  const handleTranscript = useCallback((data) => {
-    updateLatestTranscript(data, translateText, isTranslating);
-  }, [updateLatestTranscript, translateText, isTranslating]);
+  // 创建一个 ref 来存储最新的处理函数
+  const transcriptHandlerRef = useRef(null);
+
+  // 当 isTranslating 改变时更新处理函数
+  useEffect(() => {
+    transcriptHandlerRef.current = (data) => {
+      console.log('Processing transcript with latest translation state:', {
+        isTranslating,
+        text: data?.channel?.alternatives?.[0]?.processedTranscript?.text
+      });
+
+      updateLatestTranscript(data);
+
+      if (isTranslating) {
+        const transcript = data?.channel?.alternatives?.[0]?.processedTranscript;
+        if (transcript?.text) {
+          console.log('Requesting translation for:', transcript.text);
+          translateText(transcript.text).then(translation => {
+            if (translation) {
+              console.log('Received translation:', translation);
+              updateTranscriptTranslations(transcript.id, translation);
+            }
+          });
+        }
+      }
+    };
+  }, [isTranslating, translateText, updateLatestTranscript, updateTranscriptTranslations]);
 
   useEffect(() => {
     return stopRecording;
   }, [stopRecording]);
 
-  const handleRecordingToggle = () => {
+  // 修改录音切换函数
+  const handleRecordingToggle = useCallback(() => {
     if (isRecording) {
       stopRecording();
     } else {
-      startRecording(handleTranscript);
+      // 使用一个包装函数来调用最新的处理函数
+      const handleTranscriptWithLatestState = (data) => {
+        if (transcriptHandlerRef.current) {
+          transcriptHandlerRef.current(data);
+        }
+      };
+
+      startRecording(handleTranscriptWithLatestState);
     }
-  };
+  }, [isRecording, stopRecording, startRecording]);
 
   const handleTranslationToggle = useCallback(async () => {
-    const willEnableTranslation = !isTranslating;
-    
-    toggleTranslation(transcripts);
-  }, [isTranslating, transcripts, toggleTranslation]);
+    try {
+      console.log('Translation toggle clicked. Current state:', isTranslating);
+      
+      await toggleTranslation(transcripts);
+      console.log('Translation state toggled. New state should be:', !isTranslating);
+
+      if (!isTranslating) {
+        console.log('Processing existing transcripts for translation');
+        const translationPromises = transcripts
+          .filter(t => !t.translation && t.text)
+          .map(async transcript => {
+            const translation = await translateText(transcript.text);
+            if (translation) {
+              updateTranscriptTranslations(transcript.id, translation);
+            }
+            return { id: transcript.id, translation };
+          });
+
+        await Promise.all(translationPromises);
+      }
+    } catch (error) {
+      console.error('Error during translation toggle:', error);
+    }
+  }, [isTranslating, transcripts, toggleTranslation, translateText, updateTranscriptTranslations]);
+
+  // 添加调试用的 useEffect
+  useEffect(() => {
+    console.log('Translation state changed:', isTranslating);
+  }, [isTranslating]);
 
   return (
     <div className="relative min-h-screen p-4">

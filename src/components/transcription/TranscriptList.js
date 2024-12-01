@@ -32,6 +32,15 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
     };
   }, [transcripts, interimResult]);
 
+  // 添加调试日志
+  useEffect(() => {
+    console.log('TranscriptList updated:', {
+      transcriptsCount: transcripts.length,
+      hasInterim: !!interimResult,
+      translations: transcripts.map(t => t.translation).filter(Boolean)
+    });
+  }, [transcripts, interimResult]);
+
   return (
     <div className="space-y-4 mt-16">
       <motion.div
@@ -41,10 +50,9 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
           isRecording ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'
         }`}
       >
-        {/* 连续显示的文字 */}
+        {/* 转录文本显示 */}
         <div className="text-gray-800 text-left">
           <span>{historicalText}</span>
-          <span>{prevInterimRef.current}</span>
           <AnimatePresence mode="wait">
             {incrementalText && (
               <motion.span
@@ -59,18 +67,24 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
           </AnimatePresence>
         </div>
 
-        {/* 翻译 */}
+        {/* 翻译显示部分 */}
         {isTranslating && (
           <div className="mt-2 text-gray-600 border-t border-gray-200 pt-2 text-left">
-            {[...transcripts, interimResult]
-              .filter(Boolean)
-              .map(t => t.translation)
-              .filter(Boolean)
-              .join(' ')}
+            {(() => {
+              // 收集所有翻译，包括历史记录和当前临时结果
+              const translations = [
+                ...transcripts.map(t => t.translation),
+                interimResult?.translation
+              ].filter(Boolean);
+              
+              console.log('Rendering translations:', translations);
+              
+              return translations.join(' ');
+            })()}
           </div>
         )}
 
-        {/* 时间戳 */}
+        {/* 时间戳显示 */}
         {(interimResult || transcripts[transcripts.length - 1]) && (
           <div className="mt-2 text-xs text-gray-500">
             {new Date(

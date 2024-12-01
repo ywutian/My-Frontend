@@ -1,169 +1,111 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 export function useTranslation() {
   const [isTranslating, setIsTranslating] = useState(false);
   const lastTranslationRef = useRef({ text: '', timestamp: 0 });
-  const translationQueueRef = useRef([]);
-  const isProcessingRef = useRef(false);
-  const lastTranslatedIndexRef = useRef(-1);
   const THROTTLE_TIME = 300;
 
-  const addToTranslationQueue = useCallback((segment) => {
-    translationQueueRef.current.push({
-      ...segment,
-      translated: false,
-      timestamp: Date.now()
-    });
-
-    // 如果翻译已启动，尝试处理队列
-    if (isTranslating && !isProcessingRef.current) {
-      processTranslationQueue();
-    }
-  }, [isTranslating]);
-
-  
-  const processTranslationQueue = useCallback(async () => {
-    if (isProcessingRef.current || !isTranslating) return;
-
-    isProcessingRef.current = true;
-    console.log('Processing translation queue...');
-
-    try {
-      const nextIndex = lastTranslatedIndexRef.current + 1;
-      
-      while (nextIndex < translationQueueRef.current.length) {
-        const segment = translationQueueRef.current[nextIndex];
-        
-        if (!segment.translated && segment.text) {
-          console.log(`Translating segment ${nextIndex}:`, segment.text);
-          
-          const translation = await translateText(segment.text);
-          
-          if (translation) {
-            // 更新队列中的段落
-            translationQueueRef.current[nextIndex] = {
-              ...segment,
-              translated: true,
-              translation
-            };
-
-            // 调用回调通知更新
-            segment.onTranslationComplete?.(segment.id, translation);
-          }
-        }
-        
-        lastTranslatedIndexRef.current = nextIndex;
-        nextIndex++;
-      }
-    } catch (error) {
-      console.error('Error processing translation queue:', error);
-    } finally {
-      isProcessingRef.current = false;
-    }
-  }, [isTranslating]);
-
+  // 先定义 translateText 函数
   const translateText = useCallback(async (text) => {
+    if (!text) return '';
+    
+    console.log('Sending translation request for:', text);
+    
     // 检查是否在短时间内翻译过相同的文本
     const now = Date.now();
     if (
       text === lastTranslationRef.current.text && 
       now - lastTranslationRef.current.timestamp < THROTTLE_TIME
     ) {
+      console.log('Using cached translation');
       return lastTranslationRef.current.translation;
     }
-    
-    if (!text) return '';
-    
-    // 添加调试日志
-    console.log('Translation requested for:', text);
-    
+
     try {
       const response = await fetch('http://localhost:5001/translate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          text,
-          sourceLang: 'en',
-          targetLang: 'zh',
-        }),
+        body: JSON.stringify({ text }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Translation response:', data);
+
       const translation = data?.translation || '';
       
-      console.log('Translation received:', translation);
-      
-      // 保存最新的翻译结果
-      lastTranslationRef.current.translation = translation;
+      // 更新缓存
+      lastTranslationRef.current = {
+        text,
+        translation,
+        timestamp: now
+      };
+
       return translation;
     } catch (error) {
-      console.error('Translation error:', error);
+      console.error('Translation request failed:', error);
       return '';
     }
-  }, []);
+  }, []); // 没有依赖项
 
-  const handleNewTranscript = useCallback((transcript) => {
-    if (!isTranslating || !transcript.text) return;
-    
-    addToTranslationQueue({
-        id: transcript.id,
-        text: transcript.text,
-        timestamp: transcript.timestamp,
-        onTranslationComplete: transcript.onTranslationComplete
-      });
-    }, [isTranslating, addToTranslationQueue]);
+  // 然后定义 handleNewTranscript，它依赖于 translateText
+  const handleNewTranscript = useCallback(async (transcript) => {
+    if (!isTranslating || !transcript?.text) {
+      console.log('Skipping translation:', { isTranslating, hasText: !!transcript?.text });
+      return;
+    }
 
- const toggleTranslation = useCallback(async (existingTranscripts = []) => {
-    const newState = !isTranslating;
+    try {
+      console.log('Processing transcript for translation:', transcript.text);
+      const translation = await translateText(transcript.text);
+      console.log('Received translation:', translation);
+      
+      // 直接返回翻译结果，让调用者决定如何处理
+      return translation;
+    } catch (error) {
+      console.error('Translation processing failed:', error);
+      return '';
+    }
+  }, [isTranslating, translateText]);
+
+  // 最后定义 toggleTranslation，它依赖于 handleNewTranscript
+  const toggleTranslation = useCallback(async (existingTranscripts = []) => {
+    console.log('Toggle translation called with transcripts:', existingTranscripts.length);
     
-    // 如果要开启翻译，先处理现有转录
-    if (newState && existingTranscripts.length > 0) {
-      existingTranscripts.forEach(transcript => {
-        if (!transcript.translation && transcript.text) {
-          addToTranslationQueue({
-            id: transcript.id,
-            text: transcript.text,
-            timestamp: transcript.timestamp,
-            onTranslationComplete: transcript.onTranslationComplete
-          });
-        }
-      });
+    // 先更新状态
+    setIsTranslating(prev => !prev);
+    
+    // 如果是开启翻译，处理现有记录
+    if (!isTranslating) {
+      console.log('Processing existing transcripts for translation');
+      const translations = await Promise.all(
+        existingTranscripts
+          .filter(t => t.text && !t.translation)
+          .map(async transcript => {
+            const translation = await translateText(transcript.text);
+            return {
+              id: transcript.id,
+              translation
+            };
+          })
+      );
+      
+      console.log('Completed translations:', translations);
+      return translations;
     }
     
-    // 更新状态
-    setIsTranslating(newState);
-    
-    // 如果开启翻译，确保队列开始处理
-    if (newState) {
-      setTimeout(() => {
-        processTranslationQueue();
-      }, 0);
-    } else {
-      // 重置翻译状态
-      lastTranslatedIndexRef.current = -1;
-      isProcessingRef.current = false;
-      translationQueueRef.current = [];
-    }
-  }, [isTranslating, addToTranslationQueue, processTranslationQueue]);
-
-  // 清理队列的方法
-  const clearTranslationQueue = useCallback(() => {
-    translationQueueRef.current = [];
-    lastTranslatedIndexRef.current = -1;
-    isProcessingRef.current = false;
-  }, []);
+    return [];
+  }, [isTranslating, translateText]);
 
   return {
     isTranslating,
     translateText,
     toggleTranslation,
-    handleNewTranscript,
-    clearTranslationQueue
+    handleNewTranscript
   };
 }

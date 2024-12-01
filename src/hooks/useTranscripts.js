@@ -4,92 +4,41 @@ export function useTranscripts() {
   const [transcripts, setTranscripts] = useState([]);
   const [interimResult, setInterimResult] = useState(null);
 
-  const updateLatestTranscript = useCallback((data, translateText, isTranslating) => {
-    if (!data?.channel?.alternatives?.[0]?.transcript) {
-      console.warn('Invalid data format received:', data);
-      return;
-    }
-
-    const transcriptData = data.channel.alternatives[0];
-    const transcript = transcriptData.transcript.trim();
-    const isFinal = data.is_final;
-
+  const updateLatestTranscript = useCallback((data) => {
+    const transcript = data?.channel?.alternatives?.[0]?.processedTranscript;
     if (!transcript) return;
 
-    console.log('Processing transcript:', {
-      text: transcript,
-      isFinal,
-      isTranslating,
-      hasTranslateFunction: !!translateText
-    });
-
-    if (!isFinal) {
-      setInterimResult({
-        text: transcript,
-        timestamp: new Date(),
-        translation: null
-      });
-
-      if (isTranslating && translateText) {
-        translateText(transcript).then(translation => {
-          setInterimResult(current => 
-            current?.text === transcript ? { ...current, translation } : current
-          );
-        });
-      }
-    } else {
-      if (!interimResult || interimResult.text !== transcript) {
-        setTranscripts(prev => {
-          const newTranscript = {
-            id: Date.now(),
-            text: transcript,
-            timestamp: new Date(),
-            translation: null
-          };
-
-          if (isTranslating && translateText) {
-            translateText(transcript).then(translation => {
-              setTranscripts(current => 
-                current.map(t => 
-                  t.id === newTranscript.id ? { ...t, translation } : t
-                )
-              );
-            });
-          }
-
-          return [...prev, newTranscript];
-        });
-      }
+    if (transcript.isFinal) {
+      setTranscripts(prev => [...prev, {
+        ...transcript,
+        timestamp: Date.now(),
+        translation: data.translation
+      }]);
       setInterimResult(null);
+    } else {
+      setInterimResult({
+        ...transcript,
+        timestamp: Date.now(),
+        translation: data.translation
+      });
     }
-  }, [interimResult]);
+  }, []);
 
-  const updateTranscriptTranslations = useCallback(async (translateText) => {
-    // 遍历所有转录记录
-    const updatedTranscripts = await Promise.all(
-      transcripts.map(async (transcript) => {
-        // 如果已经有翻译，就跳过
-        if (transcript.translation) return transcript;
-        
-        // 翻译文本
-        const translation = await translateText(transcript.text);
-        
-        // 返回更新后的转录对象
-        return {
-          ...transcript,
-          translation
-        };
-      })
+  const updateTranscriptTranslations = useCallback((id, translation) => {
+    console.log('Updating translation:', { id, translation });
+    
+    setTranscripts(prev => prev.map(t => 
+      t.id === id ? { ...t, translation } : t
+    ));
+    
+    setInterimResult(prev => 
+      prev?.id === id ? { ...prev, translation } : prev
     );
-
-    // 更新状态
-    setTranscripts(updatedTranscripts);
-  }, [transcripts]);
+  }, []);
 
   return {
     transcripts,
     interimResult,
-    setTranscripts,
     updateLatestTranscript,
     updateTranscriptTranslations
   };
