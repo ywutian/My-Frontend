@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { FiX, FiMoon, FiSun, FiGlobe, FiLock, FiCreditCard } from 'react-icons/fi';
+import { useTheme } from '../../context/ThemeContext';
 
 function SettingsModal({ isOpen, onClose }) {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('general');
   
   const tabs = [
@@ -92,11 +94,19 @@ function SettingsModal({ isOpen, onClose }) {
                 <div>
                   <h3 className="text-sm font-medium mb-3">Theme</h3>
                   <div className="flex space-x-4">
-                    <button className="flex items-center px-4 py-2 rounded-lg border hover:bg-gray-50">
+                    <button 
+                      className={`flex items-center px-4 py-2 rounded-lg border hover:bg-gray-50
+                        ${theme === 'light' ? 'bg-blue-50 border-blue-500' : ''}`}
+                      onClick={() => theme !== 'light' && toggleTheme()}
+                    >
                       <FiSun className="h-5 w-5 mr-2" />
                       Light
                     </button>
-                    <button className="flex items-center px-4 py-2 rounded-lg border hover:bg-gray-50">
+                    <button 
+                      className={`flex items-center px-4 py-2 rounded-lg border hover:bg-gray-50
+                        ${theme === 'dark' ? 'bg-blue-50 border-blue-500' : ''}`}
+                      onClick={() => theme !== 'dark' && toggleTheme()}
+                    >
                       <FiMoon className="h-5 w-5 mr-2" />
                       Dark
                     </button>

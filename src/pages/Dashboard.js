@@ -4,12 +4,16 @@ import SubjectSelectionModal from '../components/subject/SubjectSelectionModal';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import LiveTranscription from '../components/transcription/LiveTranscription';
 import SettingsModal from '../components/settings/SettingsModal';
-
+import NoteCard from '../components/notes/NoteCard';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 function Dashboard() {
   const [selectedInput, setSelectedInput] = useState(null);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [showLiveTranscription, setShowLiveTranscription] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const navigate = useNavigate();
+  const { theme } = useTheme();
 
   const handleSubjectSelect = (subjectId) => {
     try {
@@ -39,14 +43,14 @@ function Dashboard() {
       icon: '🎙️',
       title: 'Record or Upload Audio',
       subtitle: 'Upload an audio file',
-      bgColor: 'from-blue-500 to-blue-600'
+      bgColor: 'bg-blue-500'
     },
     {
       id: 'lecture',
       icon: '🎤',
       title: 'Record Live Lecture',
       subtitle: 'Real time transcript',
-      bgColor: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-500',
       isNew: true
     },
     {
@@ -54,14 +58,14 @@ function Dashboard() {
       icon: '▶️',
       title: 'YouTube Video',
       subtitle: 'Paste a YouTube link',
-      bgColor: 'from-red-500 to-red-600'
+      bgColor: 'bg-red-500'
     },
     {
       id: 'document',
       icon: '📄',
       title: 'Document Upload',
       subtitle: 'PDF,PPT,WORD,EXCEL,CSV,TXT',
-      bgColor: 'from-green-500 to-green-600'
+      bgColor: 'bg-green-500'
     }
   ];
 
@@ -92,7 +96,9 @@ function Dashboard() {
   return (
     <ErrorBoundary>
       <div className="p-6">
-        <div className="bg-white rounded-lg shadow-xl p-6">
+        <div className={`rounded-lg shadow-xl p-6 ${
+          theme === 'light' ? 'bg-white' : 'bg-gray-800 text-white'
+        }`}>
           {!showLiveTranscription ? (
             <>
               <h1 className="text-2xl font-bold mb-6 text-[#1e3d58]">Dashboard</h1>
@@ -103,7 +109,7 @@ function Dashboard() {
                   <button
                     key={option.id}
                     onClick={() => handleInputSelect(option.id)}
-                    className={`relative p-6 rounded-lg bg-gradient-to-r ${option.bgColor} text-white hover:shadow-lg transition-all duration-200 text-left`}
+                    className={`relative p-6 rounded-lg ${option.bgColor} text-white hover:shadow-lg transition-all duration-200 text-left`}
                   >
                     {option.isNew && (
                       <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
@@ -122,24 +128,11 @@ function Dashboard() {
                 <h2 className="text-xl font-semibold mb-4 text-[#1e3d58]">Recent Notes</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recentNotes.map((note) => (
-                    <div 
+                    <NoteCard
                       key={note.id}
-                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 border border-gray-100"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-[#1e3d58]">{note.title}</h3>
-                        <span className="text-xs text-gray-500">{note.date}</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{note.preview}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded-full">
-                          {note.subject}
-                        </span>
-                        <button className="text-sm text-blue-500 hover:text-blue-600">
-                          View →
-                        </button>
-                      </div>
-                    </div>
+                      note={note}
+                      onClick={() => navigate(`/notes/${note.id}`)}
+                    />
                   ))}
                 </div>
               </div>
