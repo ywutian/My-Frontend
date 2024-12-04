@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiChevronRight, FiPlay, FiCheck, FiX, FiClock, FiRotateCcw } from 'react-icons/fi';
+import { FiChevronRight, FiPlay, FiCheck, FiX, FiClock, FiRotateCcw, FiArrowLeft } from 'react-icons/fi';
 import { generateQuiz, saveQuizResult, getQuizHistory } from '../../services/quizGenerationService';
 
 const QuizPanel = ({ noteContent, noteId }) => {
@@ -14,7 +14,6 @@ const QuizPanel = ({ noteContent, noteId }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [currentQuizId, setCurrentQuizId] = useState(null);
 
-  // 确保 noteId 存在
   useEffect(() => {
     if (noteId) {
       console.log('Initial load of quiz history for noteId:', noteId);
@@ -148,14 +147,37 @@ const QuizPanel = ({ noteContent, noteId }) => {
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <div className="flex justify-between items-center p-4 bg-white border-b">
-        <h2 className="text-xl font-semibold text-gray-800">Quiz</h2>
-        <button
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-500 transition-colors"
-          onClick={() => setShowHistory(true)}
-        >
-          <span>Previous Quizzes</span>
-          <FiChevronRight />
-        </button>
+        <div className="flex items-center gap-3">
+          {(showHistory || (isQuizStarted && currentQuizId)) && (
+            <button
+              onClick={() => {
+                setIsQuizStarted(false);
+                setShowHistory(false);
+                setCurrentQuizId(null);
+                setQuestions([]);
+                setUserAnswers([]);
+                setCurrentQuestion(0);
+                setSelectedAnswer(null);
+                setShowExplanation(false);
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Back to Quiz Generation"
+            >
+              <FiArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          )}
+          <h2 className="text-xl font-semibold text-gray-800">Quiz</h2>
+        </div>
+        
+        {!showHistory && isQuizStarted && (
+          <button
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-500 transition-colors"
+            onClick={() => setShowHistory(true)}
+          >
+            <span>Previous Quizzes</span>
+            <FiChevronRight />
+          </button>
+        )}
       </div>
 
       {/* Main content */}
