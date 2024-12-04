@@ -1,6 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiEdit2, FiShare2, FiPlus, FiDownload, FiArrowLeft, FiSend, FiChevronRight, FiChevronLeft, FiSave } from 'react-icons/fi';
+import {
+  FiEdit2,
+  FiShare2,
+  FiPlus,
+  FiDownload,
+  FiArrowLeft,
+  FiSend,
+  FiChevronRight,
+  FiChevronLeft,
+  FiSave,
+} from 'react-icons/fi';
 import QuizPanel from '../components/quiz/QuizPanel';
 import FlashcardPanel from '../components/flashcards/FlashcardPanel';
 import { db } from '../db/db';
@@ -18,8 +28,9 @@ function NoteDetail() {
     {
       id: 1,
       type: 'assistant',
-      content: 'Hi! I can help you analyze this note. What would you like to know?'
-    }
+      content:
+        'Hi! I can help you analyze this note. What would you like to know?',
+    },
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isResizing, setIsResizing] = useState(false);
@@ -36,25 +47,28 @@ function NoteDetail() {
 
   // 从数据库获取笔记
   useEffect(() => {
+    let isMounted = true;
+
     const fetchNote = async () => {
       setIsLoading(true);
       try {
         const noteData = await db.notes.get(parseInt(noteId));
-        if (noteData) {
+        if (isMounted) {
           setNote(noteData);
-        } else {
-          console.error('Note not found');
-          navigate('/');
         }
       } catch (error) {
         console.error('Error fetching note:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchNote();
-  }, [noteId, navigate]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [noteId]);
 
   // 当进入编辑模式时，初始化编辑内容
   useEffect(() => {
@@ -65,29 +79,21 @@ function NoteDetail() {
 
   // 修改笔记更新函数
   const handleNoteUpdate = async () => {
+    setIsLoading(true);
     try {
       const updatedNote = {
         ...note,
         content: editContent,
-        lastModified: new Date().toISOString()
+        lastModified: new Date().toISOString(),
       };
-      
-      // 1. 先退出编辑模式
-      setIsEditing(false);
-      
-      // 2. 清空内容
-      setNote(prev => ({ ...prev, content: '' }));
-      
-      // 3. 更新数据库
-      await db.notes.update(note.id, updatedNote);
-      
-      // 4. 更新状态
-      requestAnimationFrame(() => {
-        setNote(updatedNote);
-      });
-      
+
+      await db.notes.update(note.id, updatedNote); // 更新数据库
+      setNote(updatedNote); // 更新状态
+      setIsEditing(false); // 退出编辑模式
     } catch (error) {
       console.error('Error updating note:', error);
+    } finally {
+      setIsLoading(false); // 恢复加载状态
     }
   };
 
@@ -101,7 +107,7 @@ function NoteDetail() {
     const handleMouseMove = (e) => {
       const deltaX = startX - e.clientX;
       const newWidth = startWidth + deltaX;
-      
+
       // 检查是否应该收起
       if (newWidth < COLLAPSE_THRESHOLD) {
         setIsCollapsed(true);
@@ -152,10 +158,10 @@ function NoteDetail() {
     const userMessage = {
       id: messages.length + 1,
       type: 'user',
-      content: inputMessage
+      content: inputMessage,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage('');
 
     // 模拟AI响应
@@ -163,9 +169,9 @@ function NoteDetail() {
       const aiResponse = {
         id: messages.length + 2,
         type: 'assistant',
-        content: `I understand you're asking about "${inputMessage}". Let me help you with that...`
+        content: `I understand you're asking about "${inputMessage}". Let me help you with that...`,
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages((prev) => [...prev, aiResponse]);
     }, 1000);
   };
 
@@ -204,7 +210,7 @@ function NoteDetail() {
         {/* Header */}
         <header className="border-b p-4 flex justify-between items-center bg-white">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => navigate(-1)}
               className="text-gray-600 hover:text-gray-900"
             >
@@ -213,7 +219,7 @@ function NoteDetail() {
             <h1 className="text-2xl font-bold">{note.title}</h1>
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={isEditing ? handleNoteUpdate : () => setIsEditing(true)}
               className="btn-primary flex items-center gap-1 px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600"
             >
@@ -227,18 +233,16 @@ function NoteDetail() {
                 </>
               )}
             </button>
-            <button 
+            <button
               onClick={handleShare}
               className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
             >
               <FiShare2 /> Share
             </button>
-            <button 
-              className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
-            >
+            <button className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">
               <FiPlus /> Add
             </button>
-            <button 
+            <button
               onClick={handleExport}
               className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
             >
@@ -269,42 +273,49 @@ function NoteDetail() {
         {/* Content Area */}
         <div className="flex-1 overflow-auto bg-gray-50">
           {activeTab === 'Note' && (
-            <div className="h-full p-6">
-              <div className="h-full bg-white p-6 rounded-lg shadow-sm">
-                {isEditing ? (
-                  <textarea
-                    className="w-full h-full p-4 border rounded-lg font-mono"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                  />
-                ) : (
-                  <div className="h-full overflow-auto">
-                    <MarkdownViewer key={note.lastModified} content={note.content} />
-                  </div>
-                )}
+            <div className="h-full bg-white p-6 rounded-lg shadow-sm relative">
+              {/* 编辑模式 */}
+              <textarea
+                className="absolute inset-0 w-full h-full p-4 border rounded-lg font-mono"
+                style={{
+                  visibility: isEditing ? 'visible' : 'hidden',
+                  pointerEvents: isEditing ? 'auto' : 'none',
+                }}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+              />
+
+              {/* 查看模式 */}
+              <div
+                className="absolute inset-0 w-full h-full overflow-auto"
+                style={{
+                  visibility: !isEditing ? 'visible' : 'hidden',
+                  pointerEvents: !isEditing ? 'auto' : 'none',
+                }}
+              >
+                <MarkdownViewer content={note.content} />
               </div>
             </div>
           )}
-          
+
           {activeTab === 'Quiz' && (
             <div className="h-full">
-              <QuizPanel 
-                noteContent={note.content} 
-                noteId={note.id}
-              />
+              <QuizPanel noteContent={note.content} noteId={note.id} />
             </div>
           )}
-          
+
           {activeTab === 'Flashcards' && (
             <div className="h-full">
               <FlashcardPanel />
             </div>
           )}
-          
+
           {activeTab === 'Podcast' && (
             <div className="h-full p-6">
               <div className="h-full bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Podcast Information</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Podcast Information
+                </h2>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Created</p>
@@ -326,11 +337,13 @@ function NoteDetail() {
               </div>
             </div>
           )}
-          
+
           {activeTab === 'Mindmap' && (
             <div className="h-full p-6">
               <div className="h-full bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Mindmap Information</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Mindmap Information
+                </h2>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Created</p>
@@ -352,7 +365,7 @@ function NoteDetail() {
               </div>
             </div>
           )}
-          
+
           {activeTab === 'About' && (
             <div className="h-full p-6">
               <div className="h-full bg-white p-6 rounded-lg shadow-sm">
@@ -386,9 +399,9 @@ function NoteDetail() {
         className={`relative bg-white border-l flex flex-col ${
           isResizing ? 'select-none' : ''
         }`}
-        style={{ 
+        style={{
           width: aiPanelWidth,
-          transition: isResizing ? 'none' : 'width 0.2s ease-out'
+          transition: isResizing ? 'none' : 'width 0.2s ease-out',
         }}
       >
         {/* Resize Handle with Collapse Toggle */}
@@ -396,9 +409,11 @@ function NoteDetail() {
           className="absolute left-0 top-0 w-4 h-full cursor-col-resize group -ml-2"
           onMouseDown={handleResizeStart}
         >
-          <div 
+          <div
             className={`absolute left-1/2 top-0 w-1 h-full -translate-x-1/2 ${
-              isResizing ? 'bg-purple-500' : 'bg-gray-200 group-hover:bg-purple-500'
+              isResizing
+                ? 'bg-purple-500'
+                : 'bg-gray-200 group-hover:bg-purple-500'
             }`}
           />
           <button
@@ -414,7 +429,9 @@ function NoteDetail() {
           <>
             <div className="p-4 border-b">
               <h2 className="text-xl font-semibold">AI Assistant</h2>
-              <p className="text-sm text-gray-600">Ask me anything about this note...</p>
+              <p className="text-sm text-gray-600">
+                Ask me anything about this note...
+              </p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -436,7 +453,7 @@ function NoteDetail() {
               ))}
             </div>
 
-            <form 
+            <form
               onSubmit={handleSendMessage}
               className="p-4 border-t bg-white"
             >
@@ -461,7 +478,10 @@ function NoteDetail() {
           </>
         ) : (
           <div className="h-full flex items-center justify-center">
-            <span className="text-gray-400 rotate-180" style={{ writingMode: 'vertical-rl' }}>
+            <span
+              className="text-gray-400 rotate-180"
+              style={{ writingMode: 'vertical-rl' }}
+            >
               AI Assistant
             </span>
           </div>
@@ -471,4 +491,4 @@ function NoteDetail() {
   );
 }
 
-export default NoteDetail; 
+export default NoteDetail;
