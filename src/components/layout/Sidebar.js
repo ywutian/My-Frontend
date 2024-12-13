@@ -87,7 +87,7 @@ function Sidebar({ isOpen, onToggle }) {
   };
 
   const handleDashboardClick = () => {
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const handleFolderClick = (folder, e) => {

@@ -5,7 +5,7 @@ import ErrorBoundary from '../components/common/ErrorBoundary';
 import LiveTranscription from '../components/transcription/LiveTranscription';
 import SettingsModal from '../components/settings/SettingsModal';
 import NoteCard from '../components/notes/NoteCard';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import CreateNoteModal from '../components/notes/CreateNoteModal';
 import { transcribeAudio } from '../services/transcriptionService';
@@ -23,6 +23,7 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recentNotes, setRecentNotes] = useState([]);
+  const location = useLocation();
 
   useEffect(() => {
     const loadRecentNotes = async () => {
@@ -41,6 +42,10 @@ function Dashboard() {
 
     loadRecentNotes();
   }, []);
+
+  useEffect(() => {
+    setShowLiveTranscription(false);
+  }, [location]);
 
   const handleSubjectSelect = (subjectId) => {
     try {
