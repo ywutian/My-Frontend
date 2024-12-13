@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   FiChevronRight,
   FiChevronLeft,
@@ -17,7 +17,8 @@ const DraggableSidebar = ({
   maxHeight = 600,
   initialPosition = 'right',
   defaultTab,
-  onResize,
+  onWidthChange,
+  onStateChange,
 }) => {
   const [size, setSize] = useState({
     width: defaultWidth,
@@ -40,6 +41,14 @@ const DraggableSidebar = ({
   const COLLAPSED_SIZE = 40;
   const POSITION_SWITCH_THRESHOLD = 100;
 
+  useEffect(() => {
+    onStateChange?.({
+      isCollapsed,
+      size,
+      COLLAPSED_SIZE
+    });
+  }, [isCollapsed, size, onStateChange]);
+
   const handleResizeStart = (e) => {
     e.preventDefault();
     setIsResizing(true);
@@ -54,32 +63,17 @@ const DraggableSidebar = ({
         const deltaX = startX - e.clientX;
         const newWidth = startWidth + deltaX;
 
-        // Check for position switch
-        const deltaY = e.clientY - startY;
-        if (
-          Math.abs(deltaY) > POSITION_SWITCH_THRESHOLD &&
-          !isDraggingPosition
-        ) {
-          setIsDraggingPosition(true);
-          setPosition('bottom');
-          setSize({
-            width: window.innerWidth,
-            height: defaultHeight,
-          });
-          return;
-        }
-
         if (newWidth < COLLAPSE_THRESHOLD) {
           setIsCollapsed(true);
           const newSize = { width: COLLAPSED_SIZE, height: size.height };
           setSize(newSize);
-          onResize?.(newSize);
+          onWidthChange?.(COLLAPSED_SIZE);
         } else {
           setIsCollapsed(false);
           const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
           const newSize = { width: clampedWidth, height: size.height };
           setSize(newSize);
-          onResize?.(newSize);
+          onWidthChange?.(clampedWidth);
         }
       } else {
         const deltaY = startY - e.clientY;
@@ -134,7 +128,7 @@ const DraggableSidebar = ({
         [position === 'right' ? 'width' : 'height']: position === 'right' ? minWidth : minHeight,
       };
       setSize(newSize);
-      onResize?.(newSize);
+      onWidthChange?.(newSize.width);
     } else {
       setIsCollapsed(true);
       const newSize = {
@@ -142,16 +136,17 @@ const DraggableSidebar = ({
         [position === 'right' ? 'width' : 'height']: COLLAPSED_SIZE,
       };
       setSize(newSize);
-      onResize?.(newSize);
+      onWidthChange?.(COLLAPSED_SIZE);
     }
   };
 
   const getStyle = () => {
     const baseStyle = {
       transition: isResizing ? 'none' : 'all 0.2s ease-out',
-      position: 'fixed',
       background: 'white',
       boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+      position: 'fixed',
+      zIndex: 10,
     };
 
     if (position === 'right') {
@@ -181,8 +176,8 @@ const DraggableSidebar = ({
       <div
         className={`absolute ${
           position === 'right'
-            ? 'left-0 top-0 w-4 h-full cursor-col-resize -ml-2'
-            : 'top-0 left-0 w-full h-4 cursor-row-resize -mt-2'
+            ? 'left-0 top-0 w-4 h-full cursor-col-resize -ml-2 z-10'
+            : 'top-0 left-0 w-full h-4 cursor-row-resize -mt-2 z-10'
         } group`}
         onMouseDown={handleResizeStart}
       >
@@ -255,4 +250,5 @@ const DraggableSidebar = ({
   );
 };
 
+export const COLLAPSED_SIZE = 40;
 export default DraggableSidebar;

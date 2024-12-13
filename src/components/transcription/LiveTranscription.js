@@ -33,6 +33,12 @@ function LiveTranscription() {
   const [transcriptionContent, setTranscriptionContent] = useState('');
   const [transcriptionLanguage, setTranscriptionLanguage] = useState('en');
   const [translationLanguage, setTranslationLanguage] = useState('zh');
+  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [sidebarState, setSidebarState] = useState({
+    isCollapsed: false,
+    size: { width: 400 },
+    COLLAPSED_SIZE: 40
+  });
 
   useEffect(() => {
     const fullTranscript = transcripts.map((t) => t.text).join('\n');
@@ -44,8 +50,14 @@ function LiveTranscription() {
   }, [transcripts, interimResult]);
 
   return (
-    <div className="flex h-screen">
-      <div className="flex-1 relative p-4">
+    <div className="h-screen overflow-hidden">
+      <div 
+        className="h-full p-4"
+        style={{ 
+          marginRight: sidebarState.isCollapsed ? sidebarState.COLLAPSED_SIZE : sidebarState.size.width,
+          transition: 'margin-right 0.2s ease-out'
+        }}
+      >
         <TranscriptList
           transcripts={transcripts}
           interimResult={interimResult}
@@ -62,8 +74,9 @@ function LiveTranscription() {
 
       <DraggableSidebar
         title="Controls"
-        defaultWidth={400}
+        defaultWidth={300}
         defaultTab="Transcription"
+        onStateChange={setSidebarState}
       >
         <div role="tabpanel" label="Transcription">
           <TranscriptionPanel
