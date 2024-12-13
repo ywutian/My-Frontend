@@ -26,7 +26,7 @@ function Transcription({ videoId }) {
     loadTranscription();
     // Set up polling if transcription is processing
     intervalRef.current = setInterval(loadTranscription, 10000);
-    
+
     // Cleanup interval on unmount
     return () => {
       if (intervalRef.current) {
@@ -35,9 +35,12 @@ function Transcription({ videoId }) {
     };
   }, [loadTranscription]);
 
-  if (loading) return <div className="text-center py-4">Loading transcription...</div>;
-  if (error) return <div className="text-center py-4 text-red-600">{error}</div>;
-  if (!transcription) return <div className="text-center py-4">No transcription available</div>;
+  if (loading)
+    return <div className="text-center py-4">Loading transcription...</div>;
+  if (error)
+    return <div className="text-center py-4 text-red-600">{error}</div>;
+  if (!transcription)
+    return <div className="text-center py-4">No transcription available</div>;
 
   return (
     <div className="bg-white rounded-lg p-4 shadow">
@@ -54,7 +57,8 @@ function Transcription({ videoId }) {
           {transcription.segments.map((segment, index) => (
             <div key={index} className="p-2 hover:bg-gray-50">
               <div className="text-gray-500 text-sm mb-1">
-                {formatTimestamp(segment.start)} - {formatTimestamp(segment.end)}
+                {formatTimestamp(segment.start)} -{' '}
+                {formatTimestamp(segment.end)}
               </div>
               <p>{segment.text}</p>
             </div>
@@ -71,4 +75,4 @@ function formatTimestamp(seconds) {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-export default Transcription; 
+export default Transcription;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   FiGrid, 
@@ -18,6 +18,8 @@ import BillingModal from '../billing/BillingModal';
 import SettingsModal from '../settings/SettingsModal';
 import { folderService } from '../../services/folderService';
 import ConfirmDialog from '../common/ConfirmDialog';
+import { db } from '../../db/db';
+import FolderSelector from '../Folder/FolderSelector';
 
 function Sidebar({ isOpen, onToggle }) {
   const [isFoldersExpanded, setIsFoldersExpanded] = useState(true);
@@ -34,34 +36,51 @@ function Sidebar({ isOpen, onToggle }) {
   const [error, setError] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState(null);
+  const [folders, setFolders] = useState([]);
+  const [showFolderSelector, setShowFolderSelector] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', icon: FiGrid, label: 'Dashboard', path: '/dashboard' },
     { id: 'notes', icon: FiFileText, label: 'All Notes', path: '/notes' },
   ];
 
-  const [folders, setFolders] = useState([
-    { id: 1, name: 'Study Notes', count: 5 },
-    { id: 2, name: 'Work', count: 3 },
-    { id: 3, name: 'Personal', count: 2 },
-  ]);
-
-  useEffect(() => {
-    fetchFolders();
-  }, []);
-
-  const fetchFolders = async () => {
+  const fetchFolders = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await folderService.getFolders();
-      setFolders(response);
+      const dbFolders = await db.folders.toArray();
+      
+      const foldersWithCounts = await Promise.all(
+        dbFolders.map(async (folder) => {
+          const count = await db.notes
+            .where('folderId')
+            .equals(folder.id)
+            .count();
+          return { ...folder, count };
+        })
+      );
+      
+      setFolders(foldersWithCounts);
     } catch (err) {
       setError('Failed to load folders');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchFolders();
+  }, [location.pathname, fetchFolders]);
+
+  useEffect(() => {
+    fetchFolders();
+    
+    const intervalId = setInterval(fetchFolders, 5000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchFolders]);
 
   const handleSettingsClick = (e) => {
     setShowSettingsMenu(!showSettingsMenu);
@@ -72,19 +91,36 @@ function Sidebar({ isOpen, onToggle }) {
   };
 
   const handleFolderClick = (folder, e) => {
-    e.preventDefault();
     if (e.type === 'contextmenu') {
       e.preventDefault();
       setSelectedFolder(folder);
       setShowFolderMenu(true);
     } else {
+      console.log('Navigating to folder:', folder.id);
       navigate(`/folders/${folder.id}`);
     }
   };
 
   const moveFolder = async (folderId, direction) => {
     try {
-      await folderService.moveFolder(folderId, direction);
+      const allFolders = await db.folders.toArray();
+      const currentIndex = allFolders.findIndex(f => f.id === folderId);
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+      if (newIndex < 0 || newIndex >= allFolders.length) return;
+
+      const folder1 = allFolders[currentIndex];
+      const folder2 = allFolders[newIndex];
+      
+      await db.folders.update(folder1.id, { 
+        lastModified: folder2.lastModified,
+        syncStatus: 'pending'
+      });
+      await db.folders.update(folder2.id, { 
+        lastModified: folder1.lastModified,
+        syncStatus: 'pending'
+      });
+
       await fetchFolders();
       setShowFolderMenu(false);
     } catch (err) {
@@ -95,7 +131,11 @@ function Sidebar({ isOpen, onToggle }) {
 
   const updateFolderName = async (folderId, newName) => {
     try {
-      await folderService.updateFolder(folderId, { name: newName });
+      await db.folders.update(folderId, {
+        name: newName,
+        lastModified: new Date().toISOString(),
+        syncStatus: 'pending'
+      });
       await fetchFolders();
       setEditingFolder(null);
     } catch (err) {
@@ -114,7 +154,13 @@ function Sidebar({ isOpen, onToggle }) {
     if (!folderToDelete) return;
     
     try {
-      await folderService.deleteFolder(folderToDelete.id);
+      await db.folders.delete(folderToDelete.id);
+      
+      await db.notes
+        .where('folderId')
+        .equals(folderToDelete.id)
+        .modify({ folderId: null });
+      
       await fetchFolders();
       setShowDeleteConfirm(false);
       setFolderToDelete(null);
@@ -122,6 +168,10 @@ function Sidebar({ isOpen, onToggle }) {
       setError('Failed to delete folder');
       console.error(err);
     }
+  };
+
+  const handleFolderChange = () => {
+    fetchFolders();
   };
 
   return (
@@ -341,6 +391,17 @@ function Sidebar({ isOpen, onToggle }) {
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
         </div>
+      )}
+
+      {showFolderSelector && (
+        <FolderSelector
+          onSelect={(folderId) => {
+            handleFolderClick(folderId);
+            setShowFolderSelector(false);
+          }}
+          onClose={() => setShowFolderSelector(false)}
+          onFolderChange={handleFolderChange}
+        />
       )}
     </div>
   );

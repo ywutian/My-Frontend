@@ -16,13 +16,14 @@ import FlashcardPanel from '../components/flashcards/FlashcardPanel';
 import { db } from '../db/db';
 import React from 'react';
 import MarkdownViewer from '../components/MarkdownViewer';
-
+import DraggableSidebar from '../components/layout/DraggableSidebar';
+import AiAssistant from '../components/ai/AiAssistant';
+import MindmapPanel from '../components/mindmap/MindmapPanel';
 function NoteDetail() {
   const { noteId } = useParams();
   const navigate = useNavigate();
   const [note, setNote] = useState(null);
   const [activeTab, setActiveTab] = useState('Note');
-  const [aiPanelWidth, setAiPanelWidth] = useState(300);
   const [isEditing, setIsEditing] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -33,15 +34,10 @@ function NoteDetail() {
     },
   ]);
   const [inputMessage, setInputMessage] = useState('');
-  const [isResizing, setIsResizing] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const COLLAPSE_THRESHOLD = 100; // 收起阈值
-  const COLLAPSED_WIDTH = 40; // 收起后宽度
-  const MIN_WIDTH = 280; // 最小展开宽度
-  const MAX_WIDTH = 800; // 最大宽度
   const [isLoading, setIsLoading] = useState(true);
   const [editContent, setEditContent] = useState('');
   const [shouldRender, setShouldRender] = useState(true);
+  const [sidebarSize, setSidebarSize] = useState({ width: 300, height: 300 });
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Podcast', 'Mindmap', 'About'];
 
@@ -97,41 +93,6 @@ function NoteDetail() {
     }
   };
 
-  const handleResizeStart = (e) => {
-    e.preventDefault();
-    setIsResizing(true);
-
-    const startX = e.clientX;
-    const startWidth = isCollapsed ? MIN_WIDTH : aiPanelWidth;
-
-    const handleMouseMove = (e) => {
-      const deltaX = startX - e.clientX;
-      const newWidth = startWidth + deltaX;
-
-      // 检查是否应该收起
-      if (newWidth < COLLAPSE_THRESHOLD) {
-        setIsCollapsed(true);
-        setAiPanelWidth(COLLAPSED_WIDTH);
-      } else {
-        setIsCollapsed(false);
-        // 限制最小和最大宽度
-        const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
-        setAiPanelWidth(clampedWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = 'auto';
-    };
-
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
   const handleShare = () => {
     // 实现分享能
     const shareUrl = `${window.location.origin}/notes/${noteId}`;
@@ -175,16 +136,6 @@ function NoteDetail() {
     }, 1000);
   };
 
-  const toggleCollapse = () => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-      setAiPanelWidth(MIN_WIDTH);
-    } else {
-      setIsCollapsed(true);
-      setAiPanelWidth(COLLAPSED_WIDTH);
-    }
-  };
-
   // 添加一个安全的内容获取函数
   const getSafeContent = () => {
     try {
@@ -193,6 +144,11 @@ function NoteDetail() {
       console.error('Error getting note content:', error);
       return '';
     }
+  };
+
+  // Add this handler for sidebar resize
+  const handleSidebarResize = (newSize) => {
+    setSidebarSize(newSize);
   };
 
   if (isLoading || !note) {
@@ -205,8 +161,15 @@ function NoteDetail() {
 
   return (
     <div className="h-screen flex">
-      {/* Main Content */}
-      <div id="note-container" className="flex-1 overflow-hidden flex flex-col">
+      {/* Main Content - Add dynamic style based on sidebar */}
+      <div 
+        id="note-container" 
+        className="flex-1 overflow-hidden flex flex-col"
+        style={{
+          width: `calc(100% - ${sidebarSize.width}px)`,
+          marginRight: `${sidebarSize.width}px`
+        }}
+      >
         {/* Header */}
         <header className="border-b p-4 flex justify-between items-center bg-white">
           <div className="flex items-center gap-4">
@@ -339,30 +302,8 @@ function NoteDetail() {
           )}
 
           {activeTab === 'Mindmap' && (
-            <div className="h-full p-6">
-              <div className="h-full bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">
-                  Mindmap Information
-                </h2>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Created</p>
-                    <p>{new Date(note.date).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Last Modified</p>
-                    <p>{new Date(note.lastModified).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Subject</p>
-                    <p>{note.subject}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Source</p>
-                    <p>{note.source}</p>
-                  </div>
-                </div>
-              </div>
+            <div className="h-full">
+              <MindmapPanel noteContent={note.content} />
             </div>
           )}
 
@@ -394,101 +335,21 @@ function NoteDetail() {
         </div>
       </div>
 
-      {/* Resizable AI Panel */}
-      <div
-        className={`relative bg-white border-l flex flex-col ${
-          isResizing ? 'select-none' : ''
-        }`}
-        style={{
-          width: aiPanelWidth,
-          transition: isResizing ? 'none' : 'width 0.2s ease-out',
-        }}
+      {/* AI Assistant with DraggableSidebar */}
+      <DraggableSidebar
+        title="AI Assistant"
+        defaultWidth={300}
+        minWidth={280}
+        maxWidth={800}
+        initialPosition="right"
+        defaultTab="Chat"
+        onResize={handleSidebarResize}
       >
-        {/* Resize Handle with Collapse Toggle */}
-        <div
-          className="absolute left-0 top-0 w-4 h-full cursor-col-resize group -ml-2"
-          onMouseDown={handleResizeStart}
-        >
-          <div
-            className={`absolute left-1/2 top-0 w-1 h-full -translate-x-1/2 ${
-              isResizing
-                ? 'bg-purple-500'
-                : 'bg-gray-200 group-hover:bg-purple-500'
-            }`}
-          />
-          <button
-            onClick={toggleCollapse}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            {isCollapsed ? <FiChevronLeft /> : <FiChevronRight />}
-          </button>
+        <div label="Chat">
+          <AiAssistant noteContent={note?.content || ''} />
         </div>
-
-        {/* AI Panel Content */}
-        {!isCollapsed ? (
-          <>
-            <div className="p-4 border-b">
-              <h2 className="text-xl font-semibold">AI Assistant</h2>
-              <p className="text-sm text-gray-600">
-                Ask me anything about this note...
-              </p>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.type === 'user'
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <form
-              onSubmit={handleSendMessage}
-              className="p-4 border-t bg-white"
-            >
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2"
-                  disabled={!inputMessage.trim()}
-                >
-                  <FiSend />
-                  Send
-                </button>
-              </div>
-            </form>
-          </>
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <span
-              className="text-gray-400 rotate-180"
-              style={{ writingMode: 'vertical-rl' }}
-            >
-              AI Assistant
-            </span>
-          </div>
-        )}
-      </div>
+      </DraggableSidebar>
     </div>
   );
 }
-
 export default NoteDetail;

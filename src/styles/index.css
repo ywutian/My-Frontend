@@ -66,3 +66,45 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 } 
+
+/* Custom styles for Mermaid container */
+.mermaid-container {
+  width: 100%;
+  height: 100%;
+  background-color: #f9f9f9; /* Set background color */
+  border-radius: 8px; /* Add rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow for better appearance */
+  padding: 20px; /* Add padding */
+  overflow: auto; /* Enable scrolling */
+}
+
+/* Customize the styles of mindmap nodes */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  fill: #ffffff; /* Set node background color */
+  stroke: #4a90e2; /* Set node border color */
+  stroke-width: 2px; /* Set node border width */
+}
+
+/* Customize the styles of mindmap connections */
+.mermaid .edgePath path {
+  stroke: #4a90e2; /* Set connection line color */
+  stroke-width: 2px; /* Set connection line width */
+}
+
+/* Adjust font styles in mindmap nodes */
+.mermaid .node text {
+  font-family: 'Arial, sans-serif'; /* Set font family */
+  font-size: 14px; /* Set font size */
+  fill: #333333; /* Set text color */
+}
+
+/* Add hover effects for nodes (optional) */
+.mermaid .node:hover rect,
+.mermaid .node:hover circle,
+.mermaid .node:hover ellipse {
+  fill: #e6f7ff; /* Change node background color on hover */
+  stroke: #007acc; /* Highlight node border color on hover */
+}

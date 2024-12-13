@@ -79,7 +79,7 @@ function Dashboard() {
         title,
         subject,
         audioLanguage,
-        noteLanguage
+        noteLanguage,
       });
 
       // 1. 转录音频
@@ -95,7 +95,7 @@ function Dashboard() {
         content: noteContent,
         audioLanguage,
         noteLanguage,
-        transcript
+        transcript,
       };
 
       const noteId = await saveNote(noteData);
@@ -111,7 +111,7 @@ function Dashboard() {
 
       setShowCreateNote(false);
       setIsLoading(false);
-      
+
       return noteId;
     } catch (error) {
       console.error('Error creating note:', error);
@@ -126,7 +126,7 @@ function Dashboard() {
       icon: '🎙️',
       title: 'Record or Upload Audio',
       subtitle: 'Upload an audio file',
-      bgColor: 'bg-blue-500'
+      bgColor: 'bg-blue-500',
     },
     {
       id: 'lecture',
@@ -134,34 +134,38 @@ function Dashboard() {
       title: 'Record Live Lecture',
       subtitle: 'Real time transcript',
       bgColor: 'bg-purple-500',
-      isNew: true
+      isNew: true,
     },
     {
       id: 'youtube',
       icon: '▶️',
       title: 'YouTube Video',
       subtitle: 'Paste a YouTube link',
-      bgColor: 'bg-red-500'
+      bgColor: 'bg-red-500',
     },
     {
       id: 'document',
       icon: '📄',
       title: 'Document Upload',
       subtitle: 'PDF,PPT,WORD,EXCEL,CSV,TXT',
-      bgColor: 'bg-green-500'
-    }
+      bgColor: 'bg-green-500',
+    },
   ];
 
   return (
     <ErrorBoundary>
       <div className="p-6">
-        <div className={`rounded-lg shadow-xl p-6 ${
-          theme === 'light' ? 'bg-white' : 'bg-gray-800 text-white'
-        }`}>
+        <div
+          className={`rounded-lg shadow-xl p-6 ${
+            theme === 'light' ? 'bg-white' : 'bg-gray-800 text-white'
+          }`}
+        >
           {!showLiveTranscription ? (
             <>
-              <h1 className="text-2xl font-bold mb-6 text-[#1e3d58]">Dashboard</h1>
-              
+              <h1 className="text-2xl font-bold mb-6 text-[#1e3d58]">
+                Dashboard
+              </h1>
+
               {/* Input Selection Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {inputOptions.map((option) => (
@@ -184,7 +188,9 @@ function Dashboard() {
 
               {/* Recent Notes Section */}
               <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4 text-[#1e3d58]">Recent Notes</h2>
+                <h2 className="text-xl font-semibold mb-4 text-[#1e3d58]">
+                  Recent Notes
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recentNotes.length > 0 ? (
                     recentNotes.map((note) => (
@@ -195,14 +201,15 @@ function Dashboard() {
                           title: note.title,
                           date: new Date(note.date).toLocaleDateString(),
                           preview: note.content.substring(0, 100) + '...',
-                          subject: note.subject
+                          subject: note.subject,
                         }}
                         onClick={() => navigate(`/notes/${note.id}`)}
                       />
                     ))
                   ) : (
                     <div className="col-span-3 text-center text-gray-500 py-8">
-                      No notes yet. Create your first note by clicking on "Record or Upload Audio"!
+                      No notes yet. Create your first note by clicking on
+                      "Record or Upload Audio"!
                     </div>
                   )}
                 </div>
@@ -216,7 +223,9 @@ function Dashboard() {
               )}
             </>
           ) : (
-            <LiveTranscription onClose={() => setShowLiveTranscription(false)} />
+            <LiveTranscription
+              onClose={() => setShowLiveTranscription(false)}
+            />
           )}
         </div>
       </div>
@@ -227,7 +236,7 @@ function Dashboard() {
         onSelect={handleSubjectSelect}
       />
 
-      <SettingsModal 
+      <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
@@ -241,4 +250,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;

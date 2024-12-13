@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import FolderPage from './pages/FolderPage';
@@ -8,7 +13,7 @@ import NoteDetail from './pages/NoteDetail';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-
+import MainView from './pages/MainView';
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
   const auth = useAuth();
@@ -26,45 +31,46 @@ function App() {
           <Router>
             <Routes>
               <Route path="/login" element={<Login />} />
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/dashboard" 
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/notes" 
+              <Route
+                path="/notes"
                 element={
                   <ProtectedRoute>
                     <Notes />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/notes/:noteId" 
+              <Route
+                path="/notes/:noteId"
                 element={
                   <ProtectedRoute>
                     <NoteDetail />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/folders/:id" 
+              <Route path="/mainview" element={<MainView />} />
+              <Route
+                path="/folders/:folderId"
                 element={
                   <ProtectedRoute>
                     <FolderPage />
                   </ProtectedRoute>
-                } 
+                }
               />
             </Routes>
           </Router>

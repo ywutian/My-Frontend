@@ -2,14 +2,14 @@ import Dexie from 'dexie';
 import { api } from '../services/api';
 
 export const db = new Dexie('notesApp');
-
-db.version(1).stores({
-  notes: '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage',
+db.version(2).stores({
+  notes:
+    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId',
+  folders: '++id, name, createdAt, lastModified, syncStatus',
   flashcards: '++id, noteId, front, back, syncStatus',
   syncQueue: '++id, operation, data, timestamp',
-  quizzes: '++id, noteId, questions, userAnswers, date, score'
+  quizzes: '++id, noteId, questions, userAnswers, date, score',
 });
-
 export const saveNote = async (noteData) => {
   try {
     // 准备笔记数据
@@ -17,7 +17,7 @@ export const saveNote = async (noteData) => {
       ...noteData,
       date: new Date().toISOString(),
       lastModified: new Date().toISOString(),
-      syncStatus: 'pending'
+      syncStatus: 'pending',
     };
 
     // 保存到本地数据库
@@ -32,7 +32,7 @@ export const saveNote = async (noteData) => {
       await db.syncQueue.add({
         operation: 'saveNote',
         data: note,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -48,7 +48,7 @@ export const getNote = async (id) => {
   try {
     // 先从本地获取
     const localNote = await db.notes.get(id);
-    
+
     // 尝试从服务器获取最新版本
     try {
       const serverNote = await api.getNoteFromServer(id);
@@ -56,7 +56,7 @@ export const getNote = async (id) => {
         // 服务器版本更新，更新本地数据
         await db.notes.put({
           ...serverNote,
-          syncStatus: 'synced'
+          syncStatus: 'synced',
         });
         return serverNote;
       }
@@ -74,7 +74,7 @@ export const getNote = async (id) => {
 // 同步队列处理函数
 export const processSyncQueue = async () => {
   const queue = await db.syncQueue.toArray();
-  
+
   for (const item of queue) {
     try {
       switch (item.operation) {
@@ -82,7 +82,10 @@ export const processSyncQueue = async () => {
           await api.saveNoteToServer(item.data);
           break;
         case 'saveFlashcards':
-          await api.saveFlashcardsToServer(item.data.noteId, item.data.flashcards);
+          await api.saveFlashcardsToServer(
+            item.data.noteId,
+            item.data.flashcards,
+          );
           break;
         // ... 其他操作
       }
@@ -95,4 +98,4 @@ export const processSyncQueue = async () => {
 };
 
 // 定期处理同步队列
-setInterval(processSyncQueue, 5 * 60 * 1000); // 每5分钟尝试同步一次 
+setInterval(processSyncQueue, 5 * 60 * 1000); // 每5分钟尝试同步一次

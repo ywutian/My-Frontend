@@ -1,121 +1,234 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiSearch, FiEdit2, FiTrash2, FiFolder } from 'react-icons/fi';
-import Sidebar from '../components/layout/Sidebar';
+import { db } from '../db/db';
+import {
+  addNoteToFolder,
+  removeFromFolder,
+} from '../services/folderOperations';
+import FolderSelector from '../components/Folder/FolderSelector';
+import NoteCard from '../components/notes/NoteCard';
+import { useNavigate } from 'react-router-dom';
 
 const Notes = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      title: 'Untitled Note',
-      date: '11/30/2024',
-      subject: 'No Subject',
-      content: 'Note content here...'
-    }
-  ]);
+  const [notes, setNotes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [showFolderSelector, setShowFolderSelector] = useState(false);
+
+  useEffect(() => {
+    const loadNotes = async () => {
+      try {
+        const allNotes = await db.notes.toArray();
+        setNotes(allNotes);
+      } catch (error) {
+        console.error('Error loading notes:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadNotes();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleRename = (noteId, newTitle) => {
-    setNotes(notes.map(note => 
-      note.id === noteId ? { ...note, title: newTitle } : note
-    ));
+  const handleRename = async (noteId, newTitle) => {
+    if (!newTitle) return;
+
+    try {
+      await db.notes.update(noteId, {
+        title: newTitle,
+        lastModified: new Date().toISOString(),
+        syncStatus: 'pending',
+      });
+      setNotes(
+        notes.map((note) =>
+          note.id === noteId ? { ...note, title: newTitle } : note,
+        ),
+      );
+    } catch (error) {
+      console.error('Error renaming note:', error);
+    }
   };
 
-  const handleDelete = (noteId) => {
-    setNotes(notes.filter(note => note.id !== noteId));
+  const handleDelete = async (noteId) => {
+    if (!window.confirm('Are you sure you want to delete this note?')) return;
+
+    try {
+      await db.notes.delete(noteId);
+      setNotes(notes.filter((note) => note.id !== noteId));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
   };
 
-  const handleAddToFolder = (noteId, folderId) => {
-    // Implementation for adding to folder
+  const handleAddToFolder = async (noteId) => {
+    setSelectedNote(noteId);
+    setShowFolderSelector(true);
   };
+
+  const handleFolderSelect = async (folderId) => {
+    try {
+      await addNoteToFolder(selectedNote, folderId);
+      setNotes(
+        notes.map((note) =>
+          note.id === selectedNote
+            ? { ...note, folderId, syncStatus: 'pending' }
+            : note,
+        ),
+      );
+    } catch (error) {
+      console.error('Error adding note to folder:', error);
+    } finally {
+      setShowFolderSelector(false);
+      setSelectedNote(null);
+    }
+  };
+
+  const handleRemoveFromFolder = async (noteId) => {
+    try {
+      await removeFromFolder(noteId);
+      setNotes(
+        notes.map((note) =>
+          note.id === noteId
+            ? { ...note, folderId: null, syncStatus: 'pending' }
+            : note,
+        ),
+      );
+    } catch (error) {
+      console.error('Error removing from folder:', error);
+    }
+  };
+
+  const handleNewNote = () => {
+    navigate('/dashboard');  // Navigate to new note page
+  };
+
+  const filteredNotes = notes
+    .filter(
+      (note) =>
+        note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.content?.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+    .sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.date) - new Date(a.date);
+      }
+      return (a.subject || '').localeCompare(b.subject || '');
+    });
+
+  const renderHeader = () => (
+    <div className="flex justify-between items-center mb-6">
+      <h1 className="text-2xl font-bold text-gray-800">
+        All Notes
+        <span className="text-sm text-gray-500 ml-2 font-normal">
+          {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+        </span>
+      </h1>
+      <button
+        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                   transition-colors flex items-center gap-2"
+        onClick={handleNewNote}
+      >
+        <FiEdit2 className="w-4 h-4" />
+        New Note
+      </button>
+    </div>
+  );
+
+  const renderSearchBar = () => (
+    <div className="flex items-center gap-4 mb-6">
+      <div className="flex-1 relative">
+        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search notes..."
+          className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 
+                     focus:ring-purple-500 bg-white transition-shadow hover:shadow-sm"
+          value={searchTerm}
+          onChange={handleSearch}
+        />
+      </div>
+      <select
+        className="border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 
+                   bg-white cursor-pointer hover:shadow-sm transition-shadow"
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+      >
+        <option value="date">Latest</option>
+        <option value="subject">Subject</option>
+        <option value="title">Title</option>
+      </select>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600"></div>
+        <span className="ml-3 text-gray-600">Loading notes...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar 
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
-        <div className="p-6">
-          {/* Header and Search */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">All Notes <span className="text-sm text-gray-500 ml-2">{notes.length} notes</span></h1>
-          </div>
+    <div className="min-h-screen bg-gray-50 w-full">
+      <main className="flex-1 h-full">
+        <div className="p-6 h-full">
+          <div className="max-w-7xl mx-auto">
+            {renderHeader()}
+            {renderSearchBar()}
 
-          {/* Search and Filter Bar */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search notes..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={searchTerm}
-                onChange={handleSearch}
-              />
-            </div>
-            <select
-              className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="date">Date</option>
-              <option value="subject">Subject</option>
-            </select>
-          </div>
-
-          {/* Notes List */}
-          <div className="space-y-2">
-            {notes.map(note => (
-              <div
-                key={note.id}
-                className="group flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    📝
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{note.title}</h3>
-                    <div className="text-sm text-gray-500">
-                      {note.date} • {note.subject}
-                    </div>
-                  </div>
+            {filteredNotes.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <FiSearch className="w-12 h-12 mx-auto mb-4" />
+                  {searchTerm ? 'No notes match your search' : 'No notes yet'}
                 </div>
-                
-                {/* Action Buttons - Only visible on hover */}
-                <div className="hidden group-hover:flex items-center gap-2">
-                  <button
-                    onClick={() => handleRename(note.id, prompt('Enter new title:', note.title))}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                  >
-                    <FiEdit2 className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(note.id)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                  >
-                    <FiTrash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                  <button
-                    onClick={() => handleAddToFolder(note.id)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                  >
-                    <FiFolder className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
+                <button
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                             transition-colors inline-flex items-center gap-2"
+                  onClick={handleNewNote}
+                >
+                  <FiEdit2 className="w-4 h-4" />
+                  Create your first note
+                </button>
               </div>
-            ))}
+            ) : (
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {filteredNotes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onClick={() => navigate(`/notes/${note.id}`)}
+                    onRename={(newTitle) => handleRename(note.id, newTitle)}
+                    onDelete={() => handleDelete(note.id)}
+                    onAddToFolder={() => handleAddToFolder(note.id)}
+                    onRemoveFromFolder={() => handleRemoveFromFolder(note.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
+
+          {showFolderSelector && (
+            <FolderSelector
+              onSelect={handleFolderSelect}
+              onClose={() => {
+                setShowFolderSelector(false);
+                setSelectedNote(null);
+              }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            />
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
-export default Notes; 
+export default Notes;

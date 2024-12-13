@@ -1,35 +1,18 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getTranscriptText } from '../../utils/transcriptionUtils'; // 引入工具函数
 
-export function TranscriptList({ transcripts, interimResult, isRecording, isTranslating }) {
+export function TranscriptList({
+  transcripts,
+  interimResult,
+  isRecording,
+  isTranslating,
+}) {
   const prevInterimRef = useRef('');
-  
-  // 计算历史文本和新增文本
-  const { historicalText, incrementalText } = useMemo(() => {
-    const historical = transcripts.map(t => t.text).join(' ');
-    
-    if (!interimResult) {
-      prevInterimRef.current = '';
-      return { historicalText: historical, incrementalText: '' };
-    }
 
-    const currentText = interimResult.text;
-    const prevText = prevInterimRef.current;
-    
-    // 计算真正的增量部分
-    let newIncrement = '';
-    if (currentText.startsWith(prevText)) {
-      newIncrement = currentText.slice(prevText.length);
-    } else {
-      newIncrement = currentText;
-    }
-    
-    prevInterimRef.current = currentText;
-    
-    return { 
-      historicalText: historical,
-      incrementalText: newIncrement.trim()
-    };
+  // 使用工具函数计算历史文本和新增文本
+  const { historicalText, incrementalText } = useMemo(() => {
+    return getTranscriptText(transcripts, interimResult, prevInterimRef);
   }, [transcripts, interimResult]);
 
   // 添加调试日志
@@ -37,7 +20,7 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
     console.log('TranscriptList updated:', {
       transcriptsCount: transcripts.length,
       hasInterim: !!interimResult,
-      translations: transcripts.map(t => t.translation).filter(Boolean)
+      translations: transcripts.map((t) => t.translation).filter(Boolean),
     });
   }, [transcripts, interimResult]);
 
@@ -47,7 +30,9 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className={`p-4 rounded-lg ${
-          isRecording ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'
+          isRecording
+            ? 'bg-blue-50 border border-blue-200'
+            : 'bg-gray-50 border border-gray-200'
         }`}
       >
         {/* 转录文本显示 */}
@@ -73,12 +58,10 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
             {(() => {
               // 收集所有翻译，包括历史记录和当前临时结果
               const translations = [
-                ...transcripts.map(t => t.translation),
-                interimResult?.translation
+                ...transcripts.map((t) => t.translation),
+                interimResult?.translation,
               ].filter(Boolean);
-              
-              console.log('Rendering translations:', translations);
-              
+
               return translations.join(' ');
             })()}
           </div>
@@ -88,7 +71,7 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
         {(interimResult || transcripts[transcripts.length - 1]) && (
           <div className="mt-2 text-xs text-gray-500">
             {new Date(
-              (interimResult || transcripts[transcripts.length - 1]).timestamp
+              (interimResult || transcripts[transcripts.length - 1]).timestamp,
             ).toLocaleTimeString()}
           </div>
         )}
@@ -97,4 +80,4 @@ export function TranscriptList({ transcripts, interimResult, isRecording, isTran
   );
 }
 
-export default TranscriptList; 
+export default TranscriptList;
