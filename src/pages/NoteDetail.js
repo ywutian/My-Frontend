@@ -37,8 +37,11 @@ function NoteDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [editContent, setEditContent] = useState('');
   const [shouldRender, setShouldRender] = useState(true);
-  const [sidebarSize, setSidebarSize] = useState({ width: 300, height: 300 });
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarState, setSidebarState] = useState({
+    isCollapsed: false,
+    size: { width: 300 },
+    COLLAPSED_SIZE: 40
+  });
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Podcast', 'Mindmap', 'About'];
 
@@ -147,15 +150,6 @@ function NoteDetail() {
     }
   };
 
-  // Add this handler for sidebar resize
-  const handleSidebarResize = useCallback((newSize) => {
-    setSidebarSize(newSize);
-  }, []);
-
-  const handleSidebarToggle = useCallback((isOpen) => {
-    setIsSidebarOpen(isOpen);
-  }, []);
-
   if (isLoading || !note) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -168,9 +162,10 @@ function NoteDetail() {
     <div className="h-screen flex relative">
       {/* Main Content */}
       <div 
-        className="absolute inset-0 flex flex-col transition-all duration-300 ease-in-out"
-        style={{
-          right: isSidebarOpen ? `${sidebarSize.width}px` : '40px',  // Use COLLAPSED_SIZE
+        className="flex-1 flex flex-col"
+        style={{ 
+          marginRight: `${sidebarState.isCollapsed ? sidebarState.COLLAPSED_SIZE : sidebarState.size.width}px`,
+          transition: 'margin-right 0.2s ease-out'
         }}
       >
         {/* Header */}
@@ -345,10 +340,9 @@ function NoteDetail() {
         minWidth={280}
         initialPosition="right"
         defaultTab="Chat"
-        onResize={handleSidebarResize}
-        onToggle={handleSidebarToggle}
+        onStateChange={setSidebarState}
       >
-        <div label="Chat">
+        <div role="tabpanel" label="Chat">
           <AiAssistant noteContent={note?.content || ''} />
         </div>
       </DraggableSidebar>

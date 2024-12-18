@@ -17,8 +17,7 @@ const DraggableSidebar = ({
   maxHeight = 600,
   initialPosition = 'right',
   defaultTab,
-  onResize,
-  onToggle,
+  onStateChange,
 }) => {
   const [size, setSize] = useState({
     width: defaultWidth,
@@ -42,12 +41,12 @@ const DraggableSidebar = ({
   const POSITION_SWITCH_THRESHOLD = 100;
 
   useEffect(() => {
-    onToggle?.(!isCollapsed);
-  }, [isCollapsed, onToggle]);
-
-  useEffect(() => {
-    onResize?.(size);
-  }, [size, onResize]);
+    onStateChange?.({
+      isCollapsed,
+      size,
+      COLLAPSED_SIZE
+    });
+  }, [isCollapsed, size, onStateChange]);
 
   const handleResizeStart = (e) => {
     e.preventDefault();
@@ -67,13 +66,11 @@ const DraggableSidebar = ({
           setIsCollapsed(true);
           const newSize = { width: COLLAPSED_SIZE, height: size.height };
           setSize(newSize);
-          onResize?.(COLLAPSED_SIZE);
         } else {
           setIsCollapsed(false);
           const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
           const newSize = { width: clampedWidth, height: size.height };
           setSize(newSize);
-          onResize?.(clampedWidth);
         }
       } else {
         const deltaY = startY - e.clientY;

@@ -54,8 +54,7 @@ function LiveTranscription() {
       <div 
         className="h-full p-4"
         style={{ 
-          marginRight: sidebarState.isCollapsed ? sidebarState.COLLAPSED_SIZE : sidebarState.size.width,
-          transition: 'margin-right 0.2s ease-out'
+          marginRight: sidebarState.isCollapsed ? `${sidebarState.COLLAPSED_SIZE}px` : `${sidebarState.size.width}px`
         }}
       >
         <TranscriptList
@@ -75,6 +74,8 @@ function LiveTranscription() {
       <DraggableSidebar
         title="Controls"
         defaultWidth={300}
+        minWidth={280}
+        initialPosition="right"
         defaultTab="Transcription"
         onStateChange={setSidebarState}
       >
