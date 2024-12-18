@@ -17,8 +17,8 @@ const DraggableSidebar = ({
   maxHeight = 600,
   initialPosition = 'right',
   defaultTab,
-  onWidthChange,
-  onStateChange,
+  onResize,
+  onToggle,
 }) => {
   const [size, setSize] = useState({
     width: defaultWidth,
@@ -42,12 +42,12 @@ const DraggableSidebar = ({
   const POSITION_SWITCH_THRESHOLD = 100;
 
   useEffect(() => {
-    onStateChange?.({
-      isCollapsed,
-      size,
-      COLLAPSED_SIZE
-    });
-  }, [isCollapsed, size, onStateChange]);
+    onToggle?.(!isCollapsed);
+  }, [isCollapsed, onToggle]);
+
+  useEffect(() => {
+    onResize?.(size);
+  }, [size, onResize]);
 
   const handleResizeStart = (e) => {
     e.preventDefault();
@@ -67,13 +67,13 @@ const DraggableSidebar = ({
           setIsCollapsed(true);
           const newSize = { width: COLLAPSED_SIZE, height: size.height };
           setSize(newSize);
-          onWidthChange?.(COLLAPSED_SIZE);
+          onResize?.(COLLAPSED_SIZE);
         } else {
           setIsCollapsed(false);
           const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
           const newSize = { width: clampedWidth, height: size.height };
           setSize(newSize);
-          onWidthChange?.(clampedWidth);
+          onResize?.(clampedWidth);
         }
       } else {
         const deltaY = startY - e.clientY;
@@ -121,23 +121,7 @@ const DraggableSidebar = ({
   };
 
   const toggleCollapse = () => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-      const newSize = {
-        ...size,
-        [position === 'right' ? 'width' : 'height']: position === 'right' ? minWidth : minHeight,
-      };
-      setSize(newSize);
-      onWidthChange?.(newSize.width);
-    } else {
-      setIsCollapsed(true);
-      const newSize = {
-        ...size,
-        [position === 'right' ? 'width' : 'height']: COLLAPSED_SIZE,
-      };
-      setSize(newSize);
-      onWidthChange?.(COLLAPSED_SIZE);
-    }
+    setIsCollapsed(prev => !prev);
   };
 
   const getStyle = () => {
@@ -145,7 +129,7 @@ const DraggableSidebar = ({
       transition: isResizing ? 'none' : 'all 0.2s ease-out',
       background: 'white',
       boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-      position: 'fixed',
+      position: 'absolute',
       zIndex: 10,
     };
 
@@ -154,8 +138,8 @@ const DraggableSidebar = ({
         ...baseStyle,
         top: 0,
         right: 0,
-        width: size.width,
-        height: '100vh',
+        width: isCollapsed ? COLLAPSED_SIZE : size.width,
+        height: '100%',
         borderLeft: '1px solid #e5e7eb',
       };
     } else {

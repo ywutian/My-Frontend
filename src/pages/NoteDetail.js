@@ -38,6 +38,7 @@ function NoteDetail() {
   const [editContent, setEditContent] = useState('');
   const [shouldRender, setShouldRender] = useState(true);
   const [sidebarSize, setSidebarSize] = useState({ width: 300, height: 300 });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Podcast', 'Mindmap', 'About'];
 
@@ -147,9 +148,13 @@ function NoteDetail() {
   };
 
   // Add this handler for sidebar resize
-  const handleSidebarResize = (newSize) => {
+  const handleSidebarResize = useCallback((newSize) => {
     setSidebarSize(newSize);
-  };
+  }, []);
+
+  const handleSidebarToggle = useCallback((isOpen) => {
+    setIsSidebarOpen(isOpen);
+  }, []);
 
   if (isLoading || !note) {
     return (
@@ -160,14 +165,12 @@ function NoteDetail() {
   }
 
   return (
-    <div className="h-screen flex">
-      {/* Main Content - Add dynamic style based on sidebar */}
+    <div className="h-screen flex relative">
+      {/* Main Content */}
       <div 
-        id="note-container" 
-        className="flex-1 overflow-hidden flex flex-col"
+        className="absolute inset-0 flex flex-col transition-all duration-300 ease-in-out"
         style={{
-          width: `calc(100% - ${sidebarSize.width}px)`,
-          marginRight: `${sidebarSize.width}px`
+          right: isSidebarOpen ? `${sidebarSize.width}px` : '40px',  // Use COLLAPSED_SIZE
         }}
       >
         {/* Header */}
@@ -234,12 +237,12 @@ function NoteDetail() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto bg-gray-50">
+        <div className="flex-1 overflow-auto bg-gray-50 p-2">
           {activeTab === 'Note' && (
-            <div className="h-full bg-white p-6 rounded-lg shadow-sm relative">
+            <div className="h-full bg-white p-2 rounded-lg shadow-sm relative mx-auto" >
               {/* 编辑模式 */}
               <textarea
-                className="absolute inset-0 w-full h-full p-4 border rounded-lg font-mono"
+                className="absolute inset-0 w-full h-full p-5 border rounded-lg font-mono"
                 style={{
                   visibility: isEditing ? 'visible' : 'hidden',
                   pointerEvents: isEditing ? 'auto' : 'none',
@@ -250,7 +253,7 @@ function NoteDetail() {
 
               {/* 查看模式 */}
               <div
-                className="absolute inset-0 w-full h-full overflow-auto"
+                className="absolute inset-0 w-full h-full overflow-auto px-5"
                 style={{
                   visibility: !isEditing ? 'visible' : 'hidden',
                   pointerEvents: !isEditing ? 'auto' : 'none',
@@ -340,10 +343,10 @@ function NoteDetail() {
         title="AI Assistant"
         defaultWidth={300}
         minWidth={280}
-        maxWidth={800}
         initialPosition="right"
         defaultTab="Chat"
         onResize={handleSidebarResize}
+        onToggle={handleSidebarToggle}
       >
         <div label="Chat">
           <AiAssistant noteContent={note?.content || ''} />
