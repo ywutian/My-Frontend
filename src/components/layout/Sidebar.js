@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   FiGrid, 
@@ -38,6 +38,7 @@ function Sidebar({ isOpen, onToggle }) {
   const [folderToDelete, setFolderToDelete] = useState(null);
   const [folders, setFolders] = useState([]);
   const [showFolderSelector, setShowFolderSelector] = useState(false);
+  const settingsMenuRef = useRef(null);
 
   const menuItems = [
     { id: 'dashboard', icon: FiGrid, label: 'Dashboard', path: '/dashboard' },
@@ -81,6 +82,19 @@ function Sidebar({ isOpen, onToggle }) {
       clearInterval(intervalId);
     };
   }, [fetchFolders]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
+        setShowSettingsMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSettingsClick = (e) => {
     setShowSettingsMenu(!showSettingsMenu);
@@ -328,7 +342,10 @@ function Sidebar({ isOpen, onToggle }) {
 
         {/* Settings Menu Dropdown */}
         {showSettingsMenu && (
-          <div className="absolute bottom-16 left-0 w-full bg-white border rounded-lg shadow-lg p-2">
+          <div 
+            ref={settingsMenuRef}
+            className="absolute bottom-16 left-0 w-full bg-white border rounded-lg shadow-lg p-2"
+          >
             <button
               onClick={() => {
                 setShowSettings(true);
