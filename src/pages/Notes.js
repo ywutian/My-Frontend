@@ -18,17 +18,31 @@ const Notes = () => {
   const [selectedNote, setSelectedNote] = useState(null);
   const [showFolderSelector, setShowFolderSelector] = useState(false);
 
+  const loadNotes = async () => {
+    try {
+      setIsLoading(true);
+      const allNotes = await db.notes.toArray();
+      
+      // Get folder names for notes that are in folders
+      const notesWithFolderNames = await Promise.all(
+        allNotes.map(async (note) => {
+          if (note.folderId) {
+            const folder = await db.folders.get(note.folderId);
+            return { ...note, folderName: folder?.name };
+          }
+          return note;
+        })
+      );
+      
+      setNotes(notesWithFolderNames);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        const allNotes = await db.notes.toArray();
-        setNotes(allNotes);
-      } catch (error) {
-        console.error('Error loading notes:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadNotes();
   }, []);
 
@@ -45,11 +59,7 @@ const Notes = () => {
         lastModified: new Date().toISOString(),
         syncStatus: 'pending',
       });
-      setNotes(
-        notes.map((note) =>
-          note.id === noteId ? { ...note, title: newTitle } : note,
-        ),
-      );
+      await loadNotes(); // Reload notes to get updated data
     } catch (error) {
       console.error('Error renaming note:', error);
     }
@@ -74,13 +84,7 @@ const Notes = () => {
   const handleFolderSelect = async (folderId) => {
     try {
       await addNoteToFolder(selectedNote, folderId);
-      setNotes(
-        notes.map((note) =>
-          note.id === selectedNote
-            ? { ...note, folderId, syncStatus: 'pending' }
-            : note,
-        ),
-      );
+      await loadNotes(); // Reload notes to get updated folder information
     } catch (error) {
       console.error('Error adding note to folder:', error);
     } finally {
@@ -92,20 +96,14 @@ const Notes = () => {
   const handleRemoveFromFolder = async (noteId) => {
     try {
       await removeFromFolder(noteId);
-      setNotes(
-        notes.map((note) =>
-          note.id === noteId
-            ? { ...note, folderId: null, syncStatus: 'pending' }
-            : note,
-        ),
-      );
+      await loadNotes(); // Reload notes to get updated folder information
     } catch (error) {
       console.error('Error removing from folder:', error);
     }
   };
 
   const handleNewNote = () => {
-    navigate('/dashboard');  // Navigate to new note page
+    navigate('/dashboard');
   };
 
   const filteredNotes = notes
@@ -116,9 +114,9 @@ const Notes = () => {
     )
     .sort((a, b) => {
       if (sortBy === 'date') {
-        return new Date(b.date) - new Date(a.date);
+        return new Date(b.lastModified || b.date) - new Date(a.lastModified || a.date);
       }
-      return (a.subject || '').localeCompare(b.subject || '');
+      return (a.title || '').localeCompare(b.title || '');
     });
 
   const renderHeader = () => (

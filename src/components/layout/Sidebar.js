@@ -39,6 +39,7 @@ function Sidebar({ isOpen, onToggle }) {
   const [folders, setFolders] = useState([]);
   const [showFolderSelector, setShowFolderSelector] = useState(false);
   const settingsMenuRef = useRef(null);
+  const folderMenuRef = useRef(null);
 
   const menuItems = [
     { id: 'dashboard', icon: FiGrid, label: 'Dashboard', path: '/dashboard' },
@@ -51,16 +52,24 @@ function Sidebar({ isOpen, onToggle }) {
       const dbFolders = await db.folders.toArray();
       
       const foldersWithCounts = await Promise.all(
-        dbFolders.map(async (folder) => {
+        dbFolders.map(async (folder, index) => {
           const count = await db.notes
             .where('folderId')
             .equals(folder.id)
             .count();
-          return { ...folder, count };
+          return { 
+            ...folder, 
+            count,
+            position: folder.position ?? index 
+          };
         })
       );
       
-      setFolders(foldersWithCounts);
+      const sortedFolders = foldersWithCounts.sort((a, b) => 
+        (a.position ?? 0) - (b.position ?? 0)
+      );
+      
+      setFolders(sortedFolders);
     } catch (err) {
       setError('Failed to load folders');
       console.error(err);
@@ -87,6 +96,9 @@ function Sidebar({ isOpen, onToggle }) {
     const handleClickOutside = (event) => {
       if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
         setShowSettingsMenu(false);
+      }
+      if (folderMenuRef.current && !folderMenuRef.current.contains(event.target)) {
+        setShowFolderMenu(false);
       }
     };
 
@@ -126,12 +138,17 @@ function Sidebar({ isOpen, onToggle }) {
       const folder1 = allFolders[currentIndex];
       const folder2 = allFolders[newIndex];
       
+      const tempPosition = folder1.position || currentIndex;
+      
       await db.folders.update(folder1.id, { 
-        lastModified: folder2.lastModified,
+        position: folder2.position || newIndex,
+        lastModified: new Date().toISOString(),
         syncStatus: 'pending'
       });
+      
       await db.folders.update(folder2.id, { 
-        lastModified: folder1.lastModified,
+        position: tempPosition,
+        lastModified: new Date().toISOString(),
         syncStatus: 'pending'
       });
 
@@ -290,7 +307,10 @@ function Sidebar({ isOpen, onToggle }) {
 
                 {/* Folder Context Menu */}
                 {showFolderMenu && selectedFolder?.id === folder.id && (
-                  <div className="absolute left-full ml-2 bg-white border rounded-lg shadow-lg p-2 z-30">
+                  <div 
+                    ref={folderMenuRef}
+                    className="absolute left-full ml-2 bg-white border rounded-lg shadow-lg p-2 z-30"
+                  >
                     <button
                       onClick={() => moveFolder(folder.id, 'up')}
                       className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded flex items-center"
