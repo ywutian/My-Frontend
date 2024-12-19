@@ -336,7 +336,7 @@ function NoteDetail() {
       {/* AI Assistant with DraggableSidebar */}
       <DraggableSidebar
         title="AI Assistant"
-        defaultWidth={300}
+        defaultWidth={350}
         minWidth={280}
         initialPosition="right"
         defaultTab="Chat"
