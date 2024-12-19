@@ -260,15 +260,17 @@ function NoteDetail() {
           )}
 
           {activeTab === 'Quiz' && (
-            <div className="h-full">
-              <QuizPanel noteContent={note.content} noteId={note.id} />
-            </div>
+            <QuizPanel 
+              noteContent={note?.content} 
+              noteId={note?.id} 
+            />
           )}
 
           {activeTab === 'Flashcards' && (
-            <div className="h-full">
-              <FlashcardPanel />
-            </div>
+            <FlashcardPanel 
+              noteContent={note?.content} 
+              noteId={note?.id} 
+            />
           )}
 
           {activeTab === 'Podcast' && (
