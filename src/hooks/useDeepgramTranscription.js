@@ -41,27 +41,37 @@ export function useDeepgramTranscription() {
 
   const cleanup = useCallback(() => {
     console.log('Cleaning up resources...');
+    
     if (deepgramRef.current) {
+      // 先记录状态
+      const finalState = deepgramRef.current.getReadyState();
+      console.log('Final connection state:', finalState);
+      
+      // 然后关闭连接
       console.log('Closing Deepgram connection...');
       deepgramRef.current.finish();
       deepgramRef.current = null;
     }
+
     if (streamRef.current) {
       console.log('Stopping media stream...');
       const tracks = streamRef.current.getTracks();
       tracks.forEach(track => track.stop());
       streamRef.current = null;
     }
+
     if (processorRef.current) {
       console.log('Disconnecting audio processor...');
       processorRef.current.disconnect();
       processorRef.current = null;
     }
+
     if (audioContextRef.current) {
       console.log('Closing audio context...');
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
+
     audioBufferRef.current = [];
     lastSendTimeRef.current = 0;
     setIsRecording(false);
@@ -187,9 +197,9 @@ export function useDeepgramTranscription() {
       let lastLogTime = Date.now();
       const LOG_INTERVAL = 5000; // 每5秒输出一次统计信息
 
-      const BUFFER_DURATION = 700;     
+      const BUFFER_DURATION = 300;     
       const SILENCE_THRESHOLD = 0.005;  
-      const MIN_SAMPLES_FOR_PROCESSING = 16384; 
+      const MIN_SAMPLES_FOR_PROCESSING = 4096; 
 
       processorRef.current.onaudioprocess = (e) => {
         if (!deepgramRef.current) return;
@@ -285,6 +295,25 @@ export function useDeepgramTranscription() {
 
   const stopRecording = useCallback(() => {
     console.log('Stopping recording...');
+    
+    // 先发送缓冲区中剩余的音频数据
+    if (deepgramRef.current && audioBufferRef.current.length > 0) {
+      try {
+        console.log('Sending remaining audio data before stopping:', {
+          剩余数据大小: audioBufferRef.current.length
+        });
+        
+        const finalBuffer = new Int16Array(audioBufferRef.current);
+        deepgramRef.current.send(finalBuffer);
+        
+        // 清空缓冲区
+        audioBufferRef.current = [];
+      } catch (error) {
+        console.error('Error sending final audio data:', error);
+      }
+    }
+
+    // 然后执行清理操作
     cleanup();
   }, [cleanup]);
 
