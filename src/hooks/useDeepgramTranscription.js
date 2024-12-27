@@ -68,7 +68,7 @@ export function useDeepgramTranscription() {
     console.log('Cleanup completed');
   }, []);
 
-  const startRecording = useCallback(async (onTranscriptReceived, onNewTranscriptForTranslation = null) => {
+  const startRecording = useCallback(async (onTranscriptReceived) => {
     try {
       console.log('Starting recording process...');
       
@@ -128,7 +128,6 @@ export function useDeepgramTranscription() {
       // 设置事件监听器
       deepgramRef.current.on(LiveTranscriptionEvents.Open, () => {
         console.log('Deepgram connection opened successfully');
-        console.log('Connection state:', deepgramRef.current.getReadyState());
         setIsRecording(true);
       });
 
@@ -155,7 +154,6 @@ export function useDeepgramTranscription() {
 
         // 检查置信度
         const confidence = transcript.confidence;
-        //console.log(`当前置信度: ${confidence}`);
         
         // 构建转录数据
         const transcriptSegment = {
@@ -182,40 +180,6 @@ export function useDeepgramTranscription() {
 
         // 总是调用回调，让上层决定是否需要翻译
         onTranscriptReceived(transcriptData);
-
-        if (onNewTranscriptForTranslation && 
-            (data.is_final || transcriptSegment.isStable) && 
-            confidence >= CONFIDENCE_THRESHOLD) {  // 添加置信度检查
-          
-          console.log('Transcript meets confidence threshold for translation:', {
-            confidence,
-            threshold: CONFIDENCE_THRESHOLD,
-            text: transcriptSegment.text
-          });
-
-          onNewTranscriptForTranslation({
-            id: transcriptSegment.id,
-            text: transcriptSegment.text,
-            confidence: confidence,
-            startTime: transcriptSegment.startTime,
-            endTime: transcriptSegment.endTime,
-            words: transcriptSegment.words,
-            isFinal: data.is_final,
-            onTranslationComplete: (id, translation) => {
-              onTranscriptReceived({
-                ...transcriptData,
-                translation,
-                id
-              });
-            }
-          });
-        } else if (confidence < CONFIDENCE_THRESHOLD) {
-          console.log('Skipping translation due to low confidence:', {
-            confidence,
-            threshold: CONFIDENCE_THRESHOLD,
-            text: transcriptSegment.text
-          });
-        }
       });
 
       // 音频处理逻辑
@@ -274,7 +238,7 @@ export function useDeepgramTranscription() {
 
         // console.log('发送条件检查:', {
         //   缓冲区大小: audioBufferRef.current.length,
-        //   最小样本要求: MIN_SAMPLES_FOR_PROCESSING,
+        //   最小样本数要求: MIN_SAMPLES_FOR_PROCESSING,
         //   距离上次发送: `${timeSinceLastSend}ms`,
         //   时间间隔要求: BUFFER_DURATION,
         //   满足样本条件: hasEnoughSamples,
@@ -319,6 +283,11 @@ export function useDeepgramTranscription() {
     }
   }, [cleanup]);
 
+  const stopRecording = useCallback(() => {
+    console.log('Stopping recording...');
+    cleanup();
+  }, [cleanup]);
+
   const convertFloat32ToInt16 = (float32Array) => {
     try {
       const int16Array = new Int16Array(float32Array.length);
@@ -337,6 +306,6 @@ export function useDeepgramTranscription() {
     isRecording,
     error,
     startRecording,
-    stopRecording: cleanup
+    stopRecording
   };
 } 

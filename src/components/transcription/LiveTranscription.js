@@ -27,6 +27,7 @@ function LiveTranscription() {
       translateText,
       startRecording,
       stopRecording,
+      isRecording,
       transcripts,
     });
 

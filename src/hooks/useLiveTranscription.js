@@ -7,6 +7,7 @@ export const useLiveTranscription = ({
   translateText,
   startRecording,
   stopRecording,
+  isRecording,
   transcripts,
 }) => {
   const transcriptHandlerRef = useRef(null);
@@ -46,20 +47,21 @@ export const useLiveTranscription = ({
 
   // 录音切换逻辑
   const handleRecordingToggle = useCallback(() => {
-    if (startRecording && stopRecording) {
-      if (transcriptHandlerRef.current) {
-        const handleTranscriptWithLatestState = (data) => {
-          transcriptHandlerRef.current(data);
-        };
+    if (!startRecording || !stopRecording) return;
 
-        if (startRecording.isRecording) {
-          stopRecording();
-        } else {
-          startRecording(handleTranscriptWithLatestState);
+    if (isRecording) {
+      console.log('Currently recording, stopping...');
+      stopRecording();
+    } else {
+      console.log('Not recording, starting...');
+      const handleTranscriptWithLatestState = (data) => {
+        if (transcriptHandlerRef.current) {
+          transcriptHandlerRef.current(data);
         }
-      }
+      };
+      startRecording(handleTranscriptWithLatestState);
     }
-  }, [startRecording, stopRecording]);
+  }, [isRecording, startRecording, stopRecording]);
 
   // 翻译切换逻辑
   const handleTranslationToggle = useCallback(async () => {
