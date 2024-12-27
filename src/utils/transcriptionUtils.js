@@ -1,29 +1,21 @@
-export const getTranscriptText = (
-  transcripts,
-  interimResult,
-  prevInterimRef,
-) => {
-  const historical = transcripts.map((t) => t.text).join(' ');
+export const getTranscriptText = (transcripts, interimResult, prevInterimRef) => {
+  console.log('Processing text:', {
+    transcriptsCount: transcripts.length,
+    transcriptTexts: transcripts.map(t => t.text),
+    hasInterim: !!interimResult,
+    interimText: interimResult?.text
+  });
 
-  if (!interimResult) {
-    prevInterimRef.current = '';
-    return { historicalText: historical, incrementalText: '' };
+  const historicalText = transcripts.map(t => t.text).join(' ');
+
+  let incrementalText = '';
+  if (interimResult?.text) {
+    incrementalText = interimResult.text;
+    if (prevInterimRef.current !== incrementalText) {
+      prevInterimRef.current = incrementalText;
+      console.log('Interim text updated:', incrementalText);
+    }
   }
 
-  const currentText = interimResult.text;
-  const prevText = prevInterimRef.current;
-
-  let newIncrement = '';
-  if (currentText.startsWith(prevText)) {
-    newIncrement = currentText.slice(prevText.length);
-  } else {
-    newIncrement = currentText;
-  }
-
-  prevInterimRef.current = currentText;
-
-  return {
-    historicalText: historical,
-    incrementalText: newIncrement.trim(),
-  };
+  return { historicalText, incrementalText };
 };

@@ -162,6 +162,21 @@ export function useDeepgramTranscription() {
         const transcript = data?.channel?.alternatives?.[0];
         if (!transcript?.words?.length) return;
 
+        // 添加详细的日志输出
+        console.log('Received Deepgram transcript:', {
+          isFinal: data.is_final,
+          confidence: transcript.confidence,
+          text: transcript.words.map(w => w.punctuated_word || w.word).join(' '),
+          words: transcript.words.map(w => ({
+            word: w.punctuated_word || w.word,
+            start: w.start,
+            end: w.end,
+            confidence: w.confidence
+          })),
+          duration: transcript.words[transcript.words.length - 1]?.end - transcript.words[0]?.start,
+          timestamp: new Date().toISOString()
+        });
+
         // 检查置信度
         const confidence = transcript.confidence;
         
@@ -197,9 +212,10 @@ export function useDeepgramTranscription() {
       let lastLogTime = Date.now();
       const LOG_INTERVAL = 5000; // 每5秒输出一次统计信息
 
-      const BUFFER_DURATION = 300;     
+      const BUFFER_DURATION = 300;     // 降低到100ms
       const SILENCE_THRESHOLD = 0.005;  
-      const MIN_SAMPLES_FOR_PROCESSING = 4096; 
+      const MIN_SAMPLES_FOR_PROCESSING = 2048;  // 降低样本数要求
+      const MAX_BUFFER_SIZE = 8192;    // 添加最大缓冲区大小
 
       processorRef.current.onaudioprocess = (e) => {
         if (!deepgramRef.current) return;
@@ -244,18 +260,11 @@ export function useDeepgramTranscription() {
         // 更保守的数据发送策略
         const timeSinceLastSend = currentTime - lastSendTimeRef.current;
         const hasEnoughSamples = audioBufferRef.current.length >= MIN_SAMPLES_FOR_PROCESSING;
+        const bufferIsFull = audioBufferRef.current.length >= MAX_BUFFER_SIZE;
         const hasEnoughTime = timeSinceLastSend >= BUFFER_DURATION;
 
-        // console.log('发送条件检查:', {
-        //   缓冲区大小: audioBufferRef.current.length,
-        //   最小样本数要求: MIN_SAMPLES_FOR_PROCESSING,
-        //   距离上次发送: `${timeSinceLastSend}ms`,
-        //   时间间隔要求: BUFFER_DURATION,
-        //   满足样本条件: hasEnoughSamples,
-        //   满足时间条件: hasEnoughTime
-        // });
-
-        const shouldSendData = hasEnoughTime && hasEnoughSamples;
+        // 满足任一条件就发送
+        const shouldSendData = bufferIsFull || (hasEnoughTime && hasEnoughSamples);
 
         if (shouldSendData && audioBufferRef.current.length > 0) {
           try {
@@ -296,7 +305,6 @@ export function useDeepgramTranscription() {
   const stopRecording = useCallback(() => {
     console.log('Stopping recording...');
     
-    // 先发送缓冲区中剩余的音频数据
     if (deepgramRef.current && audioBufferRef.current.length > 0) {
       try {
         console.log('Sending remaining audio data before stopping:', {
@@ -306,15 +314,19 @@ export function useDeepgramTranscription() {
         const finalBuffer = new Int16Array(audioBufferRef.current);
         deepgramRef.current.send(finalBuffer);
         
-        // 清空缓冲区
-        audioBufferRef.current = [];
+        // 给 Deepgram 一些时间处理最后的数据
+        setTimeout(() => {
+          console.log('Processing completed, cleaning up...');
+          cleanup();
+        }, 1000); // 等待1秒让 Deepgram 处理数据
+        
       } catch (error) {
         console.error('Error sending final audio data:', error);
+        cleanup();
       }
+    } else {
+      cleanup();
     }
-
-    // 然后执行清理操作
-    cleanup();
   }, [cleanup]);
 
   const convertFloat32ToInt16 = (float32Array) => {

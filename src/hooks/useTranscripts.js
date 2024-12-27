@@ -8,6 +8,13 @@ export function useTranscripts() {
     const transcript = data?.channel?.alternatives?.[0]?.processedTranscript;
     if (!transcript) return;
 
+    console.log('Transcript update:', {
+      type: transcript.isFinal ? 'final' : 'interim',
+      text: transcript.text,
+      confidence: transcript.confidence,
+      currentTranscripts: transcripts.length
+    });
+
     if (transcript.isFinal) {
       setTranscripts(prev => [...prev, {
         ...transcript,
@@ -22,7 +29,7 @@ export function useTranscripts() {
         translation: data.translation
       });
     }
-  }, []);
+  }, [transcripts.length]);
 
   const updateTranscriptTranslations = useCallback((id, translation) => {
     console.log('Updating translation:', { id, translation });
