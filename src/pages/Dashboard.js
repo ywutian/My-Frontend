@@ -11,6 +11,7 @@ import CreateNoteModal from '../components/notes/CreateNoteModal';
 import { transcribeAudio } from '../services/transcriptionService';
 import { generateNote, saveNote } from '../services/noteGenerationService';
 import { db } from '../db/db';
+import { handleDocumentUpload } from '../services/documentService';
 
 function Dashboard() {
   const [selectedInput, setSelectedInput] = useState(null);
@@ -18,6 +19,8 @@ function Dashboard() {
   const [showLiveTranscription, setShowLiveTranscription] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreateNote, setShowCreateNote] = useState(false);
+  const [noteContent, setNoteContent] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
@@ -57,10 +60,46 @@ function Dashboard() {
     }
   };
 
-  const handleInputSelect = (optionId) => {
-    console.log('Input selected:', optionId);
-    if (optionId === 'audio') {
-      setShowCreateNote(true);
+  const handleInputSelect = async (optionId) => {
+    if (optionId === 'document') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.pdf';
+      
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          try {
+            setIsProcessing(true);
+            
+            // 显示处理提示
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg';
+            notification.textContent = 'Processing document...';
+            document.body.appendChild(notification);
+
+            const { noteContent } = await handleDocumentUpload(file, 'en');
+            
+            // 移除处理提示
+            notification.remove();
+            
+            // 打开笔记创建模态框
+            setNoteContent(noteContent);
+            setShowCreateNote(true);
+          } catch (error) {
+            // 显示错误提示
+            const errorNotification = document.createElement('div');
+            errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
+            errorNotification.textContent = error.message;
+            document.body.appendChild(errorNotification);
+            setTimeout(() => errorNotification.remove(), 3000);
+          } finally {
+            setIsProcessing(false);
+          }
+        }
+      };
+      
+      input.click();
     } else if (optionId === 'lecture') {
       setShowLiveTranscription(true);
       setSelectedInput('lecture');
@@ -72,40 +111,25 @@ function Dashboard() {
   const handleCreateNote = async (formData) => {
     try {
       setIsLoading(true);
-      setError(null);
-
-      const audioFile = formData.get('audio');
-      const audioLanguage = formData.get('audioLanguage');
-      const noteLanguage = formData.get('noteLanguage');
       const title = formData.get('title');
-      const subject = formData.get('subject');
+      const noteLanguage = formData.get('noteLanguage');
+      const content = formData.get('content');
+      const folderId = formData.get('folderId');
+      const folderName = formData.get('folderName');
 
-      console.log('Creating note with data:', {
-        title,
-        subject,
-        audioLanguage,
-        noteLanguage,
-      });
-
-      // 1. 转录音频
-      const transcript = await transcribeAudio(audioFile, audioLanguage);
-
-      // 2. 生成笔记
-      const noteContent = await generateNote(transcript, noteLanguage);
-
-      // 3. 保存笔记
       const noteData = {
         title: title || new Date().toLocaleDateString(),
-        subject: subject || 'General',
-        content: noteContent,
-        audioLanguage,
+        content: content,
         noteLanguage,
-        transcript,
+        date: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        folderId: folderId || null,
+        folderName: folderName || null,
       };
 
+      // 保存笔记
       const noteId = await saveNote(noteData);
-      console.log('Note created successfully:', noteId);
-
+      
       // 刷新最近笔记列表
       const notes = await db.notes
         .orderBy('date')
@@ -114,13 +138,20 @@ function Dashboard() {
         .toArray();
       setRecentNotes(notes);
 
+      // 关闭模态框
       setShowCreateNote(false);
-      setIsLoading(false);
+      
+      // 跳转到新创建的笔记页面
+      navigate(`/notes/${noteId}`);
 
-      return noteId;
     } catch (error) {
       console.error('Error creating note:', error);
-      setError(error.message);
+      const errorNotification = document.createElement('div');
+      errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
+      errorNotification.textContent = `Failed to create note: ${error.message}`;
+      document.body.appendChild(errorNotification);
+      setTimeout(() => errorNotification.remove(), 3000);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -250,6 +281,7 @@ function Dashboard() {
         isOpen={showCreateNote}
         onClose={() => setShowCreateNote(false)}
         onSubmit={handleCreateNote}
+        initialContent={noteContent}
       />
     </ErrorBoundary>
   );
