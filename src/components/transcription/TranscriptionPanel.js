@@ -1,6 +1,6 @@
 import React from 'react';
 // 添加图标导入
-import { MicrophoneIcon, StopIcon } from '@heroicons/react/24/solid';
+import { MicrophoneIcon, StopIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
 
 // 把 languages 移动到组件内部
 const TranscriptionPanel = ({
@@ -12,6 +12,8 @@ const TranscriptionPanel = ({
   onTranslationLanguageChange,
   onRecordingToggle,
   onTranslationToggle,
+  onGenerateNote,
+  hasTranscripts,
 }) => {
   // 语言选项移到组件内部
   const languages = [
@@ -94,6 +96,23 @@ const TranscriptionPanel = ({
             </select>
           )}
         </div>
+      </div>
+
+      {/* 生成笔记按钮 - 移到这里 */}
+      <div className="pt-2 border-t border-gray-200">
+        <button
+          onClick={onGenerateNote}
+          disabled={!hasTranscripts}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
+            hasTranscripts 
+              ? 'bg-green-500 text-white hover:bg-green-600' 
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          }`}
+          title={hasTranscripts ? 'Generate Note' : 'No transcripts available'}
+        >
+          <DocumentTextIcon className="w-5 h-5" />
+          <span>Generate Note</span>
+        </button>
       </div>
     </div>
   );

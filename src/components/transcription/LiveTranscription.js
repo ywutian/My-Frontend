@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDeepgramTranscription } from '../../hooks/useDeepgramTranscription';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTranscripts } from '../../hooks/useTranscripts';
@@ -50,6 +50,14 @@ function LiveTranscription() {
     }
   }, [transcripts, interimResult]);
 
+  const handleGenerateNote = useCallback(() => {
+    const noteText = transcripts
+      .map(t => t.text)
+      .join('\n');
+    
+    console.log('Generating note:', noteText);
+  }, [transcripts]);
+
   return (
     <div className="h-screen overflow-hidden">
       <div 
@@ -90,6 +98,8 @@ function LiveTranscription() {
             onTranslationLanguageChange={setTranslationLanguage}
             onRecordingToggle={handleRecordingToggle}
             onTranslationToggle={handleTranslationToggle}
+            onGenerateNote={handleGenerateNote}
+            hasTranscripts={transcripts.length > 0}
           />
         </div>
         <div role="tabpanel" label="AI Assistant">
