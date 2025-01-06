@@ -21,8 +21,14 @@ export function TranscriptList({
       transcriptsCount: transcripts.length,
       hasInterim: !!interimResult,
       translations: transcripts.map((t) => t.translation).filter(Boolean),
+      // 添加文本日志
+      historicalText,
+      incrementalText,
+      // 添加原始数据日志
+      transcripts: transcripts.map(t => t.text),
+      interimResult: interimResult?.text
     });
-  }, [transcripts, interimResult]);
+  }, [transcripts, interimResult, historicalText, incrementalText]);
 
   return (
     <div className="w-full h-full">
