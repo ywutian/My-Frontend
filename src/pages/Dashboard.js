@@ -7,19 +7,18 @@ import SettingsModal from '../components/settings/SettingsModal';
 import NoteCard from '../components/notes/NoteCard';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import CreateNoteModal from '../components/notes/CreateNoteModal';
+import AudioUploadModal from '../components/audio/AudioUploadModal';
 import { transcribeAudio } from '../services/transcriptionService';
 import { generateNote, saveNote } from '../services/noteGenerationService';
 import { db } from '../db/db';
 import { handleDocumentUpload } from '../services/documentService';
+import ProgressBar from '../components/common/ProgressBar';
 
 function Dashboard() {
   const [selectedInput, setSelectedInput] = useState(null);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [showLiveTranscription, setShowLiveTranscription] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showCreateNote, setShowCreateNote] = useState(false);
-  const [noteContent, setNoteContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -27,6 +26,10 @@ function Dashboard() {
   const [error, setError] = useState(null);
   const [recentNotes, setRecentNotes] = useState([]);
   const location = useLocation();
+  const [showAudioUpload, setShowAudioUpload] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressStatus, setProgressStatus] = useState('');
+  const [showProgress, setShowProgress] = useState(false);
 
   useEffect(() => {
     const loadRecentNotes = async () => {
@@ -78,14 +81,44 @@ function Dashboard() {
             notification.textContent = 'Processing document...';
             document.body.appendChild(notification);
 
-            const { noteContent } = await handleDocumentUpload(file, 'en');
+            const { content, title, originalText } = await handleDocumentUpload(file, 'en');
             
+            // 保存笔记
+            const noteData = {
+              title: title,
+              content: content,
+              originalText: originalText, // 保存原始PDF文本
+              noteLanguage: 'en',
+              date: new Date().toISOString(),
+              lastModified: new Date().toISOString(),
+              type: 'pdf', // 标记笔记来源
+              fileName: file.name // 保存原始文件名
+            };
+
+            // 保存到数据库
+            const noteId = await saveNote(noteData);
+
             // 移除处理提示
             notification.remove();
-            
-            // 打开笔记创建模态框
-            setNoteContent(noteContent);
-            setShowCreateNote(true);
+
+            // 显示成功提示
+            const successNotification = document.createElement('div');
+            successNotification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+            successNotification.textContent = 'Note created successfully!';
+            document.body.appendChild(successNotification);
+            setTimeout(() => successNotification.remove(), 3000);
+
+            // 刷新笔记列表
+            const updatedNotes = await db.notes
+              .orderBy('date')
+              .reverse()
+              .limit(10)
+              .toArray();
+            setRecentNotes(updatedNotes);
+
+            // 导航到新笔记
+            navigate(`/notes/${noteId}`);
+
           } catch (error) {
             // 显示错误提示
             const errorNotification = document.createElement('div');
@@ -103,56 +136,81 @@ function Dashboard() {
     } else if (optionId === 'lecture') {
       setShowLiveTranscription(true);
       setSelectedInput('lecture');
+    } else if (optionId === 'audio') {
+      setShowAudioUpload(true);
     } else {
       setSelectedInput(optionId);
     }
   };
 
-  const handleCreateNote = async (formData) => {
+  const handleAudioUpload = async (formData) => {
     try {
-      setIsLoading(true);
-      const title = formData.get('title');
+      setIsProcessing(true);
+      setShowProgress(true);
+      
+      // Step 1: Transcribe audio (30%)
+      setProgress(0);
+      setProgressStatus('Transcribing audio...');
+      const { transcription, suggestedTitle, confidence, duration } = await transcribeAudio(formData);
+      setProgress(30);
+      
+      // Step 2: Generate note (30% -> 60%)
+      setProgressStatus('Generating structured note...');
       const noteLanguage = formData.get('noteLanguage');
-      const content = formData.get('content');
-      const folderId = formData.get('folderId');
-      const folderName = formData.get('folderName');
-
+      const structuredNote = await generateNote(transcription, noteLanguage);
+      setProgress(60);
+      
+      // Step 3: Save note (60% -> 90%)
+      setProgressStatus('Saving note...');
+      const userTitle = formData.get('title');
+      const finalTitle = userTitle || suggestedTitle;
+      
       const noteData = {
-        title: title || new Date().toLocaleDateString(),
-        content: content,
-        noteLanguage,
+        title: finalTitle,
+        content: structuredNote,
+        transcript: transcription,
+        audioLanguage: formData.get('audioLanguage'),
+        noteLanguage: noteLanguage,
+        confidence: confidence,
+        duration: duration,
         date: new Date().toISOString(),
         lastModified: new Date().toISOString(),
-        folderId: folderId || null,
-        folderName: folderName || null,
       };
 
-      // 保存笔记
       const noteId = await saveNote(noteData);
+      setProgress(90);
       
-      // 刷新最近笔记列表
-      const notes = await db.notes
+      // Step 4: Finishing up (90% -> 100%)
+      setProgressStatus('Finishing up...');
+      setShowAudioUpload(false);
+
+      // Refresh recent notes list
+      const updatedNotes = await db.notes
         .orderBy('date')
         .reverse()
         .limit(10)
         .toArray();
-      setRecentNotes(notes);
-
-      // 关闭模态框
-      setShowCreateNote(false);
+      setRecentNotes(updatedNotes);
       
-      // 跳转到新创建的笔记页面
-      navigate(`/notes/${noteId}`);
+      setProgress(100);
+      setProgressStatus('Note created successfully!');
+      
+      // Navigate to the new note after a short delay
+      setTimeout(() => {
+        setShowProgress(false);
+        navigate(`/notes/${noteId}`);
+      }, 1000);
 
     } catch (error) {
-      console.error('Error creating note:', error);
+      setShowProgress(false);
+      // Show error notification
       const errorNotification = document.createElement('div');
       errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
-      errorNotification.textContent = `Failed to create note: ${error.message}`;
+      errorNotification.textContent = error.message;
       document.body.appendChild(errorNotification);
       setTimeout(() => errorNotification.remove(), 3000);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -284,11 +342,11 @@ function Dashboard() {
               </div>
 
               {/* 音频上传部分 */}
-              {selectedInput === 'audio' && (
+              {/* {selectedInput === 'audio' && (
                 <div className="mt-8">
                   <VideoUpload onUploadSuccess={() => {}} />
                 </div>
-              )}
+              )} */}
             </>
           ) : (
             <LiveTranscription
@@ -309,11 +367,17 @@ function Dashboard() {
         onClose={() => setShowSettings(false)}
       />
 
-      <CreateNoteModal
-        isOpen={showCreateNote}
-        onClose={() => setShowCreateNote(false)}
-        onSubmit={handleCreateNote}
-        initialContent={noteContent}
+      {showProgress && (
+        <ProgressBar 
+          progress={progress} 
+          status={progressStatus} 
+        />
+      )}
+
+      <AudioUploadModal
+        isOpen={showAudioUpload}
+        onClose={() => setShowAudioUpload(false)}
+        onUpload={handleAudioUpload}
       />
     </ErrorBoundary>
   );

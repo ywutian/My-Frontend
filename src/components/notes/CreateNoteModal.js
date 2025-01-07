@@ -4,13 +4,18 @@ import { FiFolder } from 'react-icons/fi';
 import FolderSelector from '../Folder/FolderSelector';
 import { db } from '../../db/db';
 
-const CreateNoteModal = ({ isOpen, onClose, onSubmit, initialContent }) => {
+const CreateNoteModal = ({ isOpen, onClose, onSubmit, initialContent, suggestedTitle }) => {
   const [showFolderSelector, setShowFolderSelector] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState(null);
+  const [title, setTitle] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    
+    const finalTitle = title.trim() || suggestedTitle || new Date().toLocaleDateString();
+    formData.set('title', finalTitle);
+    
     if (selectedFolder) {
       formData.set('folderId', selectedFolder.id);
       formData.set('folderName', selectedFolder.name);
@@ -22,7 +27,6 @@ const CreateNoteModal = ({ isOpen, onClose, onSubmit, initialContent }) => {
   };
 
   const handleFolderSelect = async (folderId) => {
-    // 获取文件夹信息
     const folder = await db.folders.get(folderId);
     setSelectedFolder(folder);
     setShowFolderSelector(false);
@@ -33,15 +37,21 @@ const CreateNoteModal = ({ isOpen, onClose, onSubmit, initialContent }) => {
       <Modal isOpen={isOpen} onClose={onClose} title="Create Note">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-edium text-gray-700">
               Title
             </label>
             <input
               type="text"
-              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={suggestedTitle || "Enter note title (optional)"}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="Enter note title"
             />
+            {!title && suggestedTitle && (
+              <p className="mt-1 text-sm text-gray-500">
+                Leave empty to use AI generated title
+              </p>
+            )}
           </div>
 
           <div>

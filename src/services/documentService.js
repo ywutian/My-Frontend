@@ -47,11 +47,15 @@ export const handleDocumentUpload = async (file, language) => {
     }
     
     // 2. 使用 AI 生成笔记
-    const noteContent = await generateNote(text, language);
+    const content = await generateNote(text, language);
+
+    // 3. 从文件名生成标题（移除.pdf后缀）
+    const title = file.name.replace('.pdf', '');
     
     return {
-      text,
-      noteContent
+      content,
+      title,
+      originalText: text // 保存原始文本以供将来参考
     };
   } catch (error) {
     console.error('Error processing document:', error);
