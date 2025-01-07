@@ -2,9 +2,9 @@ import Dexie from 'dexie';
 import { api } from '../services/api';
 
 export const db = new Dexie('notesApp');
-db.version(2).stores({
+db.version(3).stores({
   notes:
-    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId',
+    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId, transcript',
   folders: '++id, name, createdAt, lastModified, syncStatus',
   flashcards: '++id, noteId, front, back, syncStatus',
   syncQueue: '++id, operation, data, timestamp',

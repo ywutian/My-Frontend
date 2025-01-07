@@ -328,6 +328,32 @@ function NoteDetail() {
                     <p className="text-sm text-gray-500">Source</p>
                     <p>{note.source}</p>
                   </div>
+                  {note.transcript && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">Original Transcript</p>
+                      <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                        {typeof note.transcript === 'object' ? (
+                          <div className="space-y-2">
+                            {Array.isArray(note.transcript) ? (
+                              note.transcript.map((segment, index) => (
+                                <div key={index} className="p-2 border-b">
+                                  <p className="text-sm">{segment.text}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <pre className="whitespace-pre-wrap font-sans text-sm">
+                                {JSON.stringify(note.transcript, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                        ) : (
+                          <pre className="whitespace-pre-wrap font-sans text-sm">
+                            {note.transcript}
+                          </pre>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

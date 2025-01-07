@@ -172,13 +172,13 @@ function Dashboard() {
       bgColor: 'bg-purple-500',
       isNew: true,
     },
-    {
-      id: 'youtube',
-      icon: '▶️',
-      title: 'YouTube Video',
-      subtitle: 'Paste a YouTube link',
-      bgColor: 'bg-red-500',
-    },
+    // {
+    //   id: 'youtube',
+    //   icon: '▶️',
+    //   title: 'YouTube Video',
+    //   subtitle: 'Paste a YouTube link',
+    //   bgColor: 'bg-red-500',
+    // },
     {
       id: 'document',
       icon: '📄',

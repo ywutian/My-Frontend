@@ -86,15 +86,22 @@ export const saveNote = async (noteData) => {
   console.log('Saving note to database...', { 
     title: noteData.title,
     subject: noteData.subject,
-    contentLength: noteData.content.length 
+    contentLength: noteData.content.length,
+    transcriptLength: noteData.transcript?.length
   });
 
   try {
+    // Format transcript if it's an object
+    const formattedTranscript = typeof noteData.transcript === 'object' 
+      ? JSON.stringify(noteData.transcript)
+      : noteData.transcript;
+
     const note = {
       ...noteData,
       date: new Date().toISOString(),
       lastModified: new Date().toISOString(),
-      syncStatus: 'pending'
+      syncStatus: 'pending',
+      transcript: formattedTranscript
     };
 
     const id = await db.notes.put(note);
