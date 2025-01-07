@@ -20,6 +20,8 @@ import DraggableSidebar from '../components/layout/DraggableSidebar';
 import AiAssistant from '../components/ai/AiAssistant';
 import MindmapPanel from '../components/mindmap/MindmapPanel';
 import { generateNote } from '../services/noteGenerationService';
+import html2pdf from 'html2pdf.js';
+import MarkdownIt from 'markdown-it';
 
 function NoteDetail() {
   const { noteId } = useParams();
@@ -49,6 +51,7 @@ function NoteDetail() {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [isCombining, setIsCombining] = useState(false);
   const [selectedNoteTranscript, setSelectedNoteTranscript] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Podcast', 'Mindmap', 'About'];
 
@@ -111,15 +114,47 @@ function NoteDetail() {
     alert('Note link copied to clipboard!');
   };
 
-  const handleExport = () => {
-    // 实现导出功能
-    const blob = new Blob([note.content], { type: 'text/markdown' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${note.title}.md`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      // Initialize markdown-it
+      const md = new MarkdownIt();
+      
+      // Create a temporary div to render the markdown content
+      const tempDiv = document.createElement('div');
+      tempDiv.className = 'pdf-export-container';
+      
+      // Create title element
+      const titleElement = document.createElement('h1');
+      titleElement.textContent = note.title;
+      tempDiv.appendChild(titleElement);
+      
+      // Create content container
+      const contentDiv = document.createElement('div');
+      contentDiv.innerHTML = md.render(note.content);
+      tempDiv.appendChild(contentDiv);
+      
+      // Add some basic styling
+      tempDiv.style.padding = '40px';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      
+      // Configure PDF options
+      const options = {
+        margin: 10,
+        filename: `${note.title}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Generate PDF
+      await html2pdf().from(tempDiv).set(options).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleSendMessage = (e) => {
@@ -286,9 +321,19 @@ function NoteDetail() {
             </button>
             <button
               onClick={handleExport}
-              className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+              disabled={isExporting}
+              className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiDownload /> Export
+              {isExporting ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></span>
+                  <span>Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <FiDownload /> Export
+                </>
+              )}
             </button>
           </div>
         </header>

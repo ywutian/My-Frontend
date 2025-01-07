@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FiClock, FiMoreVertical, FiEdit2, FiFolder, FiTrash2, FiFolderMinus } from 'react-icons/fi';
 import PropTypes from 'prop-types';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { db } from '../../db/db';
 
 function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFromFolder }) {
   const [showActions, setShowActions] = useState(false);
@@ -27,17 +28,32 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
     }
   };
 
-  const handleActionClick = (e, action) => {
+  const handleActionClick = async (e, action, type) => {
     e.stopPropagation();
     setShowActions(false);
     
-    if (action === onRename) {
-      const newTitle = prompt('Enter new title:', note.title);
-      if (newTitle) action(newTitle);
-      return;
+    try {
+      if (type === 'rename') {
+        const newTitle = prompt('Enter new title:', note.title);
+        if (newTitle) action(newTitle);
+      } 
+      else if (type === 'delete') {
+        try {
+          await db.notes.delete(note.id);
+          window.location.reload();
+        } catch (error) {
+          console.error('Error deleting note:', error);
+          alert('Failed to delete note');
+        }
+      } 
+      else {
+        if (typeof action === 'function') {
+          action();
+        }
+      }
+    } catch (error) {
+      console.error(`Error in ${type} action:`, error);
     }
-    
-    action();
   };
 
   return (
@@ -62,7 +78,7 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
         {showActions && (
           <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
             <button
-              onClick={(e) => handleActionClick(e, onRename)}
+              onClick={(e) => handleActionClick(e, onRename, 'rename')}
               className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
             >
               <FiEdit2 className="w-4 h-4" />
@@ -71,7 +87,7 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
             
             {note.folderId ? (
               <button
-                onClick={(e) => handleActionClick(e, onRemoveFromFolder)}
+                onClick={(e) => handleActionClick(e, onRemoveFromFolder, 'removeFromFolder')}
                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
               >
                 <FiFolderMinus className="w-4 h-4" />
@@ -79,7 +95,7 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
               </button>
             ) : (
               <button
-                onClick={(e) => handleActionClick(e, onAddToFolder)}
+                onClick={(e) => handleActionClick(e, onAddToFolder, 'addToFolder')}
                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
               >
                 <FiFolder className="w-4 h-4" />
@@ -88,7 +104,7 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
             )}
             
             <button
-              onClick={(e) => handleActionClick(e, onDelete)}
+              onClick={(e) => handleActionClick(e, null, 'delete')}
               className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-red-600"
             >
               <FiTrash2 className="w-4 h-4" />
