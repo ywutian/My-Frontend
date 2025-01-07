@@ -118,7 +118,46 @@ function FolderPage() {
             <NoteCard 
               key={note.id}
               note={note}
-              onClick={handleNoteClick}
+              onClick={() => handleNoteClick(note)}
+              onRename={async (newTitle) => {
+                try {
+                  await db.notes.update(note.id, {
+                    title: newTitle,
+                    lastModified: new Date().toISOString(),
+                    syncStatus: 'pending'
+                  });
+                  // Refresh notes list
+                  const updatedNotes = await db.notes
+                    .where('folderId')
+                    .equals(parseInt(folderId))
+                    .toArray();
+                  setNotes(updatedNotes);
+                } catch (error) {
+                  console.error('Error renaming note:', error);
+                  alert('Failed to rename note');
+                }
+              }}
+              onDelete={async () => {
+                if (window.confirm('Are you sure you want to delete this note?')) {
+                  try {
+                    await db.notes.delete(note.id);
+                    setNotes(notes.filter(n => n.id !== note.id));
+                  } catch (error) {
+                    console.error('Error deleting note:', error);
+                    alert('Failed to delete note');
+                  }
+                }
+              }}
+              onAddToFolder={() => {}} // Already in a folder
+              onRemoveFromFolder={async () => {
+                try {
+                  await db.notes.update(note.id, { folderId: null });
+                  setNotes(notes.filter(n => n.id !== note.id));
+                } catch (error) {
+                  console.error('Error removing from folder:', error);
+                  alert('Failed to remove from folder');
+                }
+              }}
             />
           ))}
         </div>

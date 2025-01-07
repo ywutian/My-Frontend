@@ -37,7 +37,23 @@ function NoteView() {
             <NoteCard
               key={note.id}
               note={note}
-              onClick={() => alert(`Viewing note: ${note.title}`)} // 示例点击逻辑
+              onClick={() => alert(`Viewing note: ${note.title}`)}
+              onRename={async (newTitle) => {
+                try {
+                  const updatedNote = { ...note, title: newTitle };
+                  setNotes(prevNotes => 
+                    prevNotes.map(n => n.id === note.id ? updatedNote : n)
+                  );
+                } catch (error) {
+                  console.error('Error renaming note:', error);
+                  alert('Failed to rename note');
+                }
+              }}
+              onDelete={() => {
+                setNotes(prevNotes => prevNotes.filter(n => n.id !== note.id));
+              }}
+              onAddToFolder={() => {}}
+              onRemoveFromFolder={() => {}}
             />
           ))
         ) : (

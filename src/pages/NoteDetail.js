@@ -427,11 +427,12 @@ function NoteDetail() {
             </div>
           )}
 
-          {activeTab === 'Mindmap' && (
-            <div className="h-full">
-              <MindmapPanel noteContent={note.content} />
-            </div>
-          )}
+          <div className={activeTab === 'Mindmap' ? 'block h-full' : 'hidden'}>
+            <MindmapPanel 
+              noteContent={note?.content}
+              isVisible={activeTab === 'Mindmap'}
+            />
+          </div>
 
           {activeTab === 'About' && (
             <div className="h-full p-6">

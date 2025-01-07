@@ -99,3 +99,31 @@ export const processSyncQueue = async () => {
 
 // 定期处理同步队列
 setInterval(processSyncQueue, 5 * 60 * 1000); // 每5分钟尝试同步一次
+
+export const updateNote = async (id, updates) => {
+  try {
+    // Update local database
+    await db.notes.update(id, {
+      ...updates,
+      lastModified: new Date().toISOString(),
+      syncStatus: 'pending'
+    });
+
+    // Try to sync with server
+    try {
+      const updatedNote = await db.notes.get(id);
+      await api.saveNoteToServer(updatedNote);
+      await db.notes.update(id, { syncStatus: 'synced' });
+    } catch (error) {
+      // If server sync fails, add to sync queue
+      await db.syncQueue.add({
+        operation: 'saveNote',
+        data: await db.notes.get(id),
+        timestamp: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error('Error updating note:', error);
+    throw error;
+  }
+};

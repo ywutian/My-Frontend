@@ -35,7 +35,19 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
     try {
       if (type === 'rename') {
         const newTitle = prompt('Enter new title:', note.title);
-        if (newTitle) action(newTitle);
+        if (newTitle && newTitle !== note.title) {
+          await db.notes.update(note.id, {
+            title: newTitle,
+            lastModified: new Date().toISOString(),
+            syncStatus: 'pending'
+          });
+          
+          if (typeof onRename === 'function') {
+            onRename(newTitle);
+          } else {
+            window.location.reload();
+          }
+        }
       } 
       else if (type === 'delete') {
         try {
@@ -53,6 +65,7 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
       }
     } catch (error) {
       console.error(`Error in ${type} action:`, error);
+      alert(`Failed to ${type} note: ${error.message}`);
     }
   };
 

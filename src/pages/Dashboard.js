@@ -240,6 +240,38 @@ function Dashboard() {
                           subject: note.subject,
                         }}
                         onClick={() => navigate(`/notes/${note.id}`)}
+                        onRename={async (newTitle) => {
+                          try {
+                            await db.notes.update(note.id, {
+                              title: newTitle,
+                              lastModified: new Date().toISOString(),
+                              syncStatus: 'pending'
+                            });
+                            // Refresh the notes list
+                            const updatedNotes = await db.notes
+                              .orderBy('date')
+                              .reverse()
+                              .limit(10)
+                              .toArray();
+                            setRecentNotes(updatedNotes);
+                          } catch (error) {
+                            console.error('Error renaming note:', error);
+                            alert('Failed to rename note');
+                          }
+                        }}
+                        onDelete={async () => {
+                          if (window.confirm('Are you sure you want to delete this note?')) {
+                            try {
+                              await db.notes.delete(note.id);
+                              setRecentNotes(recentNotes.filter(n => n.id !== note.id));
+                            } catch (error) {
+                              console.error('Error deleting note:', error);
+                              alert('Failed to delete note');
+                            }
+                          }
+                        }}
+                        onAddToFolder={() => {}} // Add folder functionality if needed
+                        onRemoveFromFolder={() => {}} // Add remove from folder functionality if needed
                       />
                     ))
                   ) : (
