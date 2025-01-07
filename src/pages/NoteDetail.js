@@ -19,6 +19,8 @@ import MarkdownViewer from '../components/MarkdownViewer';
 import DraggableSidebar from '../components/layout/DraggableSidebar';
 import AiAssistant from '../components/ai/AiAssistant';
 import MindmapPanel from '../components/mindmap/MindmapPanel';
+import { generateNote } from '../services/noteGenerationService';
+
 function NoteDetail() {
   const { noteId } = useParams();
   const navigate = useNavigate();
@@ -42,6 +44,11 @@ function NoteDetail() {
     size: { width: 300 },
     COLLAPSED_SIZE: 40
   });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [availableNotes, setAvailableNotes] = useState([]);
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [isCombining, setIsCombining] = useState(false);
+  const [selectedNoteTranscript, setSelectedNoteTranscript] = useState(null);
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Podcast', 'Mindmap', 'About'];
 
@@ -150,6 +157,74 @@ function NoteDetail() {
     }
   };
 
+  // Add this function to fetch available notes
+  const fetchAvailableNotes = useCallback(async () => {
+    try {
+      const notes = await db.notes
+        .where('id')
+        .notEqual(Number(noteId))
+        .toArray();
+      setAvailableNotes(notes);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    }
+  }, [noteId]);
+
+  // Add this function to handle note combination
+  const handleCombineNotes = async () => {
+    if (!selectedNoteId) return;
+    
+    setIsCombining(true);
+    try {
+      // Get the selected note
+      const selectedNote = await db.notes.get(selectedNoteId);
+      
+      // Combine transcripts
+      const combinedTranscript = `${note.transcript || ''}\n\n${selectedNote.transcript || ''}`;
+      
+      // Generate new note from combined transcripts
+      const newNoteContent = await generateNote(combinedTranscript, note.noteLanguage);
+      
+      // Save the combined note
+      const combinedNote = {
+        title: `Combined: ${note.title} & ${selectedNote.title}`,
+        content: newNoteContent,
+        transcript: combinedTranscript,
+        subject: note.subject,
+        noteLanguage: note.noteLanguage,
+        date: new Date().toISOString(),
+        lastModified: new Date().toISOString()
+      };
+      
+      const newNoteId = await db.notes.put(combinedNote);
+      
+      // Navigate to the new combined note
+      navigate(`/notes/${newNoteId}`);
+    } catch (error) {
+      console.error('Error combining notes:', error);
+      alert('Failed to combine notes: ' + error.message);
+    } finally {
+      setIsCombining(false);
+      setIsAddModalOpen(false);
+    }
+  };
+
+  const handleNoteSelect = async (noteId) => {
+    setSelectedNoteId(noteId);
+    try {
+      const selectedNote = await db.notes.get(noteId);
+      setSelectedNoteTranscript(selectedNote.transcript);
+    } catch (error) {
+      console.error('Error fetching selected note transcript:', error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setSelectedNoteId(null);
+    setSelectedNoteTranscript(null);
+  };
+
   if (isLoading || !note) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -200,7 +275,13 @@ function NoteDetail() {
             >
               <FiShare2 /> Share
             </button>
-            <button className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">
+            <button
+              onClick={() => {
+                fetchAvailableNotes();
+                setIsAddModalOpen(true);
+              }}
+              className="btn-secondary flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+            >
               <FiPlus /> Add
             </button>
             <button
@@ -330,26 +411,58 @@ function NoteDetail() {
                   </div>
                   {note.transcript && (
                     <div>
-                      <p className="text-sm text-gray-500 mb-2">Original Transcript</p>
-                      <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                        {typeof note.transcript === 'object' ? (
-                          <div className="space-y-2">
-                            {Array.isArray(note.transcript) ? (
-                              note.transcript.map((segment, index) => (
-                                <div key={index} className="p-2 border-b">
-                                  <p className="text-sm">{segment.text}</p>
-                                </div>
-                              ))
+                      <p className="text-sm text-gray-500 mb-2">Original Transcripts</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Current Note Transcript */}
+                        <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                          <h3 className="font-medium mb-2">{note.title}</h3>
+                          {typeof note.transcript === 'object' ? (
+                            <div className="space-y-2">
+                              {Array.isArray(note.transcript) ? (
+                                note.transcript.map((segment, index) => (
+                                  <div key={index} className="p-2 border-b">
+                                    <p className="text-sm">{segment.text}</p>
+                                  </div>
+                                ))
+                              ) : (
+                                <pre className="whitespace-pre-wrap font-sans text-sm">
+                                  {JSON.stringify(note.transcript, null, 2)}
+                                </pre>
+                              )}
+                            </div>
+                          ) : (
+                            <pre className="whitespace-pre-wrap font-sans text-sm">
+                              {note.transcript}
+                            </pre>
+                          )}
+                        </div>
+
+                        {/* Selected Note Transcript */}
+                        {selectedNoteTranscript && (
+                          <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                            <h3 className="font-medium mb-2">
+                              {availableNotes.find(n => n.id === selectedNoteId)?.title}
+                            </h3>
+                            {typeof selectedNoteTranscript === 'object' ? (
+                              <div className="space-y-2">
+                                {Array.isArray(selectedNoteTranscript) ? (
+                                  selectedNoteTranscript.map((segment, index) => (
+                                    <div key={index} className="p-2 border-b">
+                                      <p className="text-sm">{segment.text}</p>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <pre className="whitespace-pre-wrap font-sans text-sm">
+                                    {JSON.stringify(selectedNoteTranscript, null, 2)}
+                                  </pre>
+                                )}
+                              </div>
                             ) : (
                               <pre className="whitespace-pre-wrap font-sans text-sm">
-                                {JSON.stringify(note.transcript, null, 2)}
+                                {selectedNoteTranscript}
                               </pre>
                             )}
                           </div>
-                        ) : (
-                          <pre className="whitespace-pre-wrap font-sans text-sm">
-                            {note.transcript}
-                          </pre>
                         )}
                       </div>
                     </div>
@@ -374,6 +487,52 @@ function NoteDetail() {
           <AiAssistant noteContent={note?.content || ''} />
         </div>
       </DraggableSidebar>
+
+      {/* Add this modal component */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4">Combine with Another Note</h2>
+            <div className="max-h-96 overflow-y-auto">
+              {availableNotes.map((availableNote) => (
+                <div
+                  key={availableNote.id}
+                  onClick={() => handleNoteSelect(availableNote.id)}
+                  className={`p-4 border rounded-lg mb-2 cursor-pointer ${
+                    selectedNoteId === availableNote.id
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <h3 className="font-medium">{availableNote.title}</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Created: {new Date(availableNote.date).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCombineNotes}
+                disabled={!selectedNoteId || isCombining}
+                className={`px-4 py-2 bg-purple-500 text-white rounded-lg ${
+                  !selectedNoteId || isCombining
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-purple-600'
+                }`}
+              >
+                {isCombining ? 'Combining...' : 'Combine Notes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
