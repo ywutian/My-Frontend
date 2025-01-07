@@ -20,21 +20,21 @@ const ContentDisplay = ({ content }) => {
       const parts = sectionContent.split(/(\*\*.*?\*\*)/g).filter(Boolean);
 
       return (
-        <div key={sectionIndex} className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">{title}</h2>
-          <div className="space-y-4">
+        <div key={sectionIndex} className="mb-0">
+          <h4 className="text-xs mb-0">{title}</h4>
+          <div className="space-y-1">
             {parts.map((part, index) => {
               if (part.startsWith('**') && part.endsWith('**')) {
                 const boldText = part.slice(2, -2);
                 if (boldText.includes(':')) {
                   return (
-                    <h3 key={index} className="font-bold text-lg mt-4 mb-2">
+                    <h3 key={index} className="text-xs mt-1 mb-0">
                       {boldText.replace(':', '')}
                     </h3>
                   );
                 }
                 return (
-                  <h4 key={index} className="font-semibold text-md mt-3 mb-1">
+                  <h4 key={index} className="text-xs mt-1 mb-0">
                     {boldText}
                   </h4>
                 );
@@ -42,11 +42,11 @@ const ContentDisplay = ({ content }) => {
 
               const items = part.split('-').filter(Boolean);
               return (
-                <div key={index} className="ml-4">
+                <div key={index} className="ml-2">
                   {items.map(
                     (item, i) =>
                       item.trim() && (
-                        <div key={i} className="flex gap-2 mb-2">
+                        <div key={i} className="flex gap-1 mb-0 text-xs">
                           <span>•</span>
                           <span>{item.trim()}</span>
                         </div>
@@ -61,7 +61,7 @@ const ContentDisplay = ({ content }) => {
     });
   };
 
-  return <div className="text-gray-800">{processText(content)}</div>;
+  return <div className="text-gray-800 text-xs">{processText(content)}</div>;
 };
 
 export default ContentDisplay;
