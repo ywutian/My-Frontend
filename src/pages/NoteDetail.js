@@ -410,60 +410,80 @@ function NoteDetail() {
                     <p>{note.source}</p>
                   </div>
                   {note.transcript && (
-                    <div>
-                      <p className="text-sm text-gray-500 mb-2">Original Transcripts</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h2 className="text-xl font-semibold mb-6">Transcripts</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Current Note Transcript */}
-                        <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                          <h3 className="font-medium mb-2">{note.title}</h3>
-                          {typeof note.transcript === 'object' ? (
-                            <div className="space-y-2">
-                              {Array.isArray(note.transcript) ? (
-                                note.transcript.map((segment, index) => (
-                                  <div key={index} className="p-2 border-b">
-                                    <p className="text-sm">{segment.text}</p>
-                                  </div>
-                                ))
-                              ) : (
-                                <pre className="whitespace-pre-wrap font-sans text-sm">
-                                  {JSON.stringify(note.transcript, null, 2)}
-                                </pre>
-                              )}
-                            </div>
-                          ) : (
-                            <pre className="whitespace-pre-wrap font-sans text-sm">
-                              {note.transcript}
-                            </pre>
-                          )}
-                        </div>
-
-                        {/* Selected Note Transcript */}
-                        {selectedNoteTranscript && (
-                          <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                            <h3 className="font-medium mb-2">
-                              {availableNotes.find(n => n.id === selectedNoteId)?.title}
+                        <div className="border rounded-lg overflow-hidden">
+                          <div className="bg-gray-50 px-4 py-3 border-b">
+                            <h3 className="font-medium text-gray-800">
+                              Current: {note.title}
                             </h3>
-                            {typeof selectedNoteTranscript === 'object' ? (
-                              <div className="space-y-2">
-                                {Array.isArray(selectedNoteTranscript) ? (
-                                  selectedNoteTranscript.map((segment, index) => (
-                                    <div key={index} className="p-2 border-b">
-                                      <p className="text-sm">{segment.text}</p>
+                          </div>
+                          <div className="p-4 max-h-[400px] overflow-y-auto bg-white">
+                            {typeof note.transcript === 'object' ? (
+                              <div className="space-y-3">
+                                {Array.isArray(note.transcript) ? (
+                                  note.transcript.map((segment, index) => (
+                                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                      <p className="text-sm text-gray-700">{segment.text}</p>
                                     </div>
                                   ))
                                 ) : (
-                                  <pre className="whitespace-pre-wrap font-sans text-sm">
-                                    {JSON.stringify(selectedNoteTranscript, null, 2)}
+                                  <pre className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg overflow-x-auto">
+                                    {JSON.stringify(note.transcript, null, 2)}
                                   </pre>
                                 )}
                               </div>
                             ) : (
-                              <pre className="whitespace-pre-wrap font-sans text-sm">
-                                {selectedNoteTranscript}
-                              </pre>
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {note.transcript}
+                                </p>
+                              </div>
                             )}
                           </div>
-                        )}
+                        </div>
+
+                        {/* Selected Note Transcript */}
+                        <div className={`border rounded-lg overflow-hidden ${!selectedNoteTranscript ? 'border-dashed' : ''}`}>
+                          <div className="bg-gray-50 px-4 py-3 border-b">
+                            <h3 className="font-medium text-gray-800">
+                              {selectedNoteTranscript 
+                                ? `Selected: ${availableNotes.find(n => n.id === selectedNoteId)?.title}`
+                                : 'No note selected'}
+                            </h3>
+                          </div>
+                          <div className="p-4 max-h-[400px] overflow-y-auto bg-white">
+                            {selectedNoteTranscript ? (
+                              typeof selectedNoteTranscript === 'object' ? (
+                                <div className="space-y-3">
+                                  {Array.isArray(selectedNoteTranscript) ? (
+                                    selectedNoteTranscript.map((segment, index) => (
+                                      <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                        <p className="text-sm text-gray-700">{segment.text}</p>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <pre className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg overflow-x-auto">
+                                      {JSON.stringify(selectedNoteTranscript, null, 2)}
+                                    </pre>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                    {selectedNoteTranscript}
+                                  </p>
+                                </div>
+                              )
+                            ) : (
+                              <div className="h-full flex items-center justify-center text-gray-500">
+                                <p>Select a note to view its transcript</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -491,43 +511,62 @@ function NoteDetail() {
       {/* Add this modal component */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
-            <h2 className="text-xl font-semibold mb-4">Combine with Another Note</h2>
-            <div className="max-h-96 overflow-y-auto">
-              {availableNotes.map((availableNote) => (
-                <div
-                  key={availableNote.id}
-                  onClick={() => handleNoteSelect(availableNote.id)}
-                  className={`p-4 border rounded-lg mb-2 cursor-pointer ${
-                    selectedNoteId === availableNote.id
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <h3 className="font-medium">{availableNote.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Created: {new Date(availableNote.date).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-800">Combine with Another Note</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Select another note to combine with "{note.title}"
+              </p>
             </div>
-            <div className="flex justify-end gap-2 mt-4">
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto">
+                {availableNotes.map((availableNote) => (
+                  <div
+                    key={availableNote.id}
+                    onClick={() => handleNoteSelect(availableNote.id)}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedNoteId === availableNote.id
+                        ? 'border-purple-500 bg-purple-50 shadow-sm'
+                        : 'hover:border-purple-200 hover:bg-purple-50/50'
+                    }`}
+                  >
+                    <h3 className="font-medium text-gray-800">{availableNote.title}</h3>
+                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                      <span>Created: {new Date(availableNote.date).toLocaleDateString()}</span>
+                      {availableNote.subject && (
+                        <span>Subject: {availableNote.subject}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
               <button
                 onClick={handleCloseModal}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCombineNotes}
                 disabled={!selectedNoteId || isCombining}
-                className={`px-4 py-2 bg-purple-500 text-white rounded-lg ${
+                className={`px-4 py-2 bg-purple-500 text-white rounded-lg flex items-center gap-2 transition-all ${
                   !selectedNoteId || isCombining
                     ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-purple-600'
+                    : 'hover:bg-purple-600 hover:shadow-md'
                 }`}
               >
-                {isCombining ? 'Combining...' : 'Combine Notes'}
+                {isCombining ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Combining...</span>
+                  </>
+                ) : (
+                  'Combine Notes'
+                )}
               </button>
             </div>
           </div>
