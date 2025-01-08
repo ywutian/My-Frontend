@@ -227,7 +227,7 @@ function Dashboard() {
       icon: '🎤',
       title: 'Record Live Lecture',
       subtitle: 'Real time transcript',
-      bgColor: 'bg-gray-500',
+      bgColor: 'bg-purple-500',
       isNew: true,
     },
     // {

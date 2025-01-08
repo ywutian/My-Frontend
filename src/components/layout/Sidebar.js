@@ -378,7 +378,7 @@ function Sidebar({ isOpen, onToggle }) {
             >
               Settings
             </button>
-            <button
+            {/* <button
               onClick={() => {
                 setShowBilling(true);
                 setShowSettingsMenu(false);
@@ -386,7 +386,7 @@ function Sidebar({ isOpen, onToggle }) {
               className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
             >
               Billing
-            </button>
+            </button> */}
             <button
               onClick={logout}
               className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-red-600"

@@ -9,7 +9,7 @@ function SettingsModal({ isOpen, onClose }) {
   
   const tabs = [
     { id: 'general', label: 'General Settings' },
-    { id: 'billing', label: 'Billing' },
+    //{ id: 'billing', label: 'Billing' },
   ];
 
   const billingPlans = [
