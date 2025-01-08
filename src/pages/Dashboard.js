@@ -13,6 +13,7 @@ import { generateNote, saveNote } from '../services/noteGenerationService';
 import { db } from '../db/db';
 import { handleDocumentUpload } from '../services/documentService';
 import ProgressBar from '../components/common/ProgressBar';
+import YouTubeLinkModal from '../components/youtube/YouTubeLinkModal';
 
 function Dashboard() {
   const [selectedInput, setSelectedInput] = useState(null);
@@ -30,6 +31,7 @@ function Dashboard() {
   const [progress, setProgress] = useState(0);
   const [progressStatus, setProgressStatus] = useState('');
   const [showProgress, setShowProgress] = useState(false);
+  const [showYouTubeModal, setShowYouTubeModal] = useState(false);
 
   useEffect(() => {
     const loadRecentNotes = async () => {
@@ -64,7 +66,9 @@ function Dashboard() {
   };
 
   const handleInputSelect = async (optionId) => {
-    if (optionId === 'document') {
+    if (optionId === 'youtube') {
+      setShowYouTubeModal(true);
+    } else if (optionId === 'document') {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.pdf';
@@ -214,6 +218,29 @@ function Dashboard() {
     }
   };
 
+  const handleYouTubeSubmit = async (data) => {
+    try {
+      setIsProcessing(true);
+      setShowProgress(true);
+      setProgress(0);
+      setProgressStatus('Processing YouTube video...');
+      
+      // TODO: Implement YouTube processing logic here
+      
+      setShowYouTubeModal(false);
+    } catch (error) {
+      // Show error notification
+      const errorNotification = document.createElement('div');
+      errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
+      errorNotification.textContent = error.message;
+      document.body.appendChild(errorNotification);
+      setTimeout(() => errorNotification.remove(), 3000);
+    } finally {
+      setIsProcessing(false);
+      setShowProgress(false);
+    }
+  };
+
   const inputOptions = [
     {
       id: 'audio',
@@ -230,13 +257,13 @@ function Dashboard() {
       bgColor: 'bg-purple-500',
       isNew: true,
     },
-    // {
-    //   id: 'youtube',
-    //   icon: '▶️',
-    //   title: 'YouTube Video',
-    //   subtitle: 'Paste a YouTube link',
-    //   bgColor: 'bg-red-500',
-    // },
+    {
+      id: 'youtube',
+      icon: '▶️',
+      title: 'YouTube Video',
+      subtitle: 'Paste a YouTube link',
+      bgColor: 'bg-red-500',
+    },
     {
       id: 'document',
       icon: '📄',
@@ -378,6 +405,12 @@ function Dashboard() {
         isOpen={showAudioUpload}
         onClose={() => setShowAudioUpload(false)}
         onUpload={handleAudioUpload}
+      />
+
+      <YouTubeLinkModal
+        isOpen={showYouTubeModal}
+        onClose={() => setShowYouTubeModal(false)}
+        onSubmit={handleYouTubeSubmit}
       />
     </ErrorBoundary>
   );
