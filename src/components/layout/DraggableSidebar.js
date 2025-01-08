@@ -167,11 +167,12 @@ const DraggableSidebar = ({
             position === 'right'
               ? 'left-1/2 top-0 w-1 h-full -translate-x-1/2'
               : 'top-1/2 left-0 h-1 w-full -translate-y-1/2'
-          } ${isResizing ? 'bg-purple-500' : 'bg-gray-200 group-hover:bg-purple-500'}`}
+          } ${isResizing ? 'bg-gray-300' : 'bg-gray-200 group-hover:bg-gray-300'}`}
         />
         <button
           onClick={toggleCollapse}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors z-10"
+          className="absolute -right-3 top-20 w-6 h-6 bg-white border border-gray-200 
+                     rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50"
         >
           {position === 'right' ? (
             isCollapsed ? (
@@ -199,8 +200,8 @@ const DraggableSidebar = ({
                   onClick={() => setActiveTab(tab.label)}
                   className={`px-4 py-2 font-medium transition-colors ${
                     activeTab === tab.label
-                      ? 'border-b-2 border-purple-500 text-purple-500'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-gray-100 text-gray-700'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   {tab.label}

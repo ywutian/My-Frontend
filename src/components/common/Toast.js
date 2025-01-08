@@ -14,11 +14,11 @@ function Toast({ message, type = 'info', onClose }) {
       leaveTo="opacity-0"
     >
       <div className="fixed bottom-4 right-4 z-50">
-        <div className={`rounded-lg shadow-lg p-4 ${
-          type === 'error' ? 'bg-red-500' : 
-          type === 'success' ? 'bg-green-500' : 
-          'bg-blue-500'
-        } text-white`}>
+        <div className={`rounded-lg shadow-lg p-4 bg-white border ${
+          type === 'error' ? 'border-red-200 text-red-700' : 
+          type === 'success' ? 'border-gray-200 text-gray-700' : 
+          'border-gray-200 text-gray-700'
+        }`}>
           <p>{message}</p>
         </div>
       </div>

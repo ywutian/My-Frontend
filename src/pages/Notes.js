@@ -128,8 +128,8 @@ const Notes = () => {
         </span>
       </h1>
       <button
-        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
-                   transition-colors flex items-center gap-2"
+        className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg 
+                   hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center gap-2"
         onClick={handleNewNote}
       >
         <FiEdit2 className="w-4 h-4" />
@@ -139,21 +139,21 @@ const Notes = () => {
   );
 
   const renderSearchBar = () => (
-    <div className="flex items-center gap-4 mb-6">
+    <div className="flex gap-4 mb-6">
       <div className="flex-1 relative">
-        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder="Search notes..."
-          className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 
-                     focus:ring-purple-500 bg-white transition-shadow hover:shadow-sm"
           value={searchTerm}
           onChange={handleSearch}
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none 
+                   focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
         />
       </div>
       <select
-        className="border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 
-                   bg-white cursor-pointer hover:shadow-sm transition-shadow"
+        className="border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none 
+                   focus:border-gray-300 focus:ring-1 focus:ring-gray-300
+                   bg-white cursor-pointer hover:bg-gray-50 transition-colors"
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
       >
@@ -167,14 +167,14 @@ const Notes = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-600"></div>
         <span className="ml-3 text-gray-600">Loading notes...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
+    <div className="min-h-screen bg-white w-full">
       <main className="flex-1 h-full">
         <div className="p-6 h-full">
           <div className="max-w-7xl mx-auto">
@@ -188,8 +188,8 @@ const Notes = () => {
                   {searchTerm ? 'No notes match your search' : 'No notes yet'}
                 </div>
                 <button
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
-                             transition-colors inline-flex items-center gap-2"
+                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg 
+                             hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center gap-2"
                   onClick={handleNewNote}
                 >
                   <FiEdit2 className="w-4 h-4" />

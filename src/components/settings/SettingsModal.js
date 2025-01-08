@@ -74,10 +74,7 @@ function SettingsModal({ isOpen, onClose }) {
                 key={tab.id}
                 className={`
                   px-4 py-3 font-medium
-                  ${activeTab === tab.id 
-                    ? 'text-purple-600 border-b-2 border-purple-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                  }
+                  ${activeTab === tab.id ? 'text-gray-800 border-b-2 border-gray-600' : 'text-gray-500'}
                 `}
                 onClick={() => setActiveTab(tab.id)}
               >
@@ -95,8 +92,8 @@ function SettingsModal({ isOpen, onClose }) {
                   <h3 className="text-sm font-medium mb-3">Theme</h3>
                   <div className="flex space-x-4">
                     <button 
-                      className={`flex items-center px-4 py-2 rounded-lg border hover:bg-gray-50
-                        ${theme === 'light' ? 'bg-blue-50 border-blue-500' : ''}`}
+                      className={`flex items-center px-4 py-2 rounded-lg border border-gray-200 
+                        ${theme === 'light' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
                       onClick={() => theme !== 'light' && toggleTheme()}
                     >
                       <FiSun className="h-5 w-5 mr-2" />
@@ -116,7 +113,8 @@ function SettingsModal({ isOpen, onClose }) {
                 {/* Language Selection */}
                 <div>
                   <h3 className="text-sm font-medium mb-3">Language</h3>
-                  <select className="w-full px-4 py-2 rounded-lg border">
+                  <select className="w-full px-4 py-2 rounded-lg border border-gray-200 
+                                     focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300">
                     <option value="en">English</option>
                     <option value="zh">中文</option>
                     <option value="es">Español</option>
@@ -141,11 +139,11 @@ function SettingsModal({ isOpen, onClose }) {
                       key={plan.id}
                       className={`
                         relative p-6 rounded-xl border
-                        ${plan.popular ? 'border-purple-600 shadow-md' : 'border-gray-200'}
+                        ${plan.popular ? 'border-gray-600 shadow-md' : 'border-gray-200'}
                       `}
                     >
                       {plan.popular && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs px-3 py-1 rounded-full">
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-600 text-white text-xs px-3 py-1 rounded-full">
                           Popular
                         </span>
                       )}
@@ -158,7 +156,7 @@ function SettingsModal({ isOpen, onClose }) {
                         {plan.discount && (
                           <span className="text-green-500 text-sm">{plan.discount}</span>
                         )}
-                        <button className="mt-4 w-full px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700">
+                        <button className="mt-4 w-full px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700">
                           Select Plan
                         </button>
                       </div>

@@ -70,7 +70,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
             <input
               type="text"
               placeholder="Search folders..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -88,7 +88,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
         <div className="max-h-64 overflow-y-auto p-2">
           {loading ? (
             <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
             </div>
           ) : filteredFolders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -101,7 +101,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
                 onClick={() => onSelect(folder.id)}
                 className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg flex items-center group transition-colors"
               >
-                <FiFolder className="mr-3 text-gray-400 group-hover:text-purple-500" />
+                <FiFolder className="mr-3 text-gray-400 group-hover:text-gray-600" />
                 <span className="truncate text-gray-700 group-hover:text-gray-900">
                   {folder.name}
                 </span>
@@ -117,7 +117,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
               <input
                 type="text"
                 placeholder="Enter folder name"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 autoFocus
@@ -125,7 +125,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
               <div className="flex space-x-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="flex-1 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Create
                 </button>
@@ -144,7 +144,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className="w-full py-2 px-4 text-purple-600 hover:bg-purple-50 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+              className="w-full py-2 px-4 text-gray-600 hover:bg-gray-50 rounded-lg flex items-center justify-center space-x-2"
             >
               <FiPlus />
               <span>Create New Folder</span>

@@ -77,8 +77,8 @@ function AiAssistant({
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 message.type === 'user'
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-gray-100 text-gray-800'
+                  : 'bg-white border border-gray-200 text-gray-800'
               }`}
             >
               {message.type === 'assistant' ? (
@@ -98,11 +98,13 @@ function AiAssistant({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none 
+                       focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2"
+            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg 
+                       hover:bg-gray-50 flex items-center gap-2"
             disabled={!inputMessage.trim()}
           >
             <FiSend />

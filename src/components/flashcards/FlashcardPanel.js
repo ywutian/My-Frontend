@@ -103,7 +103,7 @@ function FlashcardPanel({ noteContent, noteId }) {
         <div className="flex-1 flex flex-col">
           {/* Flashcard Display */}
           <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
-            <div className="text-gray-500 mb-4">
+            <div className="text-gray-600 mb-4">
               Card {currentCardIndex + 1} of {flashcards.length}
             </div>
 
@@ -112,18 +112,18 @@ function FlashcardPanel({ noteContent, noteId }) {
               onClick={handleFlip}
             >
               <div 
-                className={`absolute inset-0 bg-white rounded-xl shadow-lg p-8 flex items-center justify-center transform transition-all duration-500 ${
-                  isFlipped ? 'rotateY-180 opacity-0' : ''
-                }`}
+                className={`absolute inset-0 bg-white rounded-xl border border-gray-200 p-8 
+                  flex items-center justify-center transform transition-all duration-500 
+                  ${isFlipped ? 'rotateY-180 opacity-0' : ''}`}
               >
-                <h2 className="text-2xl font-semibold text-purple-600">
+                <h2 className="text-2xl font-semibold text-gray-800">
                   {flashcards[currentCardIndex].front}
                 </h2>
               </div>
               <div 
-                className={`absolute inset-0 bg-white rounded-xl shadow-lg p-8 flex items-center justify-center transform transition-all duration-500 ${
-                  isFlipped ? '' : 'rotateY-180 opacity-0'
-                }`}
+                className={`absolute inset-0 bg-white rounded-xl border border-gray-200 p-8 
+                  flex items-center justify-center transform transition-all duration-500 
+                  ${isFlipped ? '' : 'rotateY-180 opacity-0'}`}
               >
                 <p className="text-lg text-gray-700">
                   {flashcards[currentCardIndex].back}
@@ -135,20 +135,22 @@ function FlashcardPanel({ noteContent, noteId }) {
                   e.stopPropagation();
                   handlePrevious();
                 }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 opacity-0 
+                  group-hover:opacity-100 transition-opacity"
                 disabled={currentCardIndex === 0}
               >
-                <FiChevronLeft className="w-8 h-8 text-gray-400 hover:text-purple-500" />
+                <FiChevronLeft className="w-8 h-8 text-gray-400 hover:text-gray-600" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 opacity-0 
+                  group-hover:opacity-100 transition-opacity"
                 disabled={currentCardIndex === flashcards.length - 1}
               >
-                <FiChevronRight className="w-8 h-8 text-gray-400 hover:text-purple-500" />
+                <FiChevronRight className="w-8 h-8 text-gray-400 hover:text-gray-600" />
               </button>
             </div>
 
@@ -156,7 +158,7 @@ function FlashcardPanel({ noteContent, noteId }) {
             <div className="flex items-center gap-4 mt-4">
               <button
                 onClick={handleFlip}
-                className="flex items-center gap-2 text-purple-500 hover:text-purple-600"
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
               >
                 <FiRotateCw className="w-4 h-4" />
                 <span>Flip</span>
@@ -165,14 +167,15 @@ function FlashcardPanel({ noteContent, noteId }) {
           </div>
 
           {/* All Flashcards List */}
-          <div className="border-t">
+          <div className="border-t border-gray-200">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">All Flashcards</h3>
+                <h3 className="text-xl font-semibold text-gray-800">All Flashcards</h3>
                 <button
                   onClick={startFlashcardGeneration}
                   disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 
+                    text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                 >
                   <FiPlus className="w-4 h-4" />
                   <span>Generate More</span>
@@ -183,13 +186,13 @@ function FlashcardPanel({ noteContent, noteId }) {
                 {flashcards.map((card, index) => (
                   <div 
                     key={card.id}
-                    className="bg-gray-50 p-4 rounded-lg"
+                    className="bg-gray-50 border border-gray-200 p-4 rounded-lg"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium">Card {index + 1}</h4>
+                      <h4 className="font-medium text-gray-800">Card {index + 1}</h4>
                       <button 
                         onClick={() => deleteFlashcard(card.id)}
-                        className="text-red-500 hover:text-red-600"
+                        className="text-gray-400 hover:text-gray-600"
                       >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
@@ -197,11 +200,11 @@ function FlashcardPanel({ noteContent, noteId }) {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-500">Front</p>
-                        <p className="mt-1">{card.front}</p>
+                        <p className="mt-1 text-gray-700">{card.front}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Back</p>
-                        <p className="mt-1">{card.back}</p>
+                        <p className="mt-1 text-gray-700">{card.back}</p>
                       </div>
                     </div>
                   </div>
@@ -213,8 +216,8 @@ function FlashcardPanel({ noteContent, noteId }) {
       ) : (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
-            <p className="text-gray-500 mb-4">Generating flashcards...</p>
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-gray-600 mb-4">Generating flashcards...</p>
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
         </div>
       )}

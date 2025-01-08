@@ -82,8 +82,8 @@ function BillingModal({ isOpen, onClose }) {
               <button
                 className={`px-4 py-2 rounded-full ${
                   billingInterval === 'annually' 
-                    ? 'bg-purple-100 text-purple-600' 
-                    : 'text-gray-600'
+                    ? 'bg-gray-100 text-gray-700' 
+                    : 'text-gray-500'
                 }`}
                 onClick={() => setBillingInterval('annually')}
               >
@@ -92,7 +92,7 @@ function BillingModal({ isOpen, onClose }) {
               <button
                 className={`px-4 py-2 rounded-full ${
                   billingInterval === 'monthly' 
-                    ? 'bg-purple-100 text-purple-600' 
+                    ? 'bg-gray-100 text-gray-800' 
                     : 'text-gray-600'
                 }`}
                 onClick={() => setBillingInterval('monthly')}
@@ -102,7 +102,7 @@ function BillingModal({ isOpen, onClose }) {
               <button
                 className={`px-4 py-2 rounded-full ${
                   billingInterval === 'weekly' 
-                    ? 'bg-purple-100 text-purple-600' 
+                    ? 'bg-gray-100 text-gray-800' 
                     : 'text-gray-600'
                 }`}
                 onClick={() => setBillingInterval('weekly')}
@@ -118,11 +118,11 @@ function BillingModal({ isOpen, onClose }) {
                   key={plan.name}
                   className={`
                     relative p-6 rounded-xl border
-                    ${plan.popular ? 'border-purple-600 shadow-lg' : 'border-gray-200'}
+                    ${plan.popular ? 'border-gray-300 shadow-sm' : 'border-gray-200'}
                   `}
                 >
                   {plan.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs px-3 py-1 rounded-full">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs px-3 py-1 rounded-full">
                       Most Popular
                     </span>
                   )}
@@ -134,7 +134,7 @@ function BillingModal({ isOpen, onClose }) {
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-center text-sm">
-                        <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         {feature}
@@ -144,8 +144,8 @@ function BillingModal({ isOpen, onClose }) {
                   <button className={`
                     mt-6 w-full py-2 px-4 rounded-lg
                     ${plan.popular 
-                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' 
+                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }
                   `}>
                     {plan.name === 'Free' ? 'Current Plan' : `Go ${plan.name}`}

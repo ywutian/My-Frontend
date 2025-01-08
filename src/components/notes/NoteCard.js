@@ -71,54 +71,54 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
 
   return (
     <div 
-      className="group bg-white p-4 rounded-lg border hover:border-purple-300 hover:shadow-lg 
-                 transition-all duration-200 cursor-pointer relative"
+      className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 
+                 hover:shadow-sm transition-all duration-200 cursor-pointer relative"
       onClick={onClick}
     >
       {/* Actions Menu */}
-      <div className="absolute top-3 right-3" ref={actionsRef}>
+      <div className="absolute right-2 top-2 z-10">
         <button
           onClick={(e) => {
             e.stopPropagation();
             setShowActions(!showActions);
           }}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <FiMoreVertical className="w-4 h-4 text-gray-500" />
         </button>
 
-        {/* Dropdown Menu */}
         {showActions && (
-          <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+          <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 
+                          rounded-lg shadow-sm py-1">
             <button
-              onClick={(e) => handleActionClick(e, onRename, 'rename')}
-              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
+              onClick={(e) => handleActionClick(e, null, 'rename')}
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
             >
               <FiEdit2 className="w-4 h-4" />
               Rename
             </button>
-            
-            {note.folderId ? (
+
+            {!note.folderId ? (
               <button
-                onClick={(e) => handleActionClick(e, onRemoveFromFolder, 'removeFromFolder')}
-                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FiFolderMinus className="w-4 h-4" />
-                Remove from Folder
-              </button>
-            ) : (
-              <button
-                onClick={(e) => handleActionClick(e, onAddToFolder, 'addToFolder')}
-                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
+                onClick={(e) => handleActionClick(e, null, 'addToFolder')}
+                className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
               >
                 <FiFolder className="w-4 h-4" />
                 Add to Folder
+              </button>
+            ) : (
+              <button
+                onClick={(e) => handleActionClick(e, null, 'removeFromFolder')}
+                className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+              >
+                <FiFolderMinus className="w-4 h-4" />
+                Remove from Folder
               </button>
             )}
             
             <button
               onClick={(e) => handleActionClick(e, null, 'delete')}
-              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-red-600"
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
             >
               <FiTrash2 className="w-4 h-4" />
               Delete
@@ -138,7 +138,7 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
 
       {/* Note Footer */}
       <div className="flex items-center justify-between text-xs text-gray-400">
-        <div className="flex items-center group-hover:text-purple-500 transition-colors">
+        <div className="flex items-center group-hover:text-gray-600 transition-colors">
           <FiClock className="w-3.5 h-3.5 mr-1" />
           <span>{formatDate(note.date || note.lastModified)}</span>
         </div>

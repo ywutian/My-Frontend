@@ -124,14 +124,14 @@ const QuizPanel = ({ noteContent, noteId }) => {
             <div className="space-x-2">
               <button
                 onClick={() => viewQuizHistory(quiz)}
-                className="px-3 py-1 text-sm bg-purple-100 text-purple-600 rounded hover:bg-purple-200"
+                className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
               >
                 <FiClock className="inline mr-1" />
                 View
               </button>
               <button
                 onClick={startQuiz}
-                className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 <FiRotateCcw className="inline mr-1" />
                 Retake
@@ -144,9 +144,9 @@ const QuizPanel = ({ noteContent, noteId }) => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-white border-b">
+      <div className="flex justify-between items-center p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           {(showHistory || (isQuizStarted && currentQuizId)) && (
             <button
@@ -169,24 +169,25 @@ const QuizPanel = ({ noteContent, noteId }) => {
           <h2 className="text-xl font-semibold text-gray-800">Quiz</h2>
         </div>
         
-        {!showHistory && isQuizStarted && (
+        {!showHistory && (
           <button
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-500 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 
+                       text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors"
             onClick={() => setShowHistory(true)}
           >
-            <span>Previous Quizzes</span>
-            <FiChevronRight />
+            <FiClock className="w-4 h-4" />
+            <span>Quiz History</span>
           </button>
         )}
       </div>
 
       {/* Main content */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
         {showHistory ? (
           <HistoryView />
         ) : !isQuizStarted ? (
           <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
-            <div className="bg-white p-8 rounded-2xl shadow-sm w-full">
+            <div className="bg-white p-8 rounded-2xl shadow-sm w-full border border-gray-200">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 Ready to Test Your Knowledge?
               </h3>
@@ -196,24 +197,20 @@ const QuizPanel = ({ noteContent, noteId }) => {
               <button
                 onClick={startQuiz}
                 disabled={isLoading}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 w-full justify-center
+                  ${isLoading ? 'bg-gray-50 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
               >
                 {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Generating Quiz...</span>
-                  </>
+                  <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <>
-                    <FiPlay className="w-5 h-5" />
-                    <span>Generate Quiz</span>
-                  </>
+                  <FiPlay className="w-5 h-5" />
                 )}
+                <span>Start Quiz</span>
               </button>
             </div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-6">
+          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             {/* Progress bar */}
             <div className="mb-6">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -222,7 +219,7 @@ const QuizPanel = ({ noteContent, noteId }) => {
               </div>
               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-purple-500 transition-all duration-300"
+                  className="h-full bg-gray-600 transition-all duration-300"
                   style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                 />
               </div>
@@ -248,26 +245,28 @@ const QuizPanel = ({ noteContent, noteId }) => {
                     className={`w-full p-4 text-left rounded-lg border transition-all ${
                       showExplanation
                         ? isCorrect
-                          ? 'border-green-500 bg-green-50'
+                          ? 'border-gray-600 bg-gray-50 text-gray-800'
                           : isSelected
-                            ? 'border-red-500 bg-red-50'
+                            ? 'border-gray-400 bg-gray-50 text-gray-600'
                             : 'border-gray-200 opacity-50'
                         : isSelected
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:border-purple-500'
+                          ? 'border-gray-400 bg-gray-50'
+                          : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       {showExplanation && (
                         <span className="flex-shrink-0">
                           {isCorrect ? (
-                            <FiCheck className="w-5 h-5 text-green-500" />
+                            <FiCheck className="w-5 h-5 text-gray-700" />
                           ) : isSelected ? (
-                            <FiX className="w-5 h-5 text-red-500" />
+                            <FiX className="w-5 h-5 text-gray-500" />
                           ) : null}
                         </span>
                       )}
-                      <span>{option}</span>
+                      <span className={showExplanation && !isCorrect && isSelected ? 'text-gray-500' : 'text-gray-700'}>
+                        {option}
+                      </span>
                     </div>
                   </button>
                 );
@@ -294,7 +293,7 @@ const QuizPanel = ({ noteContent, noteId }) => {
             {showExplanation && currentQuestion < questions.length - 1 && (
               <button
                 onClick={handleNextQuestion}
-                className="w-full mt-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full mt-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
               >
                 <span>Next Question</span>
                 <FiChevronRight />
@@ -303,11 +302,11 @@ const QuizPanel = ({ noteContent, noteId }) => {
 
             {/* Quiz completion */}
             {showExplanation && currentQuestion === questions.length - 1 && (
-              <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg text-center">
-                <h4 className="text-lg font-semibold text-purple-800 mb-2">
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <h4 className="text-lg font-semibold text-blue-800 mb-2">
                   Quiz Completed!
                 </h4>
-                <p className="text-purple-600">
+                <p className="text-blue-600">
                   You've completed all questions. Great job!
                 </p>
               </div>

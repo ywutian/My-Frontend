@@ -249,7 +249,10 @@ function Sidebar({ isOpen, onToggle }) {
                 to={item.path}
                 className={`
                   flex items-center px-2 py-2 mb-1 rounded-lg
-                  ${location.pathname === item.path ? 'bg-purple-50 text-purple-600' : 'text-gray-600 hover:bg-gray-100'}
+                  ${location.pathname === item.path 
+                    ? 'bg-gray-100 text-gray-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                  }
                   ${!isOpen && 'justify-center'}
                 `}
               >
@@ -266,7 +269,7 @@ function Sidebar({ isOpen, onToggle }) {
                 <span className="text-xs font-semibold text-gray-400">FOLDERS</span>
                 <button 
                   onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
-                  className="p-1 hover:bg-gray-100 rounded"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
                 >
                   {isFoldersExpanded ? <FiChevronDown /> : <FiChevronRight />}
                 </button>
@@ -426,7 +429,7 @@ function Sidebar({ isOpen, onToggle }) {
 
       {loading && (
         <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
         </div>
       )}
 

@@ -2,14 +2,16 @@ import Dexie from 'dexie';
 import { api } from '../services/api';
 
 export const db = new Dexie('notesApp');
-db.version(3).stores({
+db.version(4).stores({
   notes:
-    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId, transcript',
+    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId, transcript, youtubeUrl, attachments',
+  attachments: '++id, noteId, fileName, fileType, fileData, size, uploadDate',
   folders: '++id, name, createdAt, lastModified, syncStatus',
   flashcards: '++id, noteId, front, back, syncStatus',
   syncQueue: '++id, operation, data, timestamp',
   quizzes: '++id, noteId, questions, userAnswers, date, score',
 });
+
 export const saveNote = async (noteData) => {
   try {
     // 准备笔记数据
@@ -124,6 +126,64 @@ export const updateNote = async (id, updates) => {
     }
   } catch (error) {
     console.error('Error updating note:', error);
+    throw error;
+  }
+};
+
+export const saveAttachment = async (noteId, file) => {
+  try {
+    const fileData = await file.arrayBuffer(); // Convert file to ArrayBuffer for storage
+    
+    const attachment = {
+      noteId,
+      fileName: file.name,
+      fileType: file.type,
+      fileData,
+      size: file.size,
+      uploadDate: new Date().toISOString()
+    };
+
+    const attachmentId = await db.attachments.add(attachment);
+    
+    // Update note's attachments array
+    await db.notes.update(noteId, {
+      attachments: Dexie.Value.arrayUnion(attachmentId)
+    });
+
+    return attachmentId;
+  } catch (error) {
+    console.error('Error saving attachment:', error);
+    throw error;
+  }
+};
+
+export const getAttachment = async (attachmentId) => {
+  try {
+    const attachment = await db.attachments.get(attachmentId);
+    if (!attachment) throw new Error('Attachment not found');
+    
+    // Convert ArrayBuffer back to Blob
+    const blob = new Blob([attachment.fileData], { type: attachment.fileType });
+    return {
+      ...attachment,
+      blob
+    };
+  } catch (error) {
+    console.error('Error getting attachment:', error);
+    throw error;
+  }
+};
+
+export const deleteAttachment = async (attachmentId, noteId) => {
+  try {
+    await db.attachments.delete(attachmentId);
+    
+    // Remove attachment ID from note's attachments array
+    await db.notes.update(noteId, {
+      attachments: Dexie.Value.arrayDelete(attachmentId)
+    });
+  } catch (error) {
+    console.error('Error deleting attachment:', error);
     throw error;
   }
 };
