@@ -1,22 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useDeepgramTranscription } from '../../hooks/useDeepgramTranscription';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTranscripts } from '../../hooks/useTranscripts';
-import { useLiveTranscription } from '../../hooks/useLiveTranscription';
-import { TranscriptList } from './TranscriptList';
-import AiAssistant from '../ai/AiAssistant';
-import DraggableSidebar from '../layout/DraggableSidebar';
-import TranscriptionPanel from './TranscriptionPanel';
-import { saveNote } from '../../db/db';
-import CreateNoteModal from '../notes/CreateNoteModal';
-import { useNavigate } from 'react-router-dom';
-import { generateNote } from '../../services/noteGenerationService';
+import { getTranscriptText } from '../../utils/transcriptionUtils';
 
-function LiveTranscription() {
-  const navigate = useNavigate();
-  const { isRecording, error, startRecording, stopRecording } =
-    useDeepgramTranscription();
-  const { isTranslating, translateText, toggleTranslation } = useTranslation();
+export default function LiveTranscription({ onTranscriptionUpdate, isRecording }) {
+  const { error, startRecording, stopRecording } = useDeepgramTranscription();
+  const { isTranslating, translateText } = useTranslation();
   const {
     transcripts,
     interimResult,
@@ -24,150 +15,109 @@ function LiveTranscription() {
     updateTranscriptTranslations,
   } = useTranscripts();
 
-  const { handleRecordingToggle, handleTranslationToggle } =
-    useLiveTranscription({
-      isTranslating,
-      updateLatestTranscript,
-      updateTranscriptTranslations,
-      translateText,
-      startRecording,
-      stopRecording,
-      isRecording,
-      transcripts,
-    });
+  const prevInterimRef = useRef('');
+  const transcriptContainerRef = useRef(null);
 
-  const [transcriptionContent, setTranscriptionContent] = useState('');
-  const [transcriptionLanguage, setTranscriptionLanguage] = useState('en');
-  const [translationLanguage, setTranslationLanguage] = useState('zh');
-  const [sidebarWidth, setSidebarWidth] = useState(400);
-  const [sidebarState, setSidebarState] = useState({
-    isCollapsed: false,
-    size: { width: 400 },
-    COLLAPSED_SIZE: 40
-  });
-  const [showCreateNote, setShowCreateNote] = useState(false);
-  const [noteContent, setNoteContent] = useState('');
-
+  // 监听外部录音状态变化
   useEffect(() => {
-    const fullTranscript = transcripts.map((t) => t.text).join('\n');
-    if (interimResult?.text) {
-      setTranscriptionContent(`${fullTranscript}\n${interimResult.text}`);
+    if (isRecording) {
+      startRecording(updateLatestTranscript);
     } else {
-      setTranscriptionContent(fullTranscript);
+      stopRecording();
     }
+  }, [isRecording, startRecording, stopRecording, updateLatestTranscript]);
+
+  // 使用工具函数计算历史文本和新增文本
+  const { historicalText, incrementalText } = useMemo(() => {
+    return getTranscriptText(transcripts, interimResult, prevInterimRef);
   }, [transcripts, interimResult]);
 
-  const handleGenerateNote = useCallback(() => {
-    const noteText = transcripts
-      .map(t => t.text)
-      .join('\n');
+  // 更新转录内容
+  useEffect(() => {
+    const fullTranscript = transcripts.map((t) => t.text).join('\n');
+    const currentContent = interimResult?.text 
+      ? `${fullTranscript}\n${interimResult.text}`
+      : fullTranscript;
     
-    setNoteContent(noteText);
-    setShowCreateNote(true);
-  }, [transcripts]);
+    onTranscriptionUpdate?.(currentContent);
+  }, [transcripts, interimResult, onTranscriptionUpdate]);
 
-  const handleCreateNote = async (formData) => {
-    try {
-      const title = formData.get('title');
-      const noteLanguage = formData.get('noteLanguage');
-      const folderId = formData.get('folderId');
-      const folderName = formData.get('folderName');
-
-      const transcript = transcripts.map(t => t.text).join('\n');
-      const aiGeneratedContent = await generateNote(transcript, noteLanguage);
-
-      const noteData = {
-        title: title || new Date().toLocaleDateString(),
-        content: aiGeneratedContent,
-        audioLanguage: transcriptionLanguage,
-        noteLanguage,
-        transcript: transcripts,
-        date: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        folderId: folderId || null,
-        folderName: folderName || null,
-      };
-
-      const noteId = await saveNote(noteData);
-      setShowCreateNote(false);
-
-      const notification = document.createElement('div');
-      notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
-      notification.textContent = 'Note created successfully!';
-      document.body.appendChild(notification);
+  // 自动滚动到底部
+  useEffect(() => {
+    if (transcriptContainerRef.current) {
+      const container = transcriptContainerRef.current;
+      const shouldAutoScroll = 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
       
-      setTimeout(() => {
-        notification.remove();
-        navigate(`/notes/${noteId}`);
-      }, 1000);
-
-    } catch (error) {
-      console.error('Error creating note:', error);
-      const errorNotification = document.createElement('div');
-      errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
-      errorNotification.textContent = `Failed to create note: ${error.message}`;
-      document.body.appendChild(errorNotification);
-      setTimeout(() => errorNotification.remove(), 3000);
+      if (shouldAutoScroll) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
-  };
+  }, [historicalText, incrementalText]);
 
   return (
-    <div className="h-screen overflow-hidden">
-      <div 
-        className="h-full p-4"
-        style={{ 
-          marginRight: sidebarState.isCollapsed ? `${sidebarState.COLLAPSED_SIZE}px` : `${sidebarState.size.width}px`
-        }}
+    <div className="h-full overflow-hidden">
+      <motion.div
+        ref={transcriptContainerRef}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className={`h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 
+          scrollbar-track-transparent hover:scrollbar-thumb-gray-400 
+          [&::-webkit-scrollbar]:w-2 
+          [&::-webkit-scrollbar-track]:bg-transparent 
+          [&::-webkit-scrollbar-thumb]:bg-gray-300 
+          [&::-webkit-scrollbar-thumb]:rounded-full 
+          [&::-webkit-scrollbar-thumb:hover]:bg-gray-400`}
       >
-        <TranscriptList
-          transcripts={transcripts}
-          interimResult={interimResult}
-          isRecording={isRecording}
-          isTranslating={isTranslating}
-        />
-
-        {error && (
-          <div className="fixed bottom-4 left-4 bg-red-100 text-red-600 px-4 py-2 rounded-lg shadow">
-            {error}
+        <div className={`p-4 rounded-lg border border-gray-200 ${
+          isRecording ? 'bg-blue-50' : 'bg-gray-50'
+        }`}>
+          {/* 转录文本显示 */}
+          <div className="text-left">
+            <span>{historicalText}</span>
+            <AnimatePresence mode="wait">
+              {incrementalText && (
+                <motion.span
+                  key={incrementalText}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {' ' + incrementalText}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
-        )}
-      </div>
 
-      <DraggableSidebar
-        title="Controls"
-        defaultWidth={300}
-        minWidth={280}
-        initialPosition="right"
-        defaultTab="Transcription"
-        onStateChange={setSidebarState}
-      >
-        <div role="tabpanel" label="Transcription">
-          <TranscriptionPanel
-            isRecording={isRecording}
-            isTranslating={isTranslating}
-            transcriptionLanguage={transcriptionLanguage}
-            translationLanguage={translationLanguage}
-            onTranscriptionLanguageChange={setTranscriptionLanguage}
-            onTranslationLanguageChange={setTranslationLanguage}
-            onRecordingToggle={handleRecordingToggle}
-            onTranslationToggle={handleTranslationToggle}
-            onGenerateNote={handleGenerateNote}
-            hasTranscripts={transcripts.length > 0}
-          />
-        </div>
-        <div role="tabpanel" label="AI Assistant">
-          <AiAssistant noteContent={transcriptionContent} />
-        </div>
-      </DraggableSidebar>
+          {/* 翻译显示部分 */}
+          {isTranslating && (
+            <div className="mt-2 text-gray-600 border-t border-gray-200 pt-2">
+              {(() => {
+                const translations = [
+                  ...transcripts.map((t) => t.translation),
+                  interimResult?.translation,
+                ].filter(Boolean);
+                return translations.join(' ');
+              })()}
+            </div>
+          )}
 
-      <CreateNoteModal
-        isOpen={showCreateNote}
-        onClose={() => setShowCreateNote(false)}
-        onSubmit={handleCreateNote}
-        initialContent={noteContent}
-      />
+          {/* 时间戳显示 */}
+          {(interimResult || transcripts[transcripts.length - 1]) && (
+            <div className="mt-2 text-xs text-gray-500">
+              {new Date(
+                (interimResult || transcripts[transcripts.length - 1]).timestamp,
+              ).toLocaleTimeString()}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {error && (
+        <div className="fixed bottom-4 left-4 bg-red-100 text-red-600 px-4 py-2 rounded-lg shadow">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
-
-export default LiveTranscription;

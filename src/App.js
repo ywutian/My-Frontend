@@ -14,6 +14,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import MainView from './pages/MainView';
+import TranscriptionPage from './pages/TranscriptionPage';
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
   const auth = useAuth();
@@ -72,6 +73,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/transcription" element={<TranscriptionPage />} />
             </Routes>
           </Router>
         </ThemeProvider>

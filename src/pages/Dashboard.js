@@ -138,8 +138,7 @@ function Dashboard() {
       
       input.click();
     } else if (optionId === 'lecture') {
-      setShowLiveTranscription(true);
-      setSelectedInput('lecture');
+      navigate('/transcription');
     } else if (optionId === 'audio') {
       setShowAudioUpload(true);
     } else {
