@@ -1,13 +1,28 @@
 import { useState } from 'react';
 import Modal from '../common/Modal';
+import { youtubeService } from '../../services/youtubeService';
 
 function YouTubeLinkModal({ isOpen, onClose, onSubmit }) {
   const [youtubeLink, setYoutubeLink] = useState('');
   const [title, setTitle] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({ youtubeLink, title });
+    setIsProcessing(true);
+    try {
+      const result = await youtubeService.processYouTubeVideo(
+        youtubeLink, 
+        title
+      );
+      onSubmit(result);
+      onClose();
+    } catch (error) {
+      console.error('Error processing YouTube video:', error);
+      // TODO: 显示错误提示
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -52,6 +67,7 @@ function YouTubeLinkModal({ isOpen, onClose, onSubmit }) {
               onClick={onClose}
               className="px-4 py-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100
                 rounded-lg transition-colors"
+              disabled={isProcessing}
             >
               Cancel
             </button>
@@ -60,9 +76,10 @@ function YouTubeLinkModal({ isOpen, onClose, onSubmit }) {
               className="px-4 py-1.5 bg-white border border-gray-200 text-gray-700 
                 rounded-lg hover:bg-gray-100 hover:border-gray-300 
                 focus:outline-none focus:ring-1 focus:ring-gray-200
-                transition-colors"
+                transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isProcessing}
             >
-              Create Note
+              {isProcessing ? 'Processing...' : 'Create Note'}
             </button>
           </div>
         </form>
