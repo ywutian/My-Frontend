@@ -223,41 +223,12 @@ export function useDeepgramTranscription() {
         const inputData = e.inputBuffer.getChannelData(0);
         audioProcessingCount++;
 
-        // 每5秒输出一次音频处理统计
-        const currentTime = Date.now();
-        if (currentTime - lastLogTime >= LOG_INTERVAL) {
-          console.log('音频处理统计:', {
-            处理次数: audioProcessingCount,
-            缓冲区大小: audioBufferRef.current.length,
-            距离上次发送: `${currentTime - lastSendTimeRef.current}ms`,
-            每秒处理次数: (audioProcessingCount / (LOG_INTERVAL / 1000)).toFixed(2)
-          });
-          audioProcessingCount = 0;
-          lastLogTime = currentTime;
-        }
-
-        // 优化的静音检测 - 使用分段检测
-        const chunkSize = 1024;
-        let hasSound = false;
-        for (let i = 0; i < inputData.length; i += chunkSize) {
-          const chunk = inputData.slice(i, i + chunkSize);
-          const rms = Math.sqrt(chunk.reduce((sum, sample) => sum + sample * sample, 0) / chunk.length);
-          if (rms > SILENCE_THRESHOLD) {
-            hasSound = true;
-            break;
-          }
-        }
-
-        if (!hasSound) {
-          console.log('检测到静音，跳过处理');
-          return;
-        }
-
-        // 优化的数据处理
+        // 移除严格的静音检测，改用更灵活的方案
         const processedData = convertFloat32ToInt16(inputData);
         audioBufferRef.current.push(...processedData);
 
-        // 更保守的数据发送策略
+        // 使用累积音量评估来替代严格的静音检测
+        const currentTime = Date.now();
         const timeSinceLastSend = currentTime - lastSendTimeRef.current;
         const hasEnoughSamples = audioBufferRef.current.length >= MIN_SAMPLES_FOR_PROCESSING;
         const bufferIsFull = audioBufferRef.current.length >= MAX_BUFFER_SIZE;
