@@ -14,30 +14,56 @@ export function useDeepgramTranscription() {
     console.group('Cleanup Process');
     console.log('Starting cleanup process...');
     
+    // 1. 首先停止 MediaRecorder
+    if (mediaRecorderRef.current) {
+      console.log('Stopping MediaRecorder...');
+      // 添加 onstop 处理器来确保最后的数据被处理
+      mediaRecorderRef.current.onstop = () => {
+        console.log('MediaRecorder stopped completely');
+      };
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+
+    // 2. 然后关闭 Deepgram 连接
     if (connectionRef.current) {
       console.log('Closing Deepgram connection...', {
         connectionState: connectionRef.current.getReadyState(),
         totalTime: startTimeRef.current ? `${(Date.now() - startTimeRef.current) / 1000}s` : 'N/A',
         packetsProcessed: packetCountRef.current
       });
+      // 确保在关闭前所有数据都被发送
       connectionRef.current.finish();
-      connectionRef.current = null;
-    }
-
-    if (mediaStreamRef.current) {
-      console.log('Stopping media stream...');
-      if (mediaRecorderRef.current) {
-        console.log('Stopping MediaRecorder...');
-        mediaRecorderRef.current.stop();
-        mediaRecorderRef.current = null;
+      // 添加小延迟确保数据被发送
+      setTimeout(() => {
+        connectionRef.current = null;
+        // 3. 最后停止媒体流
+        if (mediaStreamRef.current) {
+          console.log('Stopping media stream...');
+          mediaStreamRef.current.getTracks().forEach(track => {
+            track.stop();
+            console.log(`Track ${track.kind} stopped`);
+          });
+          mediaStreamRef.current = null;
+        }
+        setIsRecording(false);
+        console.log('Cleanup completed');
+        console.groupEnd();
+      }, 100);
+    } else {
+      // 如果没有连接，直接清理媒体流
+      if (mediaStreamRef.current) {
+        console.log('Stopping media stream...');
+        mediaStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Track ${track.kind} stopped`);
+        });
+        mediaStreamRef.current = null;
       }
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      mediaStreamRef.current = null;
+      setIsRecording(false);
+      console.log('Cleanup completed');
+      console.groupEnd();
     }
-
-    setIsRecording(false);
-    console.log('Cleanup completed');
-    console.groupEnd();
   }, []);
 
   const startRecording = useCallback(async (onTranscriptReceived) => {

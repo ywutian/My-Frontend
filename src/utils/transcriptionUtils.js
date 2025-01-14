@@ -39,8 +39,22 @@ export const getTranscriptText = (transcripts, interimResult, prevInterimRef) =>
   // 历史文本正确
   const historicalText = transcripts.map(t => t.text).join(' ');
 
-  // 临时文本直接使用 interimResult
-  let incrementalText = interimResult?.text || '';
+  // 临时文本处理
+  let incrementalText = '';
+  if (interimResult?.text) {
+    const currentInterim = interimResult.text;
+    const prevInterim = prevInterimRef.current;
+
+    if (currentInterim !== prevInterim) {
+      // 找出新增的部分
+      incrementalText = getLCS(prevInterim, currentInterim);
+      // 更新 prevInterimRef
+      prevInterimRef.current = currentInterim;
+    }
+  } else {
+    // 如果没有临时文本，清空 prevInterimRef
+    prevInterimRef.current = '';
+  }
 
   return { historicalText, incrementalText };
 };

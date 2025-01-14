@@ -5,33 +5,48 @@ export function useTranscripts() {
   const [interimResult, setInterimResult] = useState(null);
 
   const updateLatestTranscript = useCallback((data) => {
-    const transcript = data?.channel?.alternatives?.[0]?.processedTranscript;
-    if (!transcript) return;
+    // 从 Deepgram 数据中提取转录信息
+    const transcriptData = data?.channel?.alternatives?.[0];
+    if (!transcriptData) {
+      console.log('No transcript data received');
+      return;
+    }
 
-    console.log('Transcript update:', {
+    // 构建转录对象
+    const transcript = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text: transcriptData.transcript || '',
+      confidence: transcriptData.confidence || 0,
+      words: transcriptData.words?.length || 0,
+      isFinal: data.is_final,
+      timestamp: Date.now()
+    };
+
+    console.group('Transcript Processing');
+    console.log('Processing transcript:', {
       type: transcript.isFinal ? 'final' : 'interim',
       text: transcript.text,
       confidence: transcript.confidence,
+      words: transcript.words,
       currentTranscripts: transcripts.length
     });
 
-    if (transcript.isFinal) {
-      setTranscripts(prev => [...prev, {
-        ...transcript,
-        timestamp: Date.now(),
-        translation: data.translation
-      }]);
-      setInterimResult(null);
-    } else {
-      setInterimResult({
-        ...transcript,
-        timestamp: Date.now(),
-        translation: data.translation
-      });
+    // 只处理有文本内容的转录
+    if (transcript.text.trim()) {
+      if (transcript.isFinal) {
+        setTranscripts(prev => [...prev, transcript]);
+        setInterimResult(null);
+        console.log('Final transcript added to history');
+      } else {
+        setInterimResult(transcript);
+        console.log('Interim result updated');
+      }
     }
+    console.groupEnd();
   }, [transcripts.length]);
 
   const updateTranscriptTranslations = useCallback((id, translation) => {
+    console.group('Translation Update');
     console.log('Updating translation:', { id, translation });
     
     setTranscripts(prev => prev.map(t => 
@@ -41,6 +56,9 @@ export function useTranscripts() {
     setInterimResult(prev => 
       prev?.id === id ? { ...prev, translation } : prev
     );
+    
+    console.log('Translation update completed');
+    console.groupEnd();
   }, []);
 
   return {
