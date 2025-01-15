@@ -17,3 +17,101 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Split Pane Styles */
+.gutter {
+  position: relative;
+  background-color: #f3f4f6;
+  transition: background-color 0.15s ease;
+  touch-action: none;
+}
+
+.gutter-horizontal {
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.gutter-custom {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 拖动条中间的线 */
+.gutter::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 80px;
+  background-color: #d1d5db;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+/* 拖动点样式 */
+.drag-dots {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.drag-dots > div {
+  width: 4px;
+  height: 4px;
+  background-color: #9ca3af;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+/* 悬停效果 */
+.gutter:hover {
+  background-color: #e5e7eb;
+}
+
+.gutter:hover::after {
+  background-color: #9ca3af;
+  width: 6px;
+}
+
+.gutter:hover .drag-dots > div {
+  background-color: #6b7280;
+}
+
+/* 拖动时的效果 */
+.gutter:active {
+  background-color: #d1d5db !important;
+  transition: none;
+}
+
+.gutter:active::after {
+  background-color: #6b7280;
+  width: 6px;
+  transition: none;
+}
+
+/* 确保分割面板容器正确显示 */
+.split {
+  display: flex;
+  flex-direction: row;
+  user-select: none;
+}
+
+/* 拖动时的全局样式 */
+body.dragging {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* 优化触摸设备上的拖动体验 */
+@media (pointer: coarse) {
+  .gutter {
+    min-width: 20px;
+  }
+}
