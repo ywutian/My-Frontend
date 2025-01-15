@@ -9,8 +9,7 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
   const { error, startRecording, stopRecording } = useDeepgramTranscription();
   const { isTranslating, translateText } = useTranslation();
   const {
-    transcripts,
-    interimResult,
+    transcriptBuffer,
     updateLatestTranscript,
     updateTranscriptTranslations,
   } = useTranscripts();
@@ -29,18 +28,28 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
 
   // 使用工具函数计算历史文本和新增文本
   const { historicalText, incrementalText } = useMemo(() => {
-    return getTranscriptText(transcripts, interimResult, prevInterimRef);
-  }, [transcripts, interimResult]);
+    const { segments, currentSegment, interimResult } = transcriptBuffer;
+    return getTranscriptText(
+      [...segments, currentSegment], 
+      interimResult, 
+      prevInterimRef
+    );
+  }, [transcriptBuffer]);
 
   // 更新转录内容
   useEffect(() => {
-    const fullTranscript = transcripts.map((t) => t.text).join('\n');
+    const { segments, currentSegment, interimResult } = transcriptBuffer;
+    const allSegments = [...segments, currentSegment];
+    const fullTranscript = allSegments.map(segment => 
+      segment.texts.map(t => t.text).join(' ')
+    ).join('\n');
+    
     const currentContent = interimResult?.text 
       ? `${fullTranscript}\n${interimResult.text}`
       : fullTranscript;
     
     onTranscriptionUpdate?.(currentContent);
-  }, [transcripts, interimResult, onTranscriptionUpdate]);
+  }, [transcriptBuffer, onTranscriptionUpdate]);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -54,6 +63,27 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
       }
     }
   }, [historicalText, incrementalText]);
+
+  // 合并所有需要显示的段落
+  const displaySegments = useMemo(() => {
+    const { segments, currentSegment, interimResult } = transcriptBuffer;
+    
+    // 1. 已完成的段落
+    const completedSegments = [...segments];
+    
+    // 2. 当前段落（包含临时结果）
+    if (currentSegment.texts.length > 0 || interimResult) {
+      const currentDisplay = {
+        ...currentSegment,
+        texts: interimResult 
+          ? [...currentSegment.texts, interimResult]
+          : currentSegment.texts
+      };
+      completedSegments.push(currentDisplay);
+    }
+
+    return completedSegments;
+  }, [transcriptBuffer]);
 
   return (
     <div className="h-full overflow-hidden">
@@ -69,48 +99,35 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
           [&::-webkit-scrollbar-thumb]:rounded-full 
           [&::-webkit-scrollbar-thumb:hover]:bg-gray-400`}
       >
-        <div className={`p-4 rounded-lg border border-gray-200 ${
-          isRecording ? 'bg-blue-50' : 'bg-gray-50'
-        }`}>
-          {/* 转录文本显示 */}
-          <div className="text-left">
-            <span>{historicalText}</span>
-            <AnimatePresence mode="wait">
-              {incrementalText && (
-                <motion.span
-                  key={incrementalText}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {' ' + incrementalText}
-                </motion.span>
-              )}
-            </AnimatePresence>
+        {displaySegments.map((segment, index) => (
+          <div 
+            key={segment.id || index}
+            className={`p-4 rounded-lg border border-gray-200 mb-4 ${
+              index === displaySegments.length - 1 && isRecording 
+                ? 'bg-blue-50' 
+                : 'bg-gray-50'
+            }`}
+          >
+            {/* 段落时间戳 */}
+            <div className="text-sm text-gray-500 mb-2">
+              {new Date(segment.startTime).toLocaleTimeString()}
+            </div>
+
+            {/* 段落内容 */}
+            <div className="text-left">
+              {segment.texts.map((text, i) => (
+                <span key={text.id || i}>{text.text} </span>
+              ))}
+            </div>
+
+            {/* 翻译显示部分 */}
+            {isTranslating && segment.translation && (
+              <div className="mt-2 text-gray-600 border-t border-gray-200 pt-2">
+                {segment.translation}
+              </div>
+            )}
           </div>
-
-          {/* 翻译显示部分 */}
-          {isTranslating && (
-            <div className="mt-2 text-gray-600 border-t border-gray-200 pt-2">
-              {(() => {
-                const translations = [
-                  ...transcripts.map((t) => t.translation),
-                  interimResult?.translation,
-                ].filter(Boolean);
-                return translations.join(' ');
-              })()}
-            </div>
-          )}
-
-          {/* 时间戳显示 */}
-          {(interimResult || transcripts[transcripts.length - 1]) && (
-            <div className="mt-2 text-xs text-gray-500">
-              {new Date(
-                (interimResult || transcripts[transcripts.length - 1]).timestamp,
-              ).toLocaleTimeString()}
-            </div>
-          )}
-        </div>
+        ))}
       </motion.div>
 
       {error && (

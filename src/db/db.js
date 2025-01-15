@@ -2,9 +2,9 @@ import Dexie from 'dexie';
 import { api } from '../services/api';
 
 export const db = new Dexie('notesApp');
-db.version(4).stores({
+db.version(5).stores({
   notes:
-    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId, transcript, youtubeUrl, attachments',
+    '++id, title, content, date, subject, lastModified, syncStatus, audioLanguage, noteLanguage, folderId, transcript, youtubeUrl, attachments, segments',
   attachments: '++id, noteId, fileName, fileType, fileData, size, uploadDate',
   folders: '++id, name, createdAt, lastModified, syncStatus',
   flashcards: '++id, noteId, front, back, syncStatus',
@@ -17,6 +17,7 @@ export const saveNote = async (noteData) => {
     // 准备笔记数据
     const note = {
       ...noteData,
+      segments: noteData.segments || [],
       date: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       syncStatus: 'pending',
