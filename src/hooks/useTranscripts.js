@@ -5,7 +5,6 @@ export function useTranscripts() {
   const [interimResult, setInterimResult] = useState(null);
 
   const updateLatestTranscript = useCallback((data) => {
-    // 从 Deepgram 数据中提取转录信息
     const transcriptData = data?.channel?.alternatives?.[0];
     if (!transcriptData) {
       console.log('No transcript data received');
@@ -26,24 +25,24 @@ export function useTranscripts() {
     console.log('Processing transcript:', {
       type: transcript.isFinal ? 'final' : 'interim',
       text: transcript.text,
-      confidence: transcript.confidence,
-      words: transcript.words,
-      currentTranscripts: transcripts.length
+      confidence: transcript.confidence
     });
 
-    // 只处理有文本内容的转录
-    if (transcript.text.trim()) {
+    // 只处理有文本内容且置信度达到阈值的转录
+    if (transcript.text.trim() && transcript.confidence >= 0.9) {
       if (transcript.isFinal) {
+        // 如果是最终结果，添加到历史记录并清空临时结果
         setTranscripts(prev => [...prev, transcript]);
         setInterimResult(null);
         console.log('Final transcript added to history');
       } else {
+        // 如果是临时结果，直接替换当前的临时结果
         setInterimResult(transcript);
         console.log('Interim result updated');
       }
     }
     console.groupEnd();
-  }, [transcripts.length]);
+  }, []);
 
   const updateTranscriptTranslations = useCallback((id, translation) => {
     console.group('Translation Update');

@@ -36,25 +36,40 @@ function getLCS(str1, str2) {
 }
 
 export const getTranscriptText = (transcripts, interimResult, prevInterimRef) => {
-  // 历史文本正确
+  // 历史文本处理（已确认的文本）
   const historicalText = transcripts.map(t => t.text).join(' ');
 
-  // 临时文本处理
+  // 临时文本处理（带置信度判断）
   let incrementalText = '';
-  if (interimResult?.text) {
+  if (interimResult?.text && interimResult.confidence >= 0.9) {
     const currentInterim = interimResult.text;
     const prevInterim = prevInterimRef.current;
 
     if (currentInterim !== prevInterim) {
       // 找出新增的部分
       incrementalText = getLCS(prevInterim, currentInterim);
-      // 更新 prevInterimRef
       prevInterimRef.current = currentInterim;
     }
   } else {
-    // 如果没有临时文本，清空 prevInterimRef
     prevInterimRef.current = '';
   }
 
   return { historicalText, incrementalText };
+};
+
+// 新增：处理转录结果的函数
+export const processTranscript = (data) => {
+  const transcript = data?.channel?.alternatives?.[0];
+  if (!transcript) return null;
+
+  // 只有当置信度达到阈值时才处理
+  if (transcript.confidence >= 0.9) {
+    return {
+      text: transcript.transcript,
+      isFinal: data.is_final,
+      confidence: transcript.confidence,
+      timestamp: Date.now()
+    };
+  }
+  return null;
 };
