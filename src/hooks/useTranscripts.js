@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { generateNote } from '../services/noteGenerationService';
 
 export function useTranscripts() {
-  // 使用单一状态管理所有转录数据
+  // 初始化状态时提供完整的默认值
   const [transcriptBuffer, setTranscriptBuffer] = useState({
     segments: [],           // 已完成的段落
     currentSegment: {       // 当前正在处理的段落
@@ -10,8 +11,46 @@ export function useTranscripts() {
       wordCount: 0,
       startTime: null
     },
-    interimResult: null     // 临时结果
+    interimResult: null,    // 临时结果
+    notes: []              // 笔记数组
   });
+
+  // 定义 generateSegmentNote 函数
+  const generateSegmentNote = useCallback(async (segment) => {
+    try {
+      console.log('Starting note generation for segment:', {
+        segmentId: segment.id,
+        wordCount: segment.wordCount,
+        textsCount: segment.texts.length,
+        startTime: new Date(segment.startTime).toLocaleTimeString(),
+        endTime: segment.endTime ? new Date(segment.endTime).toLocaleTimeString() : 'ongoing'
+      });
+
+      const segmentText = segment.texts.map(t => t.text).join(' ');
+      console.log('Segment text to process:', segmentText);
+
+      const note = await generateNote(segmentText, 'en');
+      
+      if (note) {
+        console.log('Note generated successfully:', {
+          noteLength: note.length,
+          firstLine: note.split('\n')[0],
+          timestamp: new Date().toLocaleTimeString()
+        });
+      } else {
+        console.warn('Note generation returned null');
+      }
+
+      return note;
+    } catch (error) {
+      console.error('Error generating note:', {
+        error: error.message,
+        segmentId: segment.id,
+        timestamp: new Date().toLocaleTimeString()
+      });
+      return null;
+    }
+  }, []);
 
   // 判断是否应该创建新段落
   const shouldCreateNewSegment = useCallback((segment, newTranscript) => {
@@ -29,10 +68,6 @@ export function useTranscripts() {
     const newText = newTranscript.text || '';
     const startsWithCapital = /^[A-Z]/.test(newText.trim());
 
-    // 同时满足：
-    // - 达到最小字数
-    // - 上一句以标点符号结束
-    // - 新句子以大写字母开头
     return hasMinWords && endsWithPunctuation && startsWithCapital;
   }, []);
 
@@ -52,8 +87,9 @@ export function useTranscripts() {
 
     if (transcript.text.trim() && transcript.confidence >= 0.9) {
       setTranscriptBuffer(prev => {
+        if (!prev) return transcriptBuffer; // 添加空值检查
+
         if (transcript.isFinal) {
-          // 更新当前段落
           const updatedSegment = {
             ...prev.currentSegment,
             texts: [...prev.currentSegment.texts, transcript],
@@ -61,63 +97,65 @@ export function useTranscripts() {
             startTime: prev.currentSegment.startTime || transcript.timestamp
           };
 
-          // 检查是否需要创建新段落
           if (shouldCreateNewSegment(updatedSegment, transcript)) {
+            // 立即生成笔记并更新状态
+            (async () => {
+              const note = await generateSegmentNote(updatedSegment);
+              if (note) {
+                const newNote = {
+                  id: `note-${Date.now()}`,
+                  content: note,
+                  segmentId: updatedSegment.id,
+                  timestamp: Date.now()
+                };
+                
+                console.log('Adding new note to buffer:', newNote);
+                
+                setTranscriptBuffer(current => ({
+                  ...current,
+                  notes: [...(current?.notes || []), newNote]
+                }));
+              }
+            })();
+
             return {
+              ...prev,
               segments: [...prev.segments, {
                 ...updatedSegment,
                 endTime: transcript.timestamp
               }],
               currentSegment: {
                 id: `segment-${Date.now()}`,
-                texts: [],  // 新段落从空开始
+                texts: [],
                 wordCount: 0,
                 startTime: transcript.timestamp
               },
               interimResult: null
             };
-          } else {
-            return {
-              ...prev,
-              currentSegment: updatedSegment,
-              interimResult: null
-            };
           }
-        } else {
+
           return {
             ...prev,
-            interimResult: transcript
+            currentSegment: updatedSegment,
+            interimResult: null
           };
         }
+
+        return {
+          ...prev,
+          interimResult: transcript
+        };
       });
     }
   }, [shouldCreateNewSegment]);
 
-  // 更新翻译
-  const updateTranscriptTranslations = useCallback((id, translation) => {
-    setTranscriptBuffer(prev => {
-      // 更新已完成段落的翻译
-      const updatedSegments = prev.segments.map(segment => 
-        segment.id === id ? { ...segment, translation } : segment
-      );
-
-      // 更新当前段落的翻译
-      const updatedCurrentSegment = 
-        prev.currentSegment.id === id 
-          ? { ...prev.currentSegment, translation }
-          : prev.currentSegment;
-
-      return {
-        ...prev,
-        segments: updatedSegments,
-        currentSegment: updatedCurrentSegment
-      };
-    });
-  }, []);
+  // 添加调试日志
+  useEffect(() => {
+    console.log('TranscriptBuffer state:', transcriptBuffer);
+  }, [transcriptBuffer]);
 
   return {
     transcriptBuffer,
     updateLatestTranscript,
-    updateTranscriptTranslations
   };
 } 

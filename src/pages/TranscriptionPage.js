@@ -8,6 +8,7 @@ import AiAssistant from '../components/ai/AiAssistant';
 import Split from 'react-split';
 import LiveNotes from '../components/notes/LiveNotes';
 import { ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { useTranscripts } from '../hooks/useTranscripts';
 
 function TranscriptionPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -20,6 +21,9 @@ function TranscriptionPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [collapsedPanel, setCollapsedPanel] = useState(null); // 'left' | 'right' | null
   const COLLAPSE_THRESHOLD = 200; // 从300px减小到200px
+
+  // 使用 useTranscripts hook
+  const { transcriptBuffer, updateLatestTranscript } = useTranscripts();
 
   // 监听转录内容更新
   const handleTranscriptionUpdate = useCallback((content) => {
@@ -171,7 +175,10 @@ function TranscriptionPage() {
               <div className={`pl-2 transition-all duration-300 ${
                 collapsedPanel === 'right' ? 'w-0 overflow-hidden' : 'w-full'
               }`}>
-                <LiveNotes content={transcriptionContent} />
+                <LiveNotes 
+                  content={transcriptionContent}
+                  notes={transcriptBuffer.notes}
+                />
                 {collapsedPanel === 'right' && (
                   <button
                     onClick={() => setCollapsedPanel(null)}
