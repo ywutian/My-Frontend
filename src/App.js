@@ -1,4 +1,4 @@
-import {
+ import {
   BrowserRouter as Router,
   Routes,
   Route,
@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import MainView from './pages/MainView';
 import TranscriptionPage from './pages/TranscriptionPage';
+import Home from './pages/Home';
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
   const auth = useAuth();
@@ -31,15 +32,8 @@ function App() {
         <ThemeProvider>
           <Router>
             <Routes>
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="/dashboard"
                 element={
