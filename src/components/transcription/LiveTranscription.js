@@ -76,9 +76,15 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
   useEffect(() => {
     const container = transcriptContainerRef.current;
     if (container) {
-      // 检查是否需要自动滚动（如果用户已经滚动到接近底部）
+      // 当新段落出现时自动滚动
+      const { segments, currentSegment } = transcriptBuffer;
+      const isNewSegment = segments.length > 0 && currentSegment.texts.length === 0;
+      
+      // 检查是否需要自动滚动
       const shouldAutoScroll = 
-        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        isNewSegment || // 新段落出现时
+        isRecording || // 正在录音时
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100; // 接近底部时
       
       if (shouldAutoScroll) {
         // 使用平滑滚动效果
@@ -88,7 +94,7 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
         });
       }
     }
-  }, [displaySegments]); // 当显示的段落发生变化时触发
+  }, [transcriptBuffer, isRecording]); // 监听转录缓冲区和录音状态的变化
 
   return (
     <div className="h-full overflow-hidden">

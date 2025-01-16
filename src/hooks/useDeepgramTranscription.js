@@ -101,9 +101,9 @@ export function useDeepgramTranscription() {
         interim_results: false,
         punctuate: true,
         min_signal: -100,
-      utterance_silence_threshold: 2000,
+      utterance_silence_threshold: 5000,
       diarize: false,
-      vad_turnoff: 5000,
+      vad_turnoff: 8000,
       });
 
       connectionRef.current = connection;
