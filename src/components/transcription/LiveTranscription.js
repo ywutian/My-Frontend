@@ -51,19 +51,6 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
     onTranscriptionUpdate?.(currentContent);
   }, [transcriptBuffer, onTranscriptionUpdate]);
 
-  // 自动滚动到底部
-  useEffect(() => {
-    if (transcriptContainerRef.current) {
-      const container = transcriptContainerRef.current;
-      const shouldAutoScroll = 
-        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-      
-      if (shouldAutoScroll) {
-        container.scrollTop = container.scrollHeight;
-      }
-    }
-  }, [historicalText, incrementalText]);
-
   // 合并所有需要显示的段落
   const displaySegments = useMemo(() => {
     const { segments, currentSegment, interimResult } = transcriptBuffer;
@@ -85,13 +72,32 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
     return completedSegments;
   }, [transcriptBuffer]);
 
+  // 添加自动滚动逻辑
+  useEffect(() => {
+    const container = transcriptContainerRef.current;
+    if (container) {
+      // 检查是否需要自动滚动（如果用户已经滚动到接近底部）
+      const shouldAutoScroll = 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+      if (shouldAutoScroll) {
+        // 使用平滑滚动效果
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [displaySegments]); // 当显示的段落发生变化时触发
+
   return (
     <div className="h-full overflow-hidden">
       <motion.div
         ref={transcriptContainerRef}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 
+        className={`h-full overflow-y-auto p-4 
+          scrollbar-thin scrollbar-thumb-gray-300 
           scrollbar-track-transparent hover:scrollbar-thumb-gray-400 
           [&::-webkit-scrollbar]:w-2 
           [&::-webkit-scrollbar-track]:bg-transparent 
