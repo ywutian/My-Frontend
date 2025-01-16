@@ -164,13 +164,13 @@ export function useDeepgramTranscription() {
           mediaRecorder.ondataavailable = (event) => {
             packetCountRef.current++;
             if (event.data.size > 0 && connection.getReadyState() === 1) {
-              console.log('Sending audio data:', {
-                packetNumber: packetCountRef.current,
-                dataSize: event.data.size,
-                connectionState: connection.getReadyState(),
-                timestamp: new Date().toISOString(),
-                elapsedTime: `${(Date.now() - startTimeRef.current) / 1000}s`
-              });
+              // console.log('Sending audio data:', {
+              //   packetNumber: packetCountRef.current,
+              //   dataSize: event.data.size,
+              //   connectionState: connection.getReadyState(),
+              //   timestamp: new Date().toISOString(),
+              //   elapsedTime: `${(Date.now() - startTimeRef.current) / 1000}s`
+              // });
               connection.send(event.data);
             }
           };

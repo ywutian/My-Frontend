@@ -71,20 +71,19 @@ export function useTranscripts() {
           endTime: transcript.timestamp
         };
 
-        // 异步生成笔记
-        // generateSegmentNote(finalizedSegment).then(note => {
-        //   if (note) {
-        //     setTranscriptBuffer(current => ({
-        //       ...current,
-        //       notes: [...current.notes, {
-        //         id: `note-${Date.now()}`,
-        //         content: note,
-        //         segmentId: finalizedSegment.id,
-        //         timestamp: Date.now()
-        //       }]
-        //     }));
-        //   }
-        // });
+        generateSegmentNote(finalizedSegment).then(note => {
+          if (note) {
+            setTranscriptBuffer(current => ({
+              ...current,
+              notes: [...current.notes, {
+                id: `note-${Date.now()}`,
+                content: note,
+                segmentId: finalizedSegment.id,
+                timestamp: Date.now()
+              }]
+            }));
+          }
+        });
 
         return {
           ...prev,

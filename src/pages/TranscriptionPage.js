@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { LiveTranscription } from '../components/transcription';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import Sidebar from '../components/layout/Sidebar';
@@ -25,10 +25,20 @@ function TranscriptionPage() {
   // 使用 useTranscripts hook
   const { transcriptBuffer, updateLatestTranscript } = useTranscripts();
 
+  // 添加调试日志
+  useEffect(() => {
+    console.log('TranscriptionPage transcriptBuffer:', {
+      notesCount: transcriptBuffer.notes?.length,
+      notes: transcriptBuffer.notes
+    });
+  }, [transcriptBuffer]);
+
   // 监听转录内容更新
   const handleTranscriptionUpdate = useCallback((content) => {
     setTranscriptionContent(content);
-  }, []);
+    // 确保更新到 useTranscripts
+    updateLatestTranscript(content);
+  }, [updateLatestTranscript]);
 
   // 处理录音状态切换
   const handleRecordingToggle = useCallback(() => {
@@ -177,7 +187,7 @@ function TranscriptionPage() {
               }`}>
                 <LiveNotes 
                   content={transcriptionContent}
-                  notes={transcriptBuffer.notes}
+                  notes={transcriptBuffer?.notes || []}
                 />
                 {collapsedPanel === 'right' && (
                   <button
