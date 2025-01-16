@@ -98,8 +98,12 @@ export function useDeepgramTranscription() {
         smart_format: true,
         model: 'enhanced',
         language: 'en-US',
-        interim_results: true,
+        interim_results: false,
         punctuate: true,
+        min_signal: -100,
+      utterance_silence_threshold: 2000,
+      diarize: false,
+      vad_turnoff: 5000,
       });
 
       connectionRef.current = connection;
