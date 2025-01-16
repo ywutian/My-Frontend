@@ -37,6 +37,27 @@ export function useTranscripts() {
     };
 
     setTranscriptBuffer(prev => {
+     
+      const lastText = prev.currentSegment.texts.length > 0
+      ? prev.currentSegment.texts[prev.currentSegment.texts.length - 1].text
+      : prev.segments.length > 0
+        ? prev.segments[prev.segments.length - 1].texts.slice(-1)[0]?.text
+        : '';
+        
+      let newText = transcript.text;
+      if (lastText) {
+        if (newText.includes(lastText)) {
+          // 如果新文本包含旧文本，只保留新增部分
+          newText = newText.substring(lastText.length).trim();
+          if (!newText) return prev; // 如果没有新内容，直接返回原状态
+        } else if (lastText.includes(newText)) {
+          // 如果新文本完全包含在旧文本中，忽略这次更新
+          return prev;
+        }
+      }
+
+      transcript.text=newText;
+
       const updatedSegment = {
         ...prev.currentSegment,
         texts: [...prev.currentSegment.texts, transcript],
