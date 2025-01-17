@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranscriptStore } from '../../hooks/useTranscripts';
 
-export default function LiveNotes({ content, notes = [] }) {
+export default function LiveNotes() {
+  const notes = useTranscriptStore(state => state.notes);
+
   // 添加日志来调试笔记数据
   useEffect(() => {
     console.log('LiveNotes received notes:', {

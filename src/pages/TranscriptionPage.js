@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { LiveTranscription } from '../components/transcription';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import Sidebar from '../components/layout/Sidebar';
@@ -8,7 +8,7 @@ import AiAssistant from '../components/ai/AiAssistant';
 import Split from 'react-split';
 import LiveNotes from '../components/notes/LiveNotes';
 import { ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
-import { useTranscripts } from '../hooks/useTranscripts';
+import { useTranscriptStore } from '../hooks/useTranscripts';
 
 function TranscriptionPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -19,26 +19,16 @@ function TranscriptionPage() {
   });
   const [transcriptionContent, setTranscriptionContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [collapsedPanel, setCollapsedPanel] = useState(null); // 'left' | 'right' | null
-  const COLLAPSE_THRESHOLD = 200; // 从300px减小到200px
+  const [collapsedPanel, setCollapsedPanel] = useState(null);
+  const COLLAPSE_THRESHOLD = 200;
 
-  // 使用 useTranscripts hook
-  const { transcriptBuffer, updateLatestTranscript } = useTranscripts();
-
-  // 添加调试日志
-  useEffect(() => {
-    console.log('TranscriptionPage transcriptBuffer:', {
-      notesCount: transcriptBuffer.notes?.length,
-      notes: transcriptBuffer.notes
-    });
-  }, [transcriptBuffer]);
+  // 直接从 Zustand store 获取笔记数据
+  const notes = useTranscriptStore(state => state.notes);
 
   // 监听转录内容更新
   const handleTranscriptionUpdate = useCallback((content) => {
     setTranscriptionContent(content);
-    // 确保更新到 useTranscripts
-    updateLatestTranscript(content);
-  }, [updateLatestTranscript]);
+  }, []);
 
   // 处理录音状态切换
   const handleRecordingToggle = useCallback(() => {
@@ -185,10 +175,7 @@ function TranscriptionPage() {
               <div className={`pl-2 transition-all duration-300 ${
                 collapsedPanel === 'right' ? 'w-0 overflow-hidden' : 'w-full'
               }`}>
-                <LiveNotes 
-                  content={transcriptionContent}
-                  notes={transcriptBuffer?.notes || []}
-                />
+                <LiveNotes />
                 {collapsedPanel === 'right' && (
                   <button
                     onClick={() => setCollapsedPanel(null)}

@@ -1,9 +1,18 @@
 import { useState, useCallback, useEffect } from 'react';
 import { generateNote } from '../services/noteGenerationService';
+import { create } from 'zustand';
+
+// 创建全局状态管理
+export const useTranscriptStore = create((set) => ({
+  notes: [],
+  addNote: (note) => set((state) => ({
+    notes: [...state.notes, note]
+  }))
+}));
 
 export function useTranscripts() {
   const [transcriptBuffer, setTranscriptBuffer] = useState({
-    segments: [],           // 已完成的段落
+    segments: [],
     currentSegment: {       // 当前正在处理的段落
       id: `segment-${Date.now()}`,
       texts: [],
@@ -26,8 +35,13 @@ export function useTranscripts() {
   }, []);
 
   const updateLatestTranscript = useCallback((data) => {
+    console.log('updateLatestTranscript called with:', data);
+    
     const transcriptData = data?.channel?.alternatives?.[0];
-    if (!transcriptData?.transcript) return;
+    if (!transcriptData?.transcript) {
+      console.log('No valid transcript data');
+      return;
+    }
 
     const transcript = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -37,12 +51,16 @@ export function useTranscripts() {
     };
 
     setTranscriptBuffer(prev => {
+      console.log('Updating transcriptBuffer:', {
+        prevState: prev,
+        newTranscript: transcriptData
+      });
      
       const lastText = prev.currentSegment.texts.length > 0
-      ? prev.currentSegment.texts[prev.currentSegment.texts.length - 1].text
-      : prev.segments.length > 0
-        ? prev.segments[prev.segments.length - 1].texts.slice(-1)[0]?.text
-        : '';
+        ? prev.currentSegment.texts[prev.currentSegment.texts.length - 1].text
+        : prev.segments.length > 0
+          ? prev.segments[prev.segments.length - 1].texts.slice(-1)[0]?.text
+          : '';
         
       let newText = transcript.text;
       if (lastText) {
@@ -56,7 +74,7 @@ export function useTranscripts() {
         }
       }
 
-      transcript.text=newText;
+      transcript.text = newText;
 
       const updatedSegment = {
         ...prev.currentSegment,
@@ -65,25 +83,30 @@ export function useTranscripts() {
         startTime: prev.currentSegment.startTime || transcript.timestamp
       };
 
+      console.log('shouldCreateNewSegment check:', {
+        segment: updatedSegment,
+        newTranscript: transcript,
+        result: shouldCreateNewSegment(updatedSegment, transcript)
+      });
+
       if (shouldCreateNewSegment(updatedSegment, transcript)) {
         const finalizedSegment = {
           ...updatedSegment,
           endTime: transcript.timestamp
         };
 
-        generateSegmentNote(finalizedSegment).then(note => {
-          if (note) {
-            setTranscriptBuffer(current => ({
-              ...current,
-              notes: [...current.notes, {
+        // 生成笔记并添加到全局状态
+        generateNote(finalizedSegment.texts.map(t => t.text).join(' '), 'en')
+          .then(note => {
+            if (note) {
+              useTranscriptStore.getState().addNote({
                 id: `note-${Date.now()}`,
                 content: note,
                 segmentId: finalizedSegment.id,
                 timestamp: Date.now()
-              }]
-            }));
-          }
-        });
+              });
+            }
+          });
 
         return {
           ...prev,
@@ -104,46 +127,20 @@ export function useTranscripts() {
     });
   }, [shouldCreateNewSegment]);
 
-  // 定义 generateSegmentNote 函数
-  const generateSegmentNote = useCallback(async (segment) => {
-    try {
-      console.log('Starting note generation for segment:', {
-        segmentId: segment.id,
-        wordCount: segment.wordCount,
-        textsCount: segment.texts.length,
-        startTime: new Date(segment.startTime).toLocaleTimeString(),
-        endTime: segment.endTime ? new Date(segment.endTime).toLocaleTimeString() : 'ongoing'
-      });
-
-      const segmentText = segment.texts.map(t => t.text).join(' ');
-      console.log('Segment text to process:', segmentText);
-
-      const note = await generateNote(segmentText, 'en');
-      
-      if (note) {
-        console.log('Note generated successfully:', {
-          noteLength: note.length,
-          firstLine: note.split('\n')[0],
-          timestamp: new Date().toLocaleTimeString()
-        });
-      } else {
-        console.warn('Note generation returned null');
-      }
-
-      return note;
-    } catch (error) {
-      console.error('Error generating note:', {
-        error: error.message,
-        segmentId: segment.id,
-        timestamp: new Date().toLocaleTimeString()
-      });
-      return null;
-    }
-  }, []);
+  // 添加调试日志
+  useEffect(() => {
+    console.log('Segments updated:', {
+      segmentsCount: transcriptBuffer.segments.length,
+      segments: transcriptBuffer.segments
+    });
+  }, [transcriptBuffer.segments]);
 
   useEffect(() => {
-    console.log('TranscriptBuffer state:', transcriptBuffer);
-  }, [transcriptBuffer]);
+    console.log('Notes updated:', {
+      notesCount: transcriptBuffer.notes.length,
+      notes: transcriptBuffer.notes
+    });
+  }, [transcriptBuffer.notes]);
 
   return {
     transcriptBuffer,
