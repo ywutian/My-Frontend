@@ -1,8 +1,8 @@
 import React from 'react';
 // 添加图标导入
 import { MicrophoneIcon, StopIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
-
-// 把 languages 移动到组件内部
+import { languages } from '../../config/languages';
+import { useTranscriptStore } from '../../hooks/useTranscripts';
 const TranscriptionPanel = ({
   isRecording,
   isTranslating,
@@ -14,15 +14,10 @@ const TranscriptionPanel = ({
   onTranslationToggle,
   onGenerateNote,
   hasTranscripts,
+
 }) => {
-  // 语言选项移到组件内部
-  const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-  ];
+const noteLanguage =useTranscriptStore(state=>state.noteLanguage);
+const setNoteLanguage =useTranscriptStore(state=>state.setNoteLanguage);
   return (
     <div className="p-4 space-y-4">
       {/* 录音控制按钮 */}
@@ -67,7 +62,23 @@ const TranscriptionPanel = ({
             ))}
           </select>
         </div>
-
+        {/*笔记语言选择*/}
+        <div>
+        <label className="text-sm text-gray-500 mb-1 block">
+          Note Language
+        </label>
+        <select
+          value={noteLanguage}
+          onChange={(e) => setNoteLanguage(e.target.value)}
+          className="w-full p-2 border rounded-lg"
+        >
+          {languages.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.flag} {lang.name}
+            </option>
+          ))}
+        </select>
+      </div>
         {/* 翻译控制 */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">

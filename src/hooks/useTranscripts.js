@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { generateNote } from '../services/noteGenerationService';
 import { create } from 'zustand';
+import { languages } from '../config/languages';
 
 // 创建全局状态管理
 export const useTranscriptStore = create((set) => ({
   notes: [],
+  noteLanguage: 'zh',  // 默认中文
+  setNoteLanguage: (language) => set({ noteLanguage: language }),
   addNote: (note) => set((state) => ({
     notes: [...state.notes, note]
   })),
@@ -142,7 +145,8 @@ export function useTranscripts() {
 
         const segmentText = finalizedSegment.texts.map(t => t.text).join(' ');
         
-        generateNote(segmentText, 'zh')
+        const noteLanguage = useTranscriptStore.getState().noteLanguage;
+        generateNote(segmentText, noteLanguage)
           .then(noteContent => {
             const htmlContent = convertToHtml(noteContent);
             
