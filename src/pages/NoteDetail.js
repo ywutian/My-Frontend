@@ -27,6 +27,7 @@ import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import rehypeSanitize from "rehype-sanitize"; // 用于安全处理
 import NoteContent from '../components/notes/NoteContent';
+import { updateNote } from '../db/db';
 
 function getYouTubeVideoId(url) {
   try {
@@ -378,6 +379,35 @@ function NoteDetail() {
     }
   };
 
+  // 处理开始编辑
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setEditContent(note.content);
+  };
+
+  // 处理内容变更
+  const handleContentChange = (newContent) => {
+    setEditContent(newContent);
+  };
+
+  // 处理保存
+  const handleSave = async () => {
+    if (editContent.trim() !== note.content) {
+      try {
+        await updateNote({
+          ...note,
+          content: editContent,
+          lastModified: new Date().toISOString()
+        });
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Failed to save note:', error);
+      }
+    } else {
+      setIsEditing(false);
+    }
+  };
+
   if (isLoading || !note) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -471,14 +501,9 @@ function NoteDetail() {
                 content={note.content}
                 isEditing={isEditing}
                 editContent={editContent}
-                onEditChange={setEditContent}
-                onEdit={() => setIsEditing(true)}
-                onSave={handleNoteUpdate}
-                onCancel={() => {
-                  setIsEditing(false);
-                  setEditContent(note.content);
-                }}
-                readOnly={!isEditing}
+                onEdit={handleStartEdit}
+                onEditChange={handleContentChange}
+                onSave={handleSave}
               />
             </div>
           )}

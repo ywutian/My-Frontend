@@ -48,7 +48,8 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
       ? `${fullTranscript}\n${interimResult.text}`
       : fullTranscript;
     
-    onTranscriptionUpdate?.(currentContent);
+    // 同时传递内容和分段信息
+    onTranscriptionUpdate?.(currentContent, allSegments);
   }, [transcriptBuffer, onTranscriptionUpdate]);
 
   // 合并所有需要显示的段落

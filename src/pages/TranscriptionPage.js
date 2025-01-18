@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { LiveTranscription } from '../components/transcription';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import Sidebar from '../components/layout/Sidebar';
@@ -9,6 +9,7 @@ import Split from 'react-split';
 import LiveNotes from '../components/notes/LiveNotes';
 import { ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { useTranscriptStore } from '../hooks/useTranscripts';
+import { saveNote } from '../db/db';
 
 function TranscriptionPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -18,16 +19,26 @@ function TranscriptionPage() {
     COLLAPSED_SIZE: 40
   });
   const [transcriptionContent, setTranscriptionContent] = useState('');
+  const [transcriptionSegments, setTranscriptionSegments] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [collapsedPanel, setCollapsedPanel] = useState(null);
   const COLLAPSE_THRESHOLD = 200;
+  const [noteTitle, setNoteTitle] = useState(getDefaultTitle());
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const addNote = useTranscriptStore(state => state.addNote);
 
   // 直接从 Zustand store 获取笔记数据
   const notes = useTranscriptStore(state => state.notes);
 
+  // 添加语言相关的状态
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState('zh-CN'); // 默认中文
+  const [translationLanguage, setTranslationLanguage] = useState('en-US');    // 默认英文
+  const [isTranslating, setIsTranslating] = useState(false);                  // 默认不开启翻译
+
   // 监听转录内容更新
-  const handleTranscriptionUpdate = useCallback((content) => {
+  const handleTranscriptionUpdate = useCallback((content, segments) => {
     setTranscriptionContent(content);
+    setTranscriptionSegments(segments);
   }, []);
 
   // 处理录音状态切换
@@ -50,6 +61,102 @@ function TranscriptionPage() {
     }
   };
 
+  // 生成默认标题（当前日期）
+  function getDefaultTitle() {
+    const now = new Date();
+    return now.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\//g, '-');
+  }
+
+  // 处理标题编辑
+  const handleTitleChange = (e) => {
+    setNoteTitle(e.target.value);
+  };
+
+  // 处理标题编辑完成
+  const handleTitleSubmit = (e) => {
+    if (e.key === 'Enter' || e.type === 'blur') {
+      setIsEditingTitle(false);
+    }
+  };
+
+  // 处理标题编辑开始
+  const handleStartEditing = () => {
+    setIsEditingTitle(true);
+    // 选中所有文本，方便直接输入覆盖
+    setTimeout(() => {
+      const input = document.querySelector('input[type="text"]');
+      if (input) {
+        input.select();
+      }
+    }, 0);
+  };
+
+  // 处理生成笔记
+  const handleGenerateNote = async () => {
+    if (!transcriptionContent.trim()) return;
+
+    try {
+      // 从 store 获取所有笔记内容并按时间顺序合并
+      const storeNotes = useTranscriptStore.getState().notes;
+      const combinedContent = storeNotes
+        .sort((a, b) => a.timestamp - b.timestamp)  // 按时间顺序排序
+        .map(note => note.content)                  // 获取所有内容
+        .join('\n');                               // 合并所有内容
+      
+      // 准备笔记数据
+      const noteData = {
+        title: noteTitle || getDefaultTitle(),
+        content: combinedContent || transcriptionContent, // 优先使用合并后的笔记内容
+        transcript: transcriptionContent, // 保留原始转录文本
+        segments: transcriptionSegments,
+        audioLanguage: transcriptionLanguage,
+        noteLanguage: isTranslating ? translationLanguage : transcriptionLanguage,
+        date: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        syncStatus: 'pending'
+      };
+
+      // 保存到数据库
+      const noteId = await saveNote(noteData);
+
+      // 更新 store
+      addNote({
+        id: noteId,
+        ...noteData,
+        timestamp: new Date().getTime()
+      });
+
+      // 清空当前转录内容
+      setTranscriptionContent('');
+      setTranscriptionSegments([]);
+      
+      // 显示成功提示
+      alert('Note generated successfully!');
+    } catch (error) {
+      console.error('Failed to generate note:', error);
+      alert('Failed to generate note. Please try again.');
+    }
+  };
+
+  // 处理页面离开
+  useEffect(() => {
+    const handleBeforeUnload = async (e) => {
+      if (transcriptionContent.trim()) {
+        // 自动保存笔记
+        await handleGenerateNote();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [transcriptionContent]);
+
   return (
     <ErrorBoundary>
       <div className="flex min-h-screen bg-gray-50">
@@ -70,7 +177,24 @@ function TranscriptionPage() {
         >
           <div className="w-full h-full px-4 py-6">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Live Transcription</h1>
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={noteTitle}
+                  onChange={handleTitleChange}
+                  onKeyDown={handleTitleSubmit}
+                  onBlur={handleTitleSubmit}
+                  className="text-2xl font-bold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none w-full max-w-md"
+                  autoFocus
+                />
+              ) : (
+                <h1 
+                  className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600"
+                  onClick={handleStartEditing}
+                >
+                  {noteTitle || getDefaultTitle()}
+                </h1>
+              )}
             </div>
             
             {/* Split Container */}
@@ -202,6 +326,14 @@ function TranscriptionPage() {
             <TranscriptionPanel 
               isRecording={isRecording}
               onRecordingToggle={handleRecordingToggle}
+              hasTranscripts={!!transcriptionContent.trim()}
+              onGenerateNote={handleGenerateNote}
+              transcriptionLanguage={transcriptionLanguage}
+              translationLanguage={translationLanguage}
+              isTranslating={isTranslating}
+              onTranscriptionLanguageChange={setTranscriptionLanguage}
+              onTranslationLanguageChange={setTranslationLanguage}
+              onTranslationToggle={() => setIsTranslating(prev => !prev)}
             />
           </div>
           <div role="tabpanel" label="AI Assistant">
