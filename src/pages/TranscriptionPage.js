@@ -104,6 +104,12 @@ function TranscriptionPage() {
     try {
       // 从 store 获取所有笔记内容并按时间顺序合并
       const storeNotes = useTranscriptStore.getState().notes;
+      
+      // 如果没有已生成的笔记，就不需要合并
+      if (storeNotes.length === 0) {
+        return;
+      }
+
       const combinedContent = storeNotes
         .sort((a, b) => a.timestamp - b.timestamp)  // 按时间顺序排序
         .map(note => note.content)                  // 获取所有内容
@@ -112,8 +118,8 @@ function TranscriptionPage() {
       // 准备笔记数据
       const noteData = {
         title: noteTitle || getDefaultTitle(),
-        content: combinedContent || transcriptionContent, // 优先使用合并后的笔记内容
-        transcript: transcriptionContent, // 保留原始转录文本
+        content: combinedContent,                   // 只使用合并后的笔记内容
+        transcript: transcriptionContent,           // 保留原始转录文本
         segments: transcriptionSegments,
         audioLanguage: transcriptionLanguage,
         noteLanguage: isTranslating ? translationLanguage : transcriptionLanguage,
@@ -124,13 +130,6 @@ function TranscriptionPage() {
 
       // 保存到数据库
       const noteId = await saveNote(noteData);
-
-      // 更新 store
-      addNote({
-        id: noteId,
-        ...noteData,
-        timestamp: new Date().getTime()
-      });
 
       // 清空当前转录内容
       setTranscriptionContent('');
