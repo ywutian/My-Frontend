@@ -1,9 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranscriptStore } from '../../hooks/useTranscripts';
+import NoteContent from './NoteContent';
 
 export default function LiveNotes() {
   const notes = useTranscriptStore(state => state.notes);
+  const updateNote = useTranscriptStore(state => state.updateNote);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
 
   // 添加日志来调试笔记数据
   useEffect(() => {
@@ -17,6 +21,24 @@ export default function LiveNotes() {
     });
   }, [notes]);
 
+  // 按时间戳排序笔记，最新的在上面
+  const sortedNotes = [...notes].sort((a, b) => b.timestamp - a.timestamp);
+
+  // 处理开始编辑
+  const handleStartEdit = (note) => {
+    setEditingId(note.id);
+    setEditContent(note.content);
+  };
+
+  // 处理保存编辑
+  const handleSave = (id) => {
+    if (editContent.trim() !== '') {
+      updateNote(id, editContent);
+    }
+    setEditingId(null);
+    setEditContent('');
+  };
+
   return (
     <div className="h-full overflow-auto bg-gray-50">
       <motion.div
@@ -26,8 +48,8 @@ export default function LiveNotes() {
       >
         <div className="space-y-4">
           <AnimatePresence mode="sync">
-            {Array.isArray(notes) && notes.length > 0 ? (
-              notes.map((note) => (
+            {Array.isArray(sortedNotes) && sortedNotes.length > 0 ? (
+              sortedNotes.map((note) => (
                 <motion.div
                   key={note.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -39,21 +61,14 @@ export default function LiveNotes() {
                   <div className="text-sm text-gray-500 mb-2">
                     {new Date(note.timestamp).toLocaleTimeString()}
                   </div>
-                  <div className="prose prose-sm max-w-none">
-                    {note.content?.split('\n').map((line, index) => {
-                      if (!line.trim()) return null;
-                      if (line.startsWith('# ')) {
-                        return <h1 key={index} className="text-xl font-bold mb-4">{line.slice(2)}</h1>;
-                      }
-                      if (line.startsWith('## ')) {
-                        return <h2 key={index} className="text-lg font-semibold mt-4 mb-2">{line.slice(3)}</h2>;
-                      }
-                      if (line.startsWith('- ')) {
-                        return <li key={index} className="ml-4 mb-1">{line.slice(2)}</li>;
-                      }
-                      return <p key={index} className="mb-2">{line}</p>;
-                    })}
-                  </div>
+                  <NoteContent
+                    content={note.content}
+                    isEditing={editingId === note.id}
+                    editContent={editingId === note.id ? editContent : ''}
+                    onEditChange={setEditContent}
+                    onEdit={() => handleStartEdit(note)}
+                    onSave={() => handleSave(note.id)}
+                  />
                 </motion.div>
               ))
             ) : (

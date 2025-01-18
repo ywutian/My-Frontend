@@ -26,6 +26,7 @@ import MarkdownIt from 'markdown-it';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import rehypeSanitize from "rehype-sanitize"; // 用于安全处理
+import NoteContent from '../components/notes/NoteContent';
 
 function getYouTubeVideoId(url) {
   try {
@@ -466,66 +467,19 @@ function NoteDetail() {
         <div className="flex-1 overflow-auto bg-gray-50 p-2">
           {activeTab === 'Note' && (
             <div className="h-full w-full">
-              {isEditing ? (
-                <div className="h-full">
-                  <div className="h-full bg-white">
-                    <MDEditor
-                      value={editContent}
-                      onChange={setEditContent}
-                      preview='edit'
-                      previewOptions={{
-                        rehypePlugins: [[rehypeSanitize]],
-                      }}
-                      height="100%"
-                      textareaProps={{
-                        placeholder: 'Write your note here...'
-                      }}
-                      className="!border-0"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <article className="h-full w-full bg-white p-8 overflow-auto">
-                  <div className="prose prose-gray max-w-none">
-                    <MDEditor.Markdown 
-                      source={note.content || ''} 
-                      rehypePlugins={[[rehypeSanitize]]}
-                      className="!bg-transparent"
-                      components={{
-                        // 自定义 Markdown 渲染样式
-                        h1: props => <h1 {...props} className="text-2xl font-bold text-gray-800 mb-4" />,
-                        h2: props => <h2 {...props} className="text-xl font-semibold text-gray-800 mt-6 mb-3" />,
-                        h3: props => <h3 {...props} className="text-lg font-semibold text-gray-800 mt-5 mb-2" />,
-                        p: props => <p {...props} className="text-gray-700 leading-relaxed mb-4" />,
-                        ul: props => <ul {...props} className="list-disc list-inside text-gray-700 mb-4 pl-4" />,
-                        ol: props => <ol {...props} className="list-decimal list-inside text-gray-700 mb-4 pl-4" />,
-                        li: props => <li {...props} className="mb-1" />,
-                        blockquote: props => (
-                          <blockquote {...props} className="border-l-4 border-gray-200 pl-4 py-2 my-4 text-gray-600 italic" />
-                        ),
-                        code: props => (
-                          <code {...props} className="bg-gray-50 text-gray-800 rounded px-1.5 py-0.5 text-sm font-mono" />
-                        ),
-                        pre: props => (
-                          <pre {...props} className="bg-gray-50 rounded-lg p-4 overflow-x-auto mb-4" />
-                        ),
-                        a: props => (
-                          <a {...props} className="text-gray-600 hover:text-gray-800 underline decoration-gray-300 
-                                             hover:decoration-gray-600 transition-colors" />
-                        ),
-                        hr: props => <hr {...props} className="border-gray-200 my-6" />,
-                        table: props => (
-                          <div className="overflow-x-auto mb-4">
-                            <table {...props} className="min-w-full border border-gray-200 text-gray-700" />
-                          </div>
-                        ),
-                        th: props => <th {...props} className="border border-gray-200 bg-gray-50 px-4 py-2 text-left" />,
-                        td: props => <td {...props} className="border border-gray-200 px-4 py-2" />
-                      }}
-                    />
-                  </div>
-                </article>
-              )}
+              <NoteContent
+                content={note.content}
+                isEditing={isEditing}
+                editContent={editContent}
+                onEditChange={setEditContent}
+                onEdit={() => setIsEditing(true)}
+                onSave={handleNoteUpdate}
+                onCancel={() => {
+                  setIsEditing(false);
+                  setEditContent(note.content);
+                }}
+                readOnly={!isEditing}
+              />
             </div>
           )}
 
