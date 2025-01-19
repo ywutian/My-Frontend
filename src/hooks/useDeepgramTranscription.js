@@ -66,7 +66,7 @@ export function useDeepgramTranscription() {
     }
   }, []);
 
-  const startRecording = useCallback(async (onTranscriptReceived) => {
+  const startRecording = useCallback(async (onTranscriptReceived,language='en-US') => {
     console.group('Starting Recording Process');
     try {
       console.log('Initializing recording process...');
@@ -89,7 +89,7 @@ export function useDeepgramTranscription() {
       console.log('Creating Deepgram live connection with config:', {
         smart_format: true,
         model: 'enhanced',
-        language: 'en-US',
+        language: language,
         interim_results: true,
         punctuate: true,
       });
@@ -97,7 +97,7 @@ export function useDeepgramTranscription() {
       const connection = deepgram.listen.live({
         smart_format: true,
         model: 'enhanced',
-        language: 'en-US',
+        language: language,
         interim_results: false,
         punctuate: true,
         min_signal: -100,

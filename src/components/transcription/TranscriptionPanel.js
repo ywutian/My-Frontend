@@ -16,8 +16,18 @@ const TranscriptionPanel = ({
   hasTranscripts,
 
 }) => {
-const noteLanguage =useTranscriptStore(state=>state.noteLanguage);
-const setNoteLanguage =useTranscriptStore(state=>state.setNoteLanguage);
+  // 从 store 获取状态和更新方法
+  const {
+    transcriptionLanguage: storeTranscriptionLanguage,
+    translationLanguage: storeTranslationLanguage,
+    isTranslating: storeIsTranslating,
+    setTranscriptionLanguage,
+    setTranslationLanguage,
+    setIsTranslating
+  } = useTranscriptStore();
+
+  const noteLanguage =useTranscriptStore(state=>state.noteLanguage);
+  const setNoteLanguage =useTranscriptStore(state=>state.setNoteLanguage);
   return (
     <div className="p-4 space-y-4">
       {/* 录音控制按钮 */}
@@ -51,8 +61,8 @@ const setNoteLanguage =useTranscriptStore(state=>state.setNoteLanguage);
             Transcription Language
           </label>
           <select
-            value={transcriptionLanguage}
-            onChange={(e) => onTranscriptionLanguageChange(e.target.value)}
+            value={storeTranscriptionLanguage}
+            onChange={(e) => setTranscriptionLanguage(e.target.value)}
             className="w-full p-2 border rounded-lg"
           >
             {languages.map((lang) => (
@@ -86,17 +96,17 @@ const setNoteLanguage =useTranscriptStore(state=>state.setNoteLanguage);
             <button
               onClick={onTranslationToggle}
               className={`px-3 py-1 rounded-lg transition-colors ${
-                isTranslating ? 'bg-blue-500 text-white' : 'bg-gray-100'
+                storeIsTranslating ? 'bg-blue-500 text-white' : 'bg-gray-100'
               }`}
             >
-              {isTranslating ? 'On' : 'Off'}
+              {storeIsTranslating ? 'On' : 'Off'}
             </button>
           </div>
 
-          {isTranslating && (
+          {storeIsTranslating && (
             <select
-              value={translationLanguage}
-              onChange={(e) => onTranslationLanguageChange(e.target.value)}
+              value={storeTranslationLanguage}
+              onChange={(e) => setTranslationLanguage(e.target.value)}
               className="w-full p-2 border rounded-lg"
             >
               {languages.map((lang) => (

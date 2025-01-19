@@ -7,6 +7,9 @@ import { languages } from '../config/languages';
 export const useTranscriptStore = create((set) => ({
   notes: [],
   noteLanguage: 'zh',  // 默认中文
+  transcriptionLanguage: 'zh-CN',  // 默认中文
+  translationLanguage: 'en-US',    // 默认英文
+  isTranslating: false,            // 默认不开启翻译
   setNoteLanguage: (language) => set({ noteLanguage: language }),
   addNote: (note) => set((state) => ({
     notes: [...state.notes, note]
@@ -17,7 +20,10 @@ export const useTranscriptStore = create((set) => ({
         ? { ...note, content: content }
         : note
     )
-  }))
+  })),
+  setTranscriptionLanguage: (language) => set({ transcriptionLanguage: language }),
+  setTranslationLanguage: (language) => set({ translationLanguage: language }),
+  setIsTranslating: (isTranslating) => set({ isTranslating }),
 }));
 
 const convertToHtml = (text) => {

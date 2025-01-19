@@ -4,8 +4,12 @@ import { useDeepgramTranscription } from '../../hooks/useDeepgramTranscription';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTranscripts } from '../../hooks/useTranscripts';
 import { getTranscriptText } from '../../utils/transcriptionUtils';
+import { useTranscriptStore } from '../../hooks/useTranscripts';
 
 export default function LiveTranscription({ onTranscriptionUpdate, isRecording }) {
+  // 从 store 获取语言设置
+  const transcriptionLanguage = useTranscriptStore(state => state.transcriptionLanguage);
+  
   const { error, startRecording, stopRecording } = useDeepgramTranscription();
   const { isTranslating, translateText } = useTranslation();
   const {
@@ -20,11 +24,11 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
   // 监听外部录音状态变化
   useEffect(() => {
     if (isRecording) {
-      startRecording(updateLatestTranscript);
+      startRecording(updateLatestTranscript, transcriptionLanguage);
     } else {
       stopRecording();
     }
-  }, [isRecording, startRecording, stopRecording, updateLatestTranscript]);
+  }, [isRecording, startRecording, stopRecording, updateLatestTranscript, transcriptionLanguage]);
 
   // 使用工具函数计算历史文本和新增文本
   const { historicalText, incrementalText } = useMemo(() => {
