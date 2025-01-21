@@ -7,7 +7,7 @@ import { languages } from '../config/languages';
 export const useTranscriptStore = create((set) => ({
   notes: [],
   noteLanguage: 'zh',  // 默认中文
-  transcriptionLanguage: 'zh-CN',  // 默认中文
+  transcriptionLanguage: 'en-US',  // 默认中文
   translationLanguage: 'en-US',    // 默认英文
   isTranslating: false,            // 默认不开启翻译
   setNoteLanguage: (language) => set({ noteLanguage: language }),

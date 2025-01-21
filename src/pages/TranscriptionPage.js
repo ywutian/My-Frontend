@@ -31,7 +31,7 @@ function TranscriptionPage() {
   const notes = useTranscriptStore(state => state.notes);
 
   // 添加语言相关的状态
-  const [transcriptionLanguage, setTranscriptionLanguage] = useState('zh-CN'); // 默认中文
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState('en-US'); // 默认中文
   const [translationLanguage, setTranslationLanguage] = useState('en-US');    // 默认英文
   const [isTranslating, setIsTranslating] = useState(false);                  // 默认不开启翻译
 
