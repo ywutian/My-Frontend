@@ -78,7 +78,7 @@ export function useTranscripts() {
 
   // 判断是否应该创建新段落
   const shouldCreateNewSegment = useCallback((segment, newTranscript) => {
-    const MIN_WORDS = 10;
+    const MIN_WORDS = 30;
     const hasMinWords = segment.wordCount >= MIN_WORDS;
     const lastText = segment.texts[segment.texts.length - 1]?.text || '';
     const endsWithPunctuation = /[.!?。！？]$/.test(lastText.trim());
