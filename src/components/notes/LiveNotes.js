@@ -21,8 +21,8 @@ export default function LiveNotes() {
     });
   }, [notes]);
 
-  // 按时间戳排序笔记，最新的在上面
-  const sortedNotes = [...notes].sort((a, b) => b.timestamp - a.timestamp);
+  // 修改排序逻辑，最新的笔记在下面
+  const sortedNotes = [...notes].sort((a, b) => a.timestamp - b.timestamp);
 
   // 处理开始编辑
   const handleStartEdit = (note) => {
