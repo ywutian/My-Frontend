@@ -6,7 +6,7 @@ import { languages } from '../config/languages';
 // 创建全局状态管理
 export const useTranscriptStore = create((set) => ({
   notes: [],
-  noteLanguage: 'zh',  // 默认中文
+  noteLanguage: 'en-US',  // 默认中文
   transcriptionLanguage: 'en-US',  // 默认中文
   translationLanguage: 'en-US',    // 默认英文
   isTranslating: false,            // 默认不开启翻译
