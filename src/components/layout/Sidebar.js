@@ -397,27 +397,27 @@ function Sidebar({ isOpen, onToggle }) {
         </div>
       </div>
 
-      {/* Settings Section - 改进视觉效果和交互 */}
-      <div className="border-t border-gray-100/80 p-3 bg-gray-50/30">
+      {/* Settings Section */}
+      <div className="border-t border-gray-100/80 p-3 
+        bg-gradient-to-b from-white/50 to-gray-50/30
+        backdrop-blur-sm relative"
+      >
         <button 
-          className={`
+          className="
             flex items-center w-full px-3 py-2.5 rounded-xl
             transition-all duration-200 group
             text-gray-600 hover:bg-gray-100/80 hover:text-gray-900
-            ${!isOpen && 'justify-center'}
-          `}
+          "
           onClick={handleSettingsClick}
         >
-          <FiSettings className={`h-5 w-5 transition-transform duration-200
-            group-hover:rotate-45 ${isOpen && 'mr-3'}`} />
-          {isOpen && (
-            <span className={`text-sm font-medium transition-all duration-300 ${slideAnimation}`}>
-              Settings
-            </span>
-          )}
+          <FiSettings className="h-5 w-5 mr-3 transition-transform duration-200
+            group-hover:rotate-45" />
+          <span className="text-sm font-medium">
+            Settings
+          </span>
         </button>
 
-        {/* Settings Menu - 改进下拉菜单样式 */}
+        {/* Settings Menu Dropdown */}
         {showSettingsMenu && (
           <div 
             ref={settingsMenuRef}
@@ -444,6 +444,20 @@ function Sidebar({ isOpen, onToggle }) {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {showSettings && (
+        <SettingsModal 
+          isOpen={showSettings} 
+          onClose={() => setShowSettings(false)} 
+        />
+      )}
+      {showBilling && (
+        <BillingModal 
+          isOpen={showBilling} 
+          onClose={() => setShowBilling(false)} 
+        />
+      )}
     </div>
   );
 }
