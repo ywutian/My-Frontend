@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 // 添加图标导入
 import { MicrophoneIcon, StopIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
 import { languages } from '../../config/languages';
 import { useTranscriptStore } from '../../hooks/useTranscripts';
+
 const TranscriptionPanel = ({
   isRecording,
   isTranslating,
@@ -14,8 +16,8 @@ const TranscriptionPanel = ({
   onTranslationToggle,
   onGenerateNote,
   hasTranscripts,
-
 }) => {
+  const navigate = useNavigate();
   // 从 store 获取状态和更新方法
   const {
     transcriptionLanguage: storeTranscriptionLanguage,
@@ -28,6 +30,20 @@ const TranscriptionPanel = ({
 
   const noteLanguage =useTranscriptStore(state=>state.noteLanguage);
   const setNoteLanguage =useTranscriptStore(state=>state.setNoteLanguage);
+
+  // 修改生成笔记按钮的处理函数
+  const handleGenerateNote = async () => {
+    try {
+      const noteId = await onGenerateNote(); // 假设 onGenerateNote 返回生成的笔记 ID
+      if (noteId) {
+        navigate(`/notes/${noteId}`); // 生成成功后跳转到笔记详情页
+      }
+    } catch (error) {
+      console.error('Failed to generate note:', error);
+      // 可以添加错误提示
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       {/* 录音控制按钮 */}
@@ -119,10 +135,10 @@ const TranscriptionPanel = ({
         </div>
       </div>
 
-      {/* 生成笔记按钮 - 移到这里 */}
+      {/* 修改生成笔记按钮的点击事件 */}
       <div className="pt-2 border-t border-gray-200">
         <button
-          onClick={onGenerateNote}
+          onClick={handleGenerateNote}
           disabled={!hasTranscripts}
           className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
             hasTranscripts 

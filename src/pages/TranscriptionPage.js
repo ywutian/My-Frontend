@@ -105,20 +105,18 @@ function TranscriptionPage() {
       // 从 store 获取所有笔记内容并按时间顺序合并
       const storeNotes = useTranscriptStore.getState().notes;
       
-      // 如果没有已生成的笔记，就不需要合并
-      if (storeNotes.length === 0) {
-        return;
-      }
-
-      const combinedContent = storeNotes
-        .sort((a, b) => a.timestamp - b.timestamp)  // 按时间顺序排序
-        .map(note => note.content)                  // 获取所有内容
-        .join('\n');                               // 合并所有内容
+      // 如果没有已生成的笔记，就使用当前转录内容
+      const combinedContent = storeNotes.length === 0 
+        ? transcriptionContent 
+        : storeNotes
+            .sort((a, b) => a.timestamp - b.timestamp)  // 按时间顺序排序
+            .map(note => note.content)                  // 获取所有内容
+            .join('\n');                               // 合并所有内容
       
       // 准备笔记数据
       const noteData = {
         title: noteTitle || getDefaultTitle(),
-        content: combinedContent,                   // 只使用合并后的笔记内容
+        content: combinedContent,                   // 使用合并后的笔记内容
         transcript: transcriptionContent,           // 保留原始转录文本
         segments: transcriptionSegments,
         audioLanguage: transcriptionLanguage,
@@ -128,18 +126,19 @@ function TranscriptionPage() {
         syncStatus: 'pending'
       };
 
-      // 保存到数据库
+      // 保存到数据库并获取返回的笔记ID
       const noteId = await saveNote(noteData);
 
       // 清空当前转录内容
       setTranscriptionContent('');
       setTranscriptionSegments([]);
       
-      // 显示成功提示
-      alert('Note generated successfully!');
+      // 返回生成的笔记ID，这样TranscriptionPanel可以使用它进行导航
+      return noteId;
     } catch (error) {
       console.error('Failed to generate note:', error);
       alert('Failed to generate note. Please try again.');
+      throw error; // 抛出错误以便TranscriptionPanel可以处理
     }
   };
 
