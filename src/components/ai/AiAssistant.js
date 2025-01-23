@@ -77,38 +77,44 @@ function AiAssistant({
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 message.type === 'user'
-                  ? 'bg-gray-100 text-gray-800'
+                  ? 'bg-gray-100 text-gray-800 text-sm'
                   : 'bg-white border border-gray-200 text-gray-800'
               }`}
             >
               {message.type === 'assistant' ? (
                 <ContentDisplay content={message.content} />
               ) : (
-                message.content
+                <span className="text-sm">{message.content}</span>
               )}
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSendMessage} className="p-4 border-t bg-white">
+      <form onSubmit={handleSendMessage} className="p-3 border-t bg-white">
         <div className="flex gap-2">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none 
-                       focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
+            className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg 
+                     focus:outline-none focus:border-blue-300 focus:ring-1 
+                     focus:ring-blue-300 placeholder:text-gray-400 
+                     placeholder:text-sm"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg 
-                       hover:bg-gray-50 flex items-center gap-2"
+            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 
+                     rounded-lg hover:bg-gray-50 flex items-center gap-1.5 
+                     text-sm transition-colors duration-200 
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     group"
             disabled={!inputMessage.trim()}
           >
-            <FiSend />
-            Send
+            <FiSend className="w-3.5 h-3.5 group-hover:text-blue-500 
+                            transition-colors duration-200" />
+            <span className="group-hover:text-blue-500">Send</span>
           </button>
         </div>
       </form>
