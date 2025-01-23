@@ -132,9 +132,12 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
         {note.title || 'Untitled Note'}
       </h3>
 
-      <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
-        {note.preview || note.content || 'No content'}
-      </p>
+      <div 
+        className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[2.5rem]"
+        dangerouslySetInnerHTML={{
+          __html: note.preview || note.content || '<p>No content</p>'
+        }}
+      />
 
       {/* Note Footer */}
       <div className="flex items-center justify-between text-xs text-gray-400">
