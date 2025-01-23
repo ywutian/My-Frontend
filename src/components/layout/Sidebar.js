@@ -205,84 +205,129 @@ function Sidebar({ isOpen, onToggle }) {
     fetchFolders();
   };
 
+  // 添加新的动画效果
+  const slideAnimation = isOpen 
+    ? "translate-x-0 opacity-100" 
+    : "-translate-x-3 opacity-0";
+
   return (
     <div className={`
       fixed inset-y-0 left-0 z-30
       ${isOpen ? 'w-64' : 'w-16'}
-      transition-all duration-300
+      transition-all duration-300 ease-in-out
+      bg-white/95 backdrop-blur-sm
+      border-r border-gray-100/80
+      flex flex-col
+      shadow-lg shadow-gray-100/50
     `}>
-      <div className={`
-        h-full
-        bg-white
-        border-r
-        flex
-        flex-col
-      `}>
-        {/* Logo Section */}
-        <div className="h-16 flex items-center justify-between px-4 border-b cursor-pointer" onClick={handleDashboardClick}>
-          <div className="flex items-center">
-            <img 
-              src="/logo.png" 
-              alt="Logo"
-              className={`h-8 w-8 ${!isOpen ? 'mx-auto' : ''}`} 
-            />
-          </div>
+      {/* Logo Section - 添加毛玻璃效果 */}
+      <div className="h-16 flex items-center justify-between px-4 
+        border-b border-gray-50/80 backdrop-blur-sm bg-white/50">
+        <div className="flex items-center">
+          <img 
+            src="/logo.png" 
+            alt="Logo"
+            className={`h-8 w-8 object-contain transition-all duration-300
+              ${!isOpen ? 'mx-auto scale-90' : 'scale-100'}`} 
+          />
+          {isOpen && (
+            <span className={`ml-3 font-semibold text-gray-800 
+              transition-all duration-300 ${slideAnimation}`}>
+              VoiceNote
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Toggle Button - 改进视觉效果 */}
+      <button 
+        onClick={onToggle}
+        className="absolute -right-3 top-20 w-7 h-7 bg-white/95 
+          backdrop-blur-sm border border-gray-200/80 
+          rounded-full flex items-center justify-center 
+          shadow-lg shadow-gray-200/50 hover:shadow-gray-300/50 
+          transition-all duration-200 hover:border-blue-200 
+          hover:bg-blue-50/80 group"
+      >
+        <FiChevronLeft 
+          className={`w-4 h-4 text-gray-600 transition-all duration-200 
+            group-hover:text-blue-500 ${!isOpen && 'rotate-180'}`} 
+        />
+      </button>
+
+      {/* Menu Section - 添加滚动条美化 */}
+      <div className="flex-1 overflow-y-auto 
+        scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300
+        scrollbar-track-transparent">
+        <div className="px-3 py-4 space-y-1">
+          {isOpen && (
+            <div className={`text-xs font-medium text-gray-400 px-3 mb-2 
+              uppercase tracking-wider transition-all duration-300 ${slideAnimation}`}>
+              Menu
+            </div>
+          )}
+          {menuItems.map((item) => (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`
+                flex items-center px-3 py-2.5 rounded-xl
+                transition-all duration-200 group
+                ${location.pathname === item.path 
+                  ? 'bg-blue-50/80 text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50/80 hover:text-gray-900'
+                }
+                ${!isOpen && 'justify-center'}
+              `}
+            >
+              <item.icon className={`h-5 w-5 flex-shrink-0 transition-transform duration-200
+                group-hover:scale-110 ${isOpen && 'mr-3'}`} />
+              {isOpen && (
+                <span className={`text-sm font-medium transition-all duration-300 ${slideAnimation}`}>
+                  {item.label}
+                </span>
+              )}
+            </Link>
+          ))}
         </div>
 
-        {/* 折叠按钮 */}
-        <button 
-          onClick={onToggle}
-          className="absolute -right-3 top-20 w-6 h-6 bg-white border rounded-full flex items-center justify-center shadow-md hover:shadow-lg"
-        >
-          <FiChevronLeft 
-            className={`w-4 h-4 transform transition-transform ${!isOpen && 'rotate-180'}`} 
-          />
-        </button>
-
-        {/* Menu Section */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 py-4">
-            {isOpen && <div className="text-xs font-semibold text-gray-400 mb-2">MENU</div>}
-            {menuItems.map((item) => (
-              <Link
-                key={item.id}
-                to={item.path}
-                className={`
-                  flex items-center px-2 py-2 mb-1 rounded-lg
-                  ${location.pathname === item.path 
-                    ? 'bg-gray-100 text-gray-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                  }
-                  ${!isOpen && 'justify-center'}
-                `}
+        {/* Folders Section - 改进视觉层次 */}
+        <div className="px-3 py-4">
+          {isOpen && (
+            <div className="flex items-center justify-between px-3 mb-2">
+              <span className={`text-xs font-medium text-gray-400 
+                uppercase tracking-wider transition-all duration-300 ${slideAnimation}`}>
+                Folders
+              </span>
+              <button 
+                onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
+                className="p-1.5 hover:bg-gray-100/80 rounded-lg transition-colors"
               >
-                <item.icon className={`h-5 w-5 ${isOpen && 'mr-3'}`} />
-                {isOpen && <span>{item.label}</span>}
-              </Link>
-            ))}
-          </div>
-
-          {/* Folders Section */}
-          <div className="px-4 py-4">
-            {isOpen && (
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-gray-400">FOLDERS</span>
-                <button 
-                  onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                >
-                  {isFoldersExpanded ? <FiChevronDown /> : <FiChevronRight />}
-                </button>
-              </div>
-            )}
-            
+                {isFoldersExpanded 
+                  ? <FiChevronDown className="w-4 h-4 text-gray-500" /> 
+                  : <FiChevronRight className="w-4 h-4 text-gray-500" />
+                }
+              </button>
+            </div>
+          )}
+          
+          {/* Folders List - 添加动画和交互效果 */}
+          <div className={`space-y-1 transition-all duration-300 
+            ${!isFoldersExpanded && 'opacity-50'}`}>
             {(isOpen && isFoldersExpanded) && folders.map((folder) => (
-              <div key={folder.id}>
+              <div key={folder.id}
+                className={`group relative transition-all duration-200
+                  ${selectedFolder?.id === folder.id ? 'z-10' : 'z-0'}`}
+              >
                 <div
                   className={`
-                    flex items-center justify-between px-2 py-2 rounded-lg 
-                    hover:bg-gray-100 cursor-pointer
-                    ${selectedFolder?.id === folder.id ? 'bg-gray-100' : ''}
+                    flex items-center justify-between px-3 py-2.5 rounded-xl
+                    transition-all duration-200
+                    hover:bg-gray-50/80 cursor-pointer
+                    ${selectedFolder?.id === folder.id 
+                      ? 'bg-gray-50/80 shadow-sm' 
+                      : ''
+                    }
                   `}
                   onClick={(e) => handleFolderClick(folder, e)}
                   onContextMenu={(e) => handleFolderClick(folder, e)}
@@ -290,7 +335,7 @@ function Sidebar({ isOpen, onToggle }) {
                   {editingFolder?.id === folder.id ? (
                     <input
                       type="text"
-                      className="flex-1 px-2 py-1 border rounded"
+                      className="flex-1 px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={editingFolder.name}
                       onChange={(e) => setEditingFolder({...editingFolder, name: e.target.value})}
                       onBlur={() => updateFolderName(folder.id, editingFolder.name)}
@@ -299,47 +344,50 @@ function Sidebar({ isOpen, onToggle }) {
                     />
                   ) : (
                     <>
-                      <div className="flex items-center flex-1">
-                        <FiFolder className="h-5 w-5 text-gray-400 mr-3" />
-                        <span className="text-gray-600">{folder.name}</span>
+                      <div className="flex items-center flex-1 min-w-0">
+                        <FiFolder className="h-4 w-4 text-gray-400 flex-shrink-0 mr-3" />
+                        <span className="text-sm text-gray-700 truncate">{folder.name}</span>
                       </div>
-                      <span className="text-xs text-gray-400">{folder.count}</span>
+                      <span className="text-xs text-gray-400 ml-2">{folder.count}</span>
                     </>
                   )}
                 </div>
 
-                {/* Folder Context Menu */}
+                {/* 改进上下文菜单样式 */}
                 {showFolderMenu && selectedFolder?.id === folder.id && (
                   <div 
                     ref={folderMenuRef}
-                    className="absolute left-full ml-2 bg-white border rounded-lg shadow-lg p-2 z-30"
+                    className="absolute left-full ml-2 bg-white/95 backdrop-blur-sm
+                      border border-gray-100/80 rounded-xl shadow-xl py-1.5 z-30
+                      min-w-[160px] transform transition-all duration-200"
                   >
                     <button
                       onClick={() => moveFolder(folder.id, 'up')}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded flex items-center"
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center text-gray-700"
                     >
-                      <FiArrowUp className="mr-2" /> Move Up
+                      <FiArrowUp className="mr-2 w-4 h-4" /> Move Up
                     </button>
                     <button
                       onClick={() => moveFolder(folder.id, 'down')}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded flex items-center"
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center text-gray-700"
                     >
-                      <FiArrowDown className="mr-2" /> Move Down
+                      <FiArrowDown className="mr-2 w-4 h-4" /> Move Down
                     </button>
                     <button
                       onClick={() => {
                         setEditingFolder(folder);
                         setShowFolderMenu(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded flex items-center"
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center text-gray-700"
                     >
-                      <FiEdit2 className="mr-2" /> Rename
+                      <FiEdit2 className="mr-2 w-4 h-4" /> Rename
                     </button>
+                    <div className="h-px bg-gray-100 my-1" />
                     <button
                       onClick={() => handleDeleteClick(folder)}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded flex items-center text-red-600"
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 flex items-center text-red-600"
                     >
-                      <FiTrash2 className="mr-2" /> Delete
+                      <FiTrash2 className="mr-2 w-4 h-4" /> Delete
                     </button>
                   </div>
                 )}
@@ -347,102 +395,55 @@ function Sidebar({ isOpen, onToggle }) {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Settings Section */}
-        <div className="border-t p-4">
-          <button 
-            className={`
-              flex items-center w-full px-2 py-2 rounded-lg
-              text-gray-600 hover:bg-gray-100
-              ${!isOpen && 'justify-center'}
-            `}
-            onClick={handleSettingsClick}
-          >
-            <FiSettings className={`h-5 w-5 ${isOpen && 'mr-3'}`} />
-            {isOpen && <span>Settings</span>}
-          </button>
-        </div>
+      {/* Settings Section - 改进视觉效果和交互 */}
+      <div className="border-t border-gray-100/80 p-3 bg-gray-50/30">
+        <button 
+          className={`
+            flex items-center w-full px-3 py-2.5 rounded-xl
+            transition-all duration-200 group
+            text-gray-600 hover:bg-gray-100/80 hover:text-gray-900
+            ${!isOpen && 'justify-center'}
+          `}
+          onClick={handleSettingsClick}
+        >
+          <FiSettings className={`h-5 w-5 transition-transform duration-200
+            group-hover:rotate-45 ${isOpen && 'mr-3'}`} />
+          {isOpen && (
+            <span className={`text-sm font-medium transition-all duration-300 ${slideAnimation}`}>
+              Settings
+            </span>
+          )}
+        </button>
 
-        {/* Settings Menu Dropdown */}
+        {/* Settings Menu - 改进下拉菜单样式 */}
         {showSettingsMenu && (
           <div 
             ref={settingsMenuRef}
-            className="absolute bottom-16 left-0 w-full bg-white border rounded-lg shadow-lg p-2"
+            className="absolute bottom-16 left-0 w-full bg-white/95 backdrop-blur-sm
+              border-t border-gray-100/80 rounded-t-xl shadow-xl py-1.5
+              transform transition-all duration-200"
           >
             <button
               onClick={() => {
                 setShowSettings(true);
                 setShowSettingsMenu(false);
               }}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-700"
             >
               Settings
             </button>
-            {/* <button
-              onClick={() => {
-                setShowBilling(true);
-                setShowSettingsMenu(false);
-              }}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-            >
-              Billing
-            </button> */}
+            <div className="h-px bg-gray-100 my-1" />
             <button
               onClick={logout}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-red-600"
+              className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 text-red-600"
             >
               Logout
             </button>
           </div>
         )}
       </div>
-
-      {/* Modals */}
-      <SettingsModal 
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
-      <BillingModal 
-        isOpen={showBilling}
-        onClose={() => setShowBilling(false)}
-      />
-
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={deleteFolder}
-        title="Delete Folder"
-        message={`Are you sure you want to delete "${folderToDelete?.name}"? This action cannot be undone.`}
-      />
-
-      {error && (
-        <div className="fixed bottom-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg">
-          {error}
-          <button
-            onClick={() => setError(null)}
-            className="ml-2 font-bold"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {loading && (
-        <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
-        </div>
-      )}
-
-      {showFolderSelector && (
-        <FolderSelector
-          onSelect={(folderId) => {
-            handleFolderClick(folderId);
-            setShowFolderSelector(false);
-          }}
-          onClose={() => setShowFolderSelector(false)}
-          onFolderChange={handleFolderChange}
-        />
-      )}
     </div>
   );
 }
