@@ -12,7 +12,7 @@ import { useTranscriptStore } from '../hooks/useTranscripts';
 import { saveNote } from '../db/db';
 
 function TranscriptionPage() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [rightSidebarState, setRightSidebarState] = useState({
     isCollapsed: false,
     size: { width: 400 },
