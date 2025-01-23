@@ -49,6 +49,36 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
           }
         }
       } 
+      else if (type === 'addToFolder') {
+        if (typeof onAddToFolder === 'function') {
+          const folderId = await onAddToFolder();
+          if (folderId) {
+            await db.notes.update(note.id, {
+              folderId,
+              lastModified: new Date().toISOString(),
+              syncStatus: 'pending'
+            });
+            
+            // 触发一个自定义事件来通知 Sidebar 更新
+            const event = new CustomEvent('folderUpdate');
+            window.dispatchEvent(event);
+            
+            // 如果仍需要刷新页面，可以保留这行
+            window.location.reload();
+          }
+        }
+      }
+      else if (type === 'removeFromFolder') {
+        if (typeof onRemoveFromFolder === 'function') {
+          await db.notes.update(note.id, {
+            folderId: null,
+            lastModified: new Date().toISOString(),
+            syncStatus: 'pending'
+          });
+          onRemoveFromFolder();
+          window.location.reload();
+        }
+      }
       else if (type === 'delete') {
         try {
           await db.notes.delete(note.id);

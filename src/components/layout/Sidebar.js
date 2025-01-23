@@ -85,9 +85,18 @@ function Sidebar({ isOpen, onToggle }) {
   useEffect(() => {
     fetchFolders();
     
+    // 监听文件夹更新事件
+    const handleFolderUpdate = () => {
+      fetchFolders();
+    };
+    
+    window.addEventListener('folderUpdate', handleFolderUpdate);
+    
+    // 定期轮询更新（可选，作为备份方案）
     const intervalId = setInterval(fetchFolders, 5000);
     
     return () => {
+      window.removeEventListener('folderUpdate', handleFolderUpdate);
       clearInterval(intervalId);
     };
   }, [fetchFolders]);
