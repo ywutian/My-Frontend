@@ -335,9 +335,10 @@ function Dashboard() {
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleInputSelect(option.id)}
                       className={`relative p-4 rounded-xl border ${option.borderColor} ${option.bgColor}
-                        text-white transition-all duration-300 text-left group
+                        text-white text-left group
                         hover:shadow-lg ${option.glowColor}
-                        backdrop-blur-lg h-[120px]`}
+                        backdrop-blur-lg h-[120px]
+                        transform-gpu will-change-transform`}
                     >
                       {option.isNew && (
                         <motion.span
