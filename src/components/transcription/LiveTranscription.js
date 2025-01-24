@@ -7,13 +7,15 @@ import { getTranscriptText } from '../../utils/transcriptionUtils';
 import { useTranscriptStore } from '../../hooks/useTranscripts';
 
 export default function LiveTranscription({ onTranscriptionUpdate, isRecording }) {
-  // 从 store 获取语言设置
+  // 统一从 Zustand store 获取所有数据
   const transcriptionLanguage = useTranscriptStore(state => state.transcriptionLanguage);
+  const transcriptBuffer = useTranscriptStore(state => state.transcriptBuffer);
+  const updateTranscriptBuffer = useTranscriptStore(state => state.updateTranscriptBuffer);
+  const isTranslating = useTranscriptStore(state => state.isTranslating);
   
   const { error, startRecording, stopRecording } = useDeepgramTranscription();
-  const { isTranslating, translateText } = useTranslation();
+  const { translateText } = useTranslation();
   const {
-    transcriptBuffer,
     updateLatestTranscript,
     updateTranscriptTranslations,
   } = useTranscripts();
@@ -100,6 +102,11 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
       }
     }
   }, [transcriptBuffer, isRecording]); // 监听转录缓冲区和录音状态的变化
+
+  // 同步 transcriptBuffer 到 store
+  useEffect(() => {
+    updateTranscriptBuffer(transcriptBuffer);
+  }, [transcriptBuffer, updateTranscriptBuffer]);
 
   return (
     <div className="h-full overflow-hidden">

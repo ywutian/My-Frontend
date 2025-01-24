@@ -147,13 +147,39 @@ function TranscriptionPage() {
     const handleBeforeUnload = async (e) => {
       if (transcriptionContent.trim()) {
         // 自动保存笔记
-        await handleGenerateNote();
+        try {
+          await handleGenerateNote();
+        } catch (error) {
+          console.error('Failed to auto-save note:', error);
+        }
       }
     };
 
+    // 处理路由变化
+    const handleRouteChange = async () => {
+      if (transcriptionContent.trim()) {
+        try {
+          await handleGenerateNote();
+        } catch (error) {
+          console.error('Failed to auto-save note:', error);
+        }
+      }
+    };
+
+    // 添加事件监听器
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [transcriptionContent]);
+    
+    // 在组件卸载时清理
+    return () => {
+      // 如果有内容，在组件卸载时自动保存
+      if (transcriptionContent.trim()) {
+        handleGenerateNote().catch(error => {
+          console.error('Failed to auto-save note on unmount:', error);
+        });
+      }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [transcriptionContent]); // 依赖项包含 transcriptionContent
 
   return (
     <ErrorBoundary>

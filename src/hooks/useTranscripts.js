@@ -4,12 +4,15 @@ import { create } from 'zustand';
 import { languages } from '../config/languages';
 
 // 创建全局状态管理
-export const useTranscriptStore = create((set) => ({
+export const useTranscriptStore = create((set, get) => ({
   notes: [],
   noteLanguage: 'en-US',  // 默认中文
   transcriptionLanguage: 'en-US',  // 默认中文
   translationLanguage: 'en-US',    // 默认英文
   isTranslating: false,            // 默认不开启翻译
+  transcriptionContent: '',  // 当前转录内容
+  transcriptionSegments: [], // 转录片段
+  isRecording: false,       // 是否正在录音
   setNoteLanguage: (language) => set({ noteLanguage: language }),
   addNote: (note) => set((state) => ({
     notes: [...state.notes, note]
@@ -24,6 +27,42 @@ export const useTranscriptStore = create((set) => ({
   setTranscriptionLanguage: (language) => set({ transcriptionLanguage: language }),
   setTranslationLanguage: (language) => set({ translationLanguage: language }),
   setIsTranslating: (isTranslating) => set({ isTranslating }),
+  setTranscriptionContent: (content) => set({ transcriptionContent: content }),
+  setTranscriptionSegments: (segments) => set({ transcriptionSegments: segments }),
+  updateTranscription: (content, segments) => set({
+    transcriptionContent: content,
+    transcriptionSegments: segments
+  }),
+  clearTranscription: () => set({
+    transcriptionContent: '',
+    transcriptionSegments: []
+  }),
+  setIsRecording: (isRecording) => set({ isRecording }),
+  getTranscriptionState: () => ({
+    content: get().transcriptionContent,
+    segments: get().transcriptionSegments,
+    isRecording: get().isRecording
+  }),
+  // 添加转录缓冲区相关状态
+  transcriptBuffer: {
+    segments: [],
+    currentSegment: {
+      id: `segment-${Date.now()}`,
+      texts: [],
+      wordCount: 0,
+      startTime: null
+    },
+    notes: []
+  },
+  // 添加更新转录缓冲区的方法
+  updateTranscriptBuffer: (newBuffer) => set((state) => ({
+    transcriptBuffer: newBuffer
+  })),
+  // 添加获取完整转录状态的方法
+  getFullTranscriptionState: () => ({
+    ...get().getTranscriptionState(),
+    buffer: get().transcriptBuffer
+  })
 }));
 
 const convertToHtml = (text) => {
@@ -75,6 +114,11 @@ export function useTranscripts() {
     },
     notes: []              // 笔记数组
   });
+
+  // 同步 transcriptBuffer 到 store
+  useEffect(() => {
+    useTranscriptStore.getState().updateTranscriptBuffer(transcriptBuffer);
+  }, [transcriptBuffer]);
 
   // 判断是否应该创建新段落
   const shouldCreateNewSegment = useCallback((segment, newTranscript) => {
