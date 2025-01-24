@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FiSearch, FiEdit2, FiTrash2, FiFolder } from 'react-icons/fi';
 import { db } from '../db/db';
 import {
@@ -46,9 +46,9 @@ const Notes = () => {
     loadNotes();
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
   const handleRename = async (noteId, newTitle) => {
     if (!newTitle) return;
@@ -102,9 +102,9 @@ const Notes = () => {
     }
   };
 
-  const handleNewNote = () => {
+  const handleNewNote = useCallback(() => {
     navigate('/dashboard');
-  };
+  }, [navigate]);
 
   const filteredNotes = notes
     .filter(
@@ -120,55 +120,104 @@ const Notes = () => {
     });
 
   const renderHeader = () => (
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">
-        All Notes
-        <span className="text-sm text-gray-500 ml-2 font-normal">
-          {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-        </span>
-      </h1>
-      <button
-        className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg 
-                   hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center gap-2"
-        onClick={handleNewNote}
-      >
-        <FiEdit2 className="w-4 h-4" />
-        New Note
-      </button>
+    <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 py-4 border-b">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          All Notes
+          <span className="text-sm text-gray-500 font-normal px-2 py-1 bg-gray-100 rounded-full">
+            {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+          </span>
+        </h1>
+      </div>
+      <div className="flex gap-2">
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg 
+                     hover:bg-blue-700 transition-colors flex items-center gap-2"
+          onClick={handleNewNote}
+        >
+          <FiEdit2 className="w-4 h-4" />
+          New Note
+        </button>
+      </div>
     </div>
   );
 
   const renderSearchBar = () => (
-    <div className="flex gap-4 mb-6">
+    <div className="flex gap-4 mb-6 sticky top-16 bg-white z-10 py-4">
       <div className="flex-1 relative">
+        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder="Search notes..."
           value={searchTerm}
           onChange={handleSearch}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none 
-                   focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg 
+                    focus:outline-none focus:border-blue-500 focus:ring-1 
+                    focus:ring-blue-500 transition-colors"
         />
       </div>
       <select
-        className="border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none 
-                   focus:border-gray-300 focus:ring-1 focus:ring-gray-300
-                   bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+        className="border border-gray-200 rounded-lg px-4 py-2.5 
+                   focus:outline-none focus:border-blue-500 focus:ring-1 
+                   focus:ring-blue-500 bg-white cursor-pointer 
+                   hover:bg-gray-50 transition-colors min-w-[120px]"
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
       >
         <option value="date">Latest</option>
-        <option value="subject">Subject</option>
         <option value="title">Title</option>
       </select>
     </div>
   );
 
+  const NoteSkeleton = () => (
+    <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+      <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+    </div>
+  );
+
+  const EmptyState = ({ searchTerm, onNewNote }) => (
+    <div className="text-center py-12 bg-gray-50 rounded-lg">
+      <div className="text-gray-400 mb-4">
+        {searchTerm ? (
+          <>
+            <FiSearch className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-lg font-medium">No notes match "{searchTerm}"</p>
+            <p className="text-sm">Try searching with different keywords</p>
+          </>
+        ) : (
+          <>
+            <FiEdit2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-lg font-medium">No notes yet</p>
+            <p className="text-sm">Create your first note to get started</p>
+          </>
+        )}
+      </div>
+      <button
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg 
+                   hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
+        onClick={onNewNote}
+      >
+        <FiEdit2 className="w-4 h-4" />
+        {searchTerm ? 'Create new note' : 'Create your first note'}
+      </button>
+    </div>
+  );
+
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-600"></div>
-        <span className="ml-3 text-gray-600">Loading notes...</span>
+      <div className="min-h-screen bg-white w-full p-6">
+        <div className="max-w-7xl mx-auto">
+          {renderHeader()}
+          {renderSearchBar()}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, index) => (
+              <NoteSkeleton key={index} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -182,20 +231,7 @@ const Notes = () => {
             {renderSearchBar()}
 
             {filteredNotes.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <FiSearch className="w-12 h-12 mx-auto mb-4" />
-                  {searchTerm ? 'No notes match your search' : 'No notes yet'}
-                </div>
-                <button
-                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg 
-                             hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center gap-2"
-                  onClick={handleNewNote}
-                >
-                  <FiEdit2 className="w-4 h-4" />
-                  Create your first note
-                </button>
-              </div>
+              <EmptyState searchTerm={searchTerm} onNewNote={handleNewNote} />
             ) : (
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {filteredNotes.map((note) => (
@@ -207,6 +243,8 @@ const Notes = () => {
                     onDelete={() => handleDelete(note.id)}
                     onAddToFolder={() => handleAddToFolder(note.id)}
                     onRemoveFromFolder={() => handleRemoveFromFolder(note.id)}
+                    className="hover:shadow-lg transition-shadow duration-200 
+                               hover:border-gray-300 group"
                   />
                 ))}
               </div>

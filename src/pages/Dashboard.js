@@ -14,6 +14,9 @@ import { db } from '../db/db';
 import { handleDocumentUpload } from '../services/documentService';
 import ProgressBar from '../components/common/ProgressBar';
 import YouTubeLinkModal from '../components/youtube/YouTubeLinkModal';
+import { motion } from 'framer-motion';
+import { HiSparkles } from 'react-icons/hi';
+import { RiVipCrownFill } from 'react-icons/ri';
 
 function Dashboard() {
   const [selectedInput, setSelectedInput] = useState(null);
@@ -246,140 +249,228 @@ function Dashboard() {
       icon: '🎙️',
       title: 'Record or Upload Audio',
       subtitle: 'Upload an audio file',
-      bgColor: 'bg-blue-500',
+      bgColor: 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600',
+      glowColor: 'group-hover:shadow-blue-500/50',
+      borderColor: 'border-blue-400/20',
     },
     {
       id: 'lecture',
       icon: '🎤',
       title: 'Record Live Lecture',
       subtitle: 'Real time transcript',
-      bgColor: 'bg-purple-500',
-      isNew: true,
+      bgColor: 'bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600',
+      glowColor: 'group-hover:shadow-purple-500/50',
+      borderColor: 'border-purple-400/20',
+      //isNew: true,
+      isPro: true,
     },
     {
       id: 'youtube',
       icon: '▶️',
       title: 'YouTube Video',
       subtitle: 'Paste a YouTube link',
-      bgColor: 'bg-red-500',
+      bgColor: 'bg-gradient-to-br from-red-400 to-red-600',
+      borderColor: 'border-red-400',
+      shadowColor: 'shadow-red-400/30',
     },
     {
       id: 'document',
       icon: '📄',
       title: 'Document Upload',
       subtitle: 'PDF,PPT,WORD,EXCEL,CSV,TXT',
-      bgColor: 'bg-green-500',
+      bgColor: 'bg-gradient-to-br from-green-400 to-green-600',
+      borderColor: 'border-green-400',
+      shadowColor: 'shadow-green-400/30',
     },
   ];
 
   return (
     <ErrorBoundary>
-      <div className="p-6">
-        <div
-          className={`rounded-lg shadow-xl p-6 ${
-            theme === 'light' ? 'bg-white' : 'bg-gray-800 text-white'
-          }`}
+      <div className="min-h-screen p-4 md:p-6 bg-[#fafafa] dark:bg-gray-900">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-7xl mx-auto"
         >
-          {!showLiveTranscription ? (
-            <>
-              <h1 className="text-2xl font-bold mb-6 text-[#1e3d58]">
-                Dashboard
-              </h1>
+          <div className={`rounded-3xl shadow-2xl backdrop-blur-xl p-6 md:p-8 
+            ${theme === 'light' 
+              ? 'bg-white/80' 
+              : 'bg-gray-800/80 text-white'}`}
+          >
+            {!showLiveTranscription ? (
+              <>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center justify-between mb-8"
+                >
+                  <div className="relative">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1e3d58] to-[#2d5a7c] 
+                      dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
+                      Dashboard
+                    </h1>
+                    <motion.div
+                      animate={{ 
+                        rotate: [0, 10, -10, 0],
+                        scale: [1, 1.2, 1] 
+                      }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                      className="absolute -top-4 -right-4"
+                    >
+                      <HiSparkles className="text-yellow-400 text-2xl" />
+                    </motion.div>
+                  </div>
+                </motion.div>
 
-              {/* Input Selection Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {inputOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handleInputSelect(option.id)}
-                    className={`relative p-6 rounded-lg ${option.bgColor} text-white hover:shadow-lg transition-all duration-200 text-left`}
-                  >
-                    {option.isNew && (
-                      <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                        New
-                      </span>
+                {/* Input Selection Grid - Updated sizing and spacing */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  {inputOptions.map((option) => (
+                    <motion.button
+                      key={option.id}
+                      whileHover={{ scale: 1.02, y: -3 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleInputSelect(option.id)}
+                      className={`relative p-4 rounded-xl border ${option.borderColor} ${option.bgColor}
+                        text-white transition-all duration-300 text-left group
+                        hover:shadow-lg ${option.glowColor}
+                        backdrop-blur-lg h-[120px]`}
+                    >
+                      {option.isNew && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 
+                            text-white text-[10px] px-2 py-0.5 rounded-full font-semibold shadow-lg"
+                        >
+                          New
+                        </motion.span>
+                      )}
+                      {option.isPro && (
+                        <motion.div
+                          animate={{ 
+                            rotate: [0, 10, -10, 0],
+                            scale: [1, 1.1, 1] 
+                          }}
+                          transition={{ 
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "reverse"
+                          }}
+                          className="absolute top-2 right-2"
+                        >
+                          <RiVipCrownFill className="text-yellow-300 text-sm" />
+                        </motion.div>
+                      )}
+                      <div className="text-2xl mb-2 transform group-hover:scale-110 
+                        transition-transform duration-300">
+                        {option.icon}
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">{option.title}</h3>
+                      <p className="text-xs text-white/80 line-clamp-2">{option.subtitle}</p>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Recent Notes Section */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-12"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-[#1e3d58] to-[#2d5a7c] 
+                      dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
+                      Recent Notes
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {recentNotes.length > 0 ? (
+                      recentNotes.map((note, index) => (
+                        <motion.div
+                          key={note.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          whileHover={{ scale: 1.02, y: -5 }}
+                          className="backdrop-blur-lg"
+                        >
+                          <NoteCard
+                            note={note}
+                            onClick={() => navigate(`/notes/${note.id}`)}
+                            onRename={async (newTitle) => {
+                              try {
+                                await db.notes.update(note.id, {
+                                  title: newTitle,
+                                  lastModified: new Date().toISOString(),
+                                  syncStatus: 'pending'
+                                });
+                                // Refresh the notes list
+                                const updatedNotes = await db.notes
+                                  .orderBy('date')
+                                  .reverse()
+                                  .limit(10)
+                                  .toArray();
+                                setRecentNotes(updatedNotes);
+                              } catch (error) {
+                                console.error('Error renaming note:', error);
+                                alert('Failed to rename note');
+                              }
+                            }}
+                            onDelete={async () => {
+                              if (window.confirm('Are you sure you want to delete this note?')) {
+                                try {
+                                  await db.notes.delete(note.id);
+                                  setRecentNotes(recentNotes.filter(n => n.id !== note.id));
+                                } catch (error) {
+                                  console.error('Error deleting note:', error);
+                                  alert('Failed to delete note');
+                                }
+                              }
+                            }}
+                            onAddToFolder={() => {}}
+                            onRemoveFromFolder={() => {}}
+                          />
+                        </motion.div>
+                      ))
+                    ) : (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="col-span-3 text-center p-12 rounded-2xl 
+                          bg-gradient-to-br from-gray-50/50 to-gray-100/50 
+                          dark:from-gray-700/30 dark:to-gray-800/30 backdrop-blur-xl"
+                      >
+                        <motion.div
+                          animate={{ 
+                            y: [0, -10, 0],
+                          }}
+                          transition={{ 
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "reverse"
+                          }}
+                          className="text-5xl mb-4"
+                        >
+                          📝
+                        </motion.div>
+                        <p className="text-xl font-medium mb-2">No notes yet</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Start your journey by creating your first note
+                        </p>
+                      </motion.div>
                     )}
-                    <div className="text-2xl mb-2">{option.icon}</div>
-                    <h3 className="font-semibold mb-1">{option.title}</h3>
-                    <p className="text-sm text-white/80">{option.subtitle}</p>
-                  </button>
-                ))}
-              </div>
-
-              {/* Recent Notes Section */}
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4 text-[#1e3d58]">
-                  Recent Notes
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentNotes.length > 0 ? (
-                    recentNotes.map((note) => (
-                      <NoteCard
-                        key={note.id}
-                        note={{
-                          id: note.id,
-                          title: note.title,
-                          date: new Date(note.date).toLocaleDateString(),
-                          preview: note.content.substring(0, 100) + '...',
-                          subject: note.subject,
-                        }}
-                        onClick={() => navigate(`/notes/${note.id}`)}
-                        onRename={async (newTitle) => {
-                          try {
-                            await db.notes.update(note.id, {
-                              title: newTitle,
-                              lastModified: new Date().toISOString(),
-                              syncStatus: 'pending'
-                            });
-                            // Refresh the notes list
-                            const updatedNotes = await db.notes
-                              .orderBy('date')
-                              .reverse()
-                              .limit(10)
-                              .toArray();
-                            setRecentNotes(updatedNotes);
-                          } catch (error) {
-                            console.error('Error renaming note:', error);
-                            alert('Failed to rename note');
-                          }
-                        }}
-                        onDelete={async () => {
-                          if (window.confirm('Are you sure you want to delete this note?')) {
-                            try {
-                              await db.notes.delete(note.id);
-                              setRecentNotes(recentNotes.filter(n => n.id !== note.id));
-                            } catch (error) {
-                              console.error('Error deleting note:', error);
-                              alert('Failed to delete note');
-                            }
-                          }
-                        }}
-                        onAddToFolder={() => {}} // Add folder functionality if needed
-                        onRemoveFromFolder={() => {}} // Add remove from folder functionality if needed
-                      />
-                    ))
-                  ) : (
-                    <div className="col-span-3 text-center text-gray-500 py-8">
-                      No notes yet. Create your first note by clicking on
-                      "Record or Upload Audio"!
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 音频上传部分 */}
-              {/* {selectedInput === 'audio' && (
-                <div className="mt-8">
-                  <VideoUpload onUploadSuccess={() => {}} />
-                </div>
-              )} */}
-            </>
-          ) : (
-            <LiveTranscription
-              onClose={() => setShowLiveTranscription(false)}
-            />
-          )}
-        </div>
+                  </div>
+                </motion.div>
+              </>
+            ) : (
+              <LiveTranscription onClose={() => setShowLiveTranscription(false)} />
+            )}
+          </div>
+        </motion.div>
       </div>
 
       <SubjectSelectionModal
