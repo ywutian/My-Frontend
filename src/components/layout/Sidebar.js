@@ -251,7 +251,7 @@ function Sidebar({ isOpen, onToggle }) {
       {/* Toggle Button - 改进视觉效果 */}
       <button 
         onClick={onToggle}
-        className="absolute -right-3 top-20 w-7 h-7 bg-white/95 
+        className="absolute -right-3 top-1/2 w-7 h-7 bg-white/95 
           backdrop-blur-sm border border-gray-200/80 
           rounded-full flex items-center justify-center 
           shadow-lg shadow-gray-200/50 hover:shadow-gray-300/50 
@@ -419,12 +419,14 @@ function Sidebar({ isOpen, onToggle }) {
           "
           onClick={handleSettingsClick}
         >
-          <FiSettings className="h-5 w-5 mr-3 transition-transform duration-200
-            group-hover:rotate-45" />
-          <span className="text-sm font-medium">
-            Settings
-          </span>
-        </button>
+          <FiSettings className={`h-5 w-5 transition-transform duration-200
+    group-hover:rotate-45 ${isOpen ? 'mr-3' : ''}`} />
+  {isOpen && (
+    <span className="text-sm font-medium">
+      Settings
+    </span>
+  )}
+</button>
 
         {/* Settings Menu Dropdown */}
         {showSettingsMenu && (
