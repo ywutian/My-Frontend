@@ -20,7 +20,7 @@ export const askQuestion = async (noteContent, question, onData) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'Qwen/Qwen2.5-7B-Instruct',
+          model: 'deepseek-ai/DeepSeek-V2.5',
           messages: [
             {
               role: 'system',
