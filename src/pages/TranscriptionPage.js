@@ -340,8 +340,8 @@ function TranscriptionPage() {
         {/* Right Sidebar */}
         <DraggableSidebar
           title="Controls"
-          defaultWidth={400}
-          minWidth={280}
+          defaultWidth={500}
+          minWidth={200}
           initialPosition="right"
           defaultTab="Transcription"
           onStateChange={setRightSidebarState}
