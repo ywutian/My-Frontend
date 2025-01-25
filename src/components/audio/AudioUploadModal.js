@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { FiUpload, FiX, FiMusic, FiGlobe } from 'react-icons/fi';
 import ProgressBar from '../common/ProgressBar';
 
 function AudioUploadModal({ isOpen, onClose, onUpload }) {
@@ -20,26 +21,43 @@ function AudioUploadModal({ isOpen, onClose, onUpload }) {
     formData.append('noteLanguage', noteLanguage);
     formData.append('title', title.trim());
     
+    setIsLoading(true);
     await onUpload(formData);
   };
 
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'zh', name: '中文' },
+    { code: 'ja', name: '日本語' },
+    { code: 'ko', name: '한국어' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' }
+  ];
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50">
       {!isLoading ? (
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Upload Audio</h2>
+        <div className="bg-gradient-to-b from-white/95 to-white/90 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md
+                     shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20
+                     transform transition-all duration-300">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-xl font-semibold bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 
+                        bg-clip-text text-transparent">
+              Upload Audio
+            </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="p-2 hover:bg-black/5 rounded-full transition-colors duration-200"
             >
-              ✕
+              <FiX className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
           {/* Title Input */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Title (Optional)
             </label>
             <input
@@ -47,54 +65,64 @@ function AudioUploadModal({ isOpen, onClose, onUpload }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter note title or leave empty for AI generated title"
-              className="w-full border rounded-md p-2"
+              className="w-full px-4 py-3 bg-white/60 border border-gray-200 rounded-xl
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                      placeholder:text-gray-400 text-sm transition-all duration-200
+                      hover:bg-white/80"
             />
           </div>
 
           {/* Language Selection */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-6 mb-8">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <FiMusic className="w-4 h-4 mr-1.5 text-blue-500" />
                 Audio Language
               </label>
               <select
                 value={audioLanguage}
                 onChange={(e) => setAudioLanguage(e.target.value)}
-                className="w-full border rounded-md p-2"
+                className="w-full px-4 py-3 bg-white/60 border border-gray-200 rounded-xl
+                        focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                        text-sm transition-all duration-200
+                        hover:bg-white/80"
               >
-                <option value="en">English</option>
-                <option value="zh">Chinese</option>
-                <option value="ja">Japanese</option>
-                <option value="ko">Korean</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
+                {languages.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <FiGlobe className="w-4 h-4 mr-1.5 text-blue-500" />
                 Note Language
               </label>
               <select
                 value={noteLanguage}
                 onChange={(e) => setNoteLanguage(e.target.value)}
-                className="w-full border rounded-md p-2"
+                className="w-full px-4 py-3 bg-white/60 border border-gray-200 rounded-xl
+                        focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                        text-sm transition-all duration-200
+                        hover:bg-white/80"
               >
-                <option value="en">English</option>
-                <option value="zh">Chinese</option>
-                <option value="ja">Japanese</option>
-                <option value="ko">Korean</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
+                {languages.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
           
           {/* Upload Area */}
           <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+            className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center
+                     hover:border-blue-400 transition-all duration-300
+                     bg-gradient-to-b from-gray-50/50 to-white/30 backdrop-blur-sm
+                     group cursor-pointer"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
@@ -121,15 +149,27 @@ function AudioUploadModal({ isOpen, onClose, onUpload }) {
               htmlFor="audio-upload"
               className="cursor-pointer flex flex-col items-center"
             >
-              <span className="text-4xl mb-2">🎵</span>
               {audioFile ? (
-                <span className="text-gray-600">{audioFile.name}</span>
+                <>
+                  <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4
+                               group-hover:bg-blue-100 transition-colors duration-200">
+                    <FiMusic className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{audioFile.name}</span>
+                  <span className="text-xs text-gray-500 mt-2">
+                    Click to change file
+                  </span>
+                </>
               ) : (
                 <>
-                  <span className="text-gray-600">
+                  <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4
+                               group-hover:bg-blue-100 transition-colors duration-200">
+                    <FiUpload className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
                     Drag & drop or click to upload audio file
                   </span>
-                  <span className="text-sm text-gray-400 mt-2">
+                  <span className="text-xs text-gray-500 mt-2">
                     Supports MP3, WAV, M4A
                   </span>
                 </>
@@ -138,27 +178,31 @@ function AudioUploadModal({ isOpen, onClose, onUpload }) {
           </div>
           
           {/* Buttons */}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-8 flex justify-end space-x-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900
+                     transition-colors duration-200 rounded-xl hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
-              onClick={() => {
-                setIsLoading(true);
-                handleSubmit();
-              }}
+              onClick={() => handleSubmit()}
               disabled={!audioFile}
-              className={`px-4 py-2 bg-blue-500 text-white rounded-lg ml-2 hover:bg-blue-600
-                ${!audioFile ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`px-6 py-2.5 rounded-xl text-sm font-medium text-white
+                       transform transition-all duration-200 shadow-sm
+                       ${!audioFile 
+                         ? 'bg-gray-300 cursor-not-allowed' 
+                         : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 hover:-translate-y-0.5 hover:shadow-md'
+                       }`}
             >
               Upload
             </button>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <ProgressBar progress={0} status="Processing audio..." />
+      )}
     </div>
   );
 }

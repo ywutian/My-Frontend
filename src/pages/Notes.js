@@ -1,5 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiSearch, FiEdit2, FiTrash2, FiFolder } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import {
+  FiSearch,
+  FiEdit2,
+  FiTrash2,
+  FiFolder,
+  FiChevronDown,
+  FiFileText,
+  FiX,
+  FiPlus,
+  FiClock,
+  FiInfo,
+  FiCalendar,
+  FiTag
+} from 'react-icons/fi';
 import { db } from '../db/db';
 import {
   addNoteToFolder,
@@ -7,7 +21,31 @@ import {
 } from '../services/folderOperations';
 import FolderSelector from '../components/Folder/FolderSelector';
 import NoteCard from '../components/notes/NoteCard';
-import { useNavigate } from 'react-router-dom';
+
+// 新增 EmptyState 组件
+const EmptyState = ({ icon: Icon, title, message, action }) => (
+  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-12 text-center shadow-sm border border-gray-100">
+    <div className="max-w-md mx-auto">
+      <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center">
+        <Icon className="w-8 h-8 text-blue-500" />
+      </div>
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        {title}
+      </h2>
+      <p className="text-gray-500 mb-6">
+        {message}
+      </p>
+      <button
+        onClick={action.onClick}
+        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 
+                 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 
+                 transition-all duration-200 shadow-sm mx-auto"
+      >
+        {action.label}
+      </button>
+    </div>
+  </div>
+);
 
 const Notes = () => {
   const navigate = useNavigate();
@@ -119,149 +157,185 @@ const Notes = () => {
       return (a.title || '').localeCompare(b.title || '');
     });
 
-  const renderHeader = () => (
-    <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 py-4 border-b">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          All Notes
-          <span className="text-sm text-gray-500 font-normal px-2 py-1 bg-gray-100 rounded-full">
-            {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-          </span>
-        </h1>
-      </div>
-      <div className="flex gap-2">
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg 
-                     hover:bg-blue-700 transition-colors flex items-center gap-2"
-          onClick={handleNewNote}
-        >
-          <FiEdit2 className="w-4 h-4" />
-          New Note
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderSearchBar = () => (
-    <div className="flex gap-4 mb-6 sticky top-16 bg-white z-10 py-4">
-      <div className="flex-1 relative">
-        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search notes..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg 
-                    focus:outline-none focus:border-blue-500 focus:ring-1 
-                    focus:ring-blue-500 transition-colors"
-        />
-      </div>
-      <select
-        className="border border-gray-200 rounded-lg px-4 py-2.5 
-                   focus:outline-none focus:border-blue-500 focus:ring-1 
-                   focus:ring-blue-500 bg-white cursor-pointer 
-                   hover:bg-gray-50 transition-colors min-w-[120px]"
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-      >
-        <option value="date">Latest</option>
-        <option value="title">Title</option>
-      </select>
-    </div>
-  );
-
-  const NoteSkeleton = () => (
-    <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
-      <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-      <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-    </div>
-  );
-
-  const EmptyState = ({ searchTerm, onNewNote }) => (
-    <div className="text-center py-12 bg-gray-50 rounded-lg">
-      <div className="text-gray-400 mb-4">
-        {searchTerm ? (
-          <>
-            <FiSearch className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No notes match "{searchTerm}"</p>
-            <p className="text-sm">Try searching with different keywords</p>
-          </>
-        ) : (
-          <>
-            <FiEdit2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No notes yet</p>
-            <p className="text-sm">Create your first note to get started</p>
-          </>
-        )}
-      </div>
-      <button
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg 
-                   hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
-        onClick={onNewNote}
-      >
-        <FiEdit2 className="w-4 h-4" />
-        {searchTerm ? 'Create new note' : 'Create your first note'}
-      </button>
-    </div>
-  );
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white w-full p-6">
-        <div className="max-w-7xl mx-auto">
-          {renderHeader()}
-          {renderSearchBar()}
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, index) => (
-              <NoteSkeleton key={index} />
-            ))}
+  return (
+    <div className="min-h-screen bg-gradient-custom overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+        {/* Stats Bar - 新增统计信息 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mx-auto">
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-gray-100
+                        hover:shadow-md transition-all duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <FiFileText className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Notes</p>
+                <p className="text-2xl font-bold text-gray-900">{notes.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-gray-100
+                        hover:shadow-md transition-all duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <FiFolder className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">In Folders</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {notes.filter(note => note.folderId).length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-gray-100
+                        hover:shadow-md transition-all duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-50 rounded-lg">
+                <FiClock className="w-5 h-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Last Updated</p>
+                <p className="text-sm font-bold text-gray-900">
+                  {notes.length > 0 
+                    ? new Date(Math.max(...notes.map(n => new Date(n.lastModified)))).toLocaleDateString()
+                    : 'No notes yet'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-white w-full">
-      <main className="flex-1 h-full">
-        <div className="p-6 h-full">
-          <div className="max-w-7xl mx-auto">
-            {renderHeader()}
-            {renderSearchBar()}
-
-            {filteredNotes.length === 0 ? (
-              <EmptyState searchTerm={searchTerm} onNewNote={handleNewNote} />
-            ) : (
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {filteredNotes.map((note) => (
-                  <NoteCard
-                    key={note.id}
-                    note={note}
-                    onClick={() => navigate(`/notes/${note.id}`)}
-                    onRename={(newTitle) => handleRename(note.id, newTitle)}
-                    onDelete={() => handleDelete(note.id)}
-                    onAddToFolder={() => handleAddToFolder(note.id)}
-                    onRemoveFromFolder={() => handleRemoveFromFolder(note.id)}
-                    className="hover:shadow-lg transition-shadow duration-200 
-                               hover:border-gray-300 group"
-                  />
-                ))}
+        {/* Search and Filter Section - 增强版 */}
+        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-gray-100 mx-auto">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative group">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 
+                            text-gray-400 group-hover:text-blue-500 transition-all duration-200">
+                <FiSearch className="w-5 h-5" />
               </div>
-            )}
+              <input
+                type="text"
+                placeholder="Search notes..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                         group-hover:border-blue-200 transition-all duration-200"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 
+                           text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="appearance-none px-4 py-3 bg-white border border-gray-200 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                           cursor-pointer min-w-[140px] pr-10 transition-all duration-200
+                           hover:border-blue-200"
+                >
+                  <option value="date">Latest First</option>
+                  <option value="title">By Title</option>
+                </select>
+                <FiChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 
+                                      text-gray-400 pointer-events-none" />
+              </div>
+              <button
+                onClick={handleNewNote}
+                className="inline-flex items-center px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 
+                         text-white rounded-lg hover:from-blue-600 hover:to-blue-700 
+                         transition-all duration-200 shadow-sm active:scale-95"
+              >
+                <FiPlus className="w-5 h-5" />
+              </button>
+            </div>
           </div>
+          {searchTerm && (
+            <div className="mt-4 flex items-center text-sm text-gray-500">
+              <FiInfo className="w-4 h-4 mr-2" />
+              <span>
+                Found {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'} 
+                matching "{searchTerm}"
+              </span>
+            </div>
+          )}
+        </div>
 
-          {showFolderSelector && (
+        {/* Notes Grid - 优化卡片布局 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto">
+          {isLoading ? (
+            [...Array(6)].map((_, index) => (
+              <div key={index} 
+                   className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm 
+                            border border-gray-100 animate-pulse">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                  <div className="space-y-2 flex-1">
+                    <div className="h-5 bg-gray-200 rounded-md w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded-md w-1/2"></div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded-md w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded-md w-2/3"></div>
+                </div>
+              </div>
+            ))
+          ) : filteredNotes.length === 0 ? (
+            <div className="col-span-full">
+              <EmptyState 
+                icon={searchTerm ? FiSearch : FiEdit2}
+                title={searchTerm ? 'No notes found' : 'Create your first note'}
+                message={searchTerm 
+                  ? `No notes match your search "${searchTerm}"`
+                  : 'Get started by creating a new note'}
+                action={{
+                  label: searchTerm ? 'Clear search' : 'Create note',
+                  onClick: searchTerm ? () => setSearchTerm('') : handleNewNote
+                }}
+              />
+            </div>
+          ) : (
+            filteredNotes.map((note) => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                onClick={() => navigate(`/notes/${note.id}`)}
+                onRename={(newTitle) => handleRename(note.id, newTitle)}
+                onDelete={() => handleDelete(note.id)}
+                onAddToFolder={() => handleAddToFolder(note.id)}
+                onRemoveFromFolder={() => handleRemoveFromFolder(note.id)}
+                className="bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-sm 
+                         rounded-xl shadow-sm hover:shadow-md transition-all duration-200
+                         transform hover:-translate-y-1 border border-gray-100
+                         hover:border-blue-200"
+              />
+            ))
+          )}
+        </div>
+
+        {/* Modals */}
+        {showFolderSelector && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 overflow-hidden">
             <FolderSelector
               onSelect={handleFolderSelect}
               onClose={() => {
                 setShowFolderSelector(false);
                 setSelectedNote(null);
               }}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              className="w-full max-w-lg mx-4 bg-white rounded-xl shadow-lg"
             />
-          )}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );

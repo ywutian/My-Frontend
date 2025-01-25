@@ -109,7 +109,7 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
   }, [transcriptBuffer, updateTranscriptBuffer]);
 
   return (
-    <div className="h-full overflow-hidden">
+    <div className="h-full overflow-hidden bg-gradient-custom">
       <motion.div
         ref={transcriptContainerRef}
         initial={{ opacity: 0 }}
@@ -128,8 +128,8 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
             key={segment.id || index}
             className={`p-4 rounded-lg border border-gray-200 mb-4 ${
               index === displaySegments.length - 1 && isRecording 
-                ? 'bg-blue-50' 
-                : 'bg-gray-50'
+                ? 'bg-blue-50/90 backdrop-blur-sm' 
+                : 'bg-white/80 backdrop-blur-sm'
             }`}
           >
             {/* 段落时间戳 */}
@@ -155,7 +155,8 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
       </motion.div>
 
       {error && (
-        <div className="fixed bottom-4 left-4 bg-red-100 text-red-600 px-4 py-2 rounded-lg shadow">
+        <div className="fixed bottom-4 left-4 bg-red-100/90 backdrop-blur-sm text-red-600 
+                      px-4 py-2 rounded-lg shadow">
           {error}
         </div>
       )}

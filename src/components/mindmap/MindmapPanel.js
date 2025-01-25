@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { FiShare2, FiPlay } from 'react-icons/fi';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -40,6 +41,7 @@ const NODE_STYLES = {
 const MindmapPanel = ({ noteContent }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getNodeStyle = (level) => ({
     ...NODE_STYLES.base,
@@ -103,6 +105,7 @@ const MindmapPanel = ({ noteContent }) => {
   };
 
   const generateMindmap = async () => {
+    setIsLoading(true);
     try {
       let finalResponse = '';
       await askQuestion(
@@ -128,6 +131,8 @@ const MindmapPanel = ({ noteContent }) => {
       setEdges(newEdges);
     } catch (error) {
       console.error('Error generating mindmap:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -136,35 +141,90 @@ const MindmapPanel = ({ noteContent }) => {
   }, []);
 
   return (
-    <div className="h-full p-6">
-      <button
-        onClick={generateMindmap}
-        className="bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-lg 
-                 border border-gray-200 transition-colors duration-200 shadow-sm"
-      >
-        Generate Mindmap
-      </button>
-      <div className="w-full h-[750px] bg-gray-50 rounded-xl border border-gray-200 shadow-sm mt-6">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onInit={onInit}
-          fitView
-          minZoom={0.1}
-          maxZoom={1.5}
-          defaultZoom={0.8}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-        >
-          <Controls className="bg-white shadow-sm rounded-lg border border-gray-200" />
-          <MiniMap 
-            style={{ background: 'white' }}
-            className="shadow-sm rounded-lg border border-gray-200"
-            nodeColor={(node) => node.style.background}
-          />
-          <Background color="#f1f5f9" gap={16} size={1} /> {/* gray-100 */}
-        </ReactFlow>
+    <div className="h-full bg-gradient-mindmap overflow-x-hidden">
+      {/* Header */}
+      <div className="bg-white/50 backdrop-blur-sm border-b border-white/20">
+        <div style={{ maxWidth: '56rem' }} className="mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <FiShare2 className="w-5 h-5 text-blue-500" />
+              </div>
+              <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 
+                         bg-clip-text text-transparent">
+                Mindmap
+              </h2>
+            </div>
+
+            <button
+              onClick={generateMindmap}
+              disabled={isLoading}
+              className={`group relative flex items-center gap-2 px-6 py-3 rounded-xl
+                bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
+                text-white shadow-lg shadow-blue-500/20 transition-all duration-200
+                hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5
+                ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <FiPlay className="w-4 h-4 text-white" />
+              )}
+              <span className="font-medium">Generate Mindmap</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-transparent custom-scrollbar" style={{ height: 'calc(100% - 73px)' }}>
+        <div className="w-full h-[750px] glass-card rounded-xl mt-6 p-1">
+          {nodes.length > 0 ? (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onInit={onInit}
+              fitView
+              minZoom={0.1}
+              maxZoom={1.5}
+              defaultZoom={0.8}
+              defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+            >
+              <Controls className="glass-card rounded-lg" />
+              <MiniMap 
+                style={{ background: 'rgba(255, 255, 255, 0.5)' }}
+                className="glass-card rounded-lg"
+                nodeColor={(node) => node.style.background}
+              />
+              <Background color="#e8f1ff" gap={16} size={1} />
+            </ReactFlow>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 
+                             flex items-center justify-center shadow-lg shadow-blue-500/20 
+                             ring-4 ring-white/50">
+                  <FiShare2 className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 
+                             bg-clip-text text-transparent mb-4">
+                  {isLoading ? 'Generating Mindmap' : 'No Mindmap Yet'}
+                </h3>
+                <p className="text-gray-600 mb-8 text-lg">
+                  {isLoading 
+                    ? 'Please wait while we analyze your note...'
+                    : 'Click "Generate Mindmap" to visualize your note content.'}
+                </p>
+                {isLoading && (
+                  <div className="w-10 h-10 mx-auto border-3 border-blue-500/30 border-t-blue-500 
+                               rounded-full animate-spin" />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

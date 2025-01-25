@@ -10,6 +10,7 @@ import LiveNotes from '../components/notes/LiveNotes';
 import { ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { useTranscriptStore } from '../hooks/useTranscripts';
 import { saveNote } from '../db/db';
+import { useNavigate } from 'react-router-dom';
 
 function TranscriptionPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -26,27 +27,21 @@ function TranscriptionPage() {
   const [noteTitle, setNoteTitle] = useState(getDefaultTitle());
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const addNote = useTranscriptStore(state => state.addNote);
-
-  // 直接从 Zustand store 获取笔记数据
   const notes = useTranscriptStore(state => state.notes);
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState('en-US');
+  const [translationLanguage, setTranslationLanguage] = useState('en-US');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const navigate = useNavigate();
 
-  // 添加语言相关的状态
-  const [transcriptionLanguage, setTranscriptionLanguage] = useState('en-US'); // 默认中文
-  const [translationLanguage, setTranslationLanguage] = useState('en-US');    // 默认英文
-  const [isTranslating, setIsTranslating] = useState(false);                  // 默认不开启翻译
-
-  // 监听转录内容更新
   const handleTranscriptionUpdate = useCallback((content, segments) => {
     setTranscriptionContent(content);
     setTranscriptionSegments(segments);
   }, []);
 
-  // 处理录音状态切换
   const handleRecordingToggle = useCallback(() => {
     setIsRecording(prev => !prev);
   }, []);
 
-  // 处理分割面板大小变化
   const handleSplitDrag = (sizes) => {
     const [leftSize, rightSize] = sizes;
     const leftWidth = window.innerWidth * (leftSize / 100);
@@ -61,7 +56,6 @@ function TranscriptionPage() {
     }
   };
 
-  // 生成默认标题（当前日期）
   function getDefaultTitle() {
     const now = new Date();
     return now.toLocaleDateString('zh-CN', {
@@ -73,22 +67,18 @@ function TranscriptionPage() {
     }).replace(/\//g, '-');
   }
 
-  // 处理标题编辑
   const handleTitleChange = (e) => {
     setNoteTitle(e.target.value);
   };
 
-  // 处理标题编辑完成
   const handleTitleSubmit = (e) => {
     if (e.key === 'Enter' || e.type === 'blur') {
       setIsEditingTitle(false);
     }
   };
 
-  // 处理标题编辑开始
   const handleStartEditing = () => {
     setIsEditingTitle(true);
-    // 选中所有文本，方便直接输入覆盖
     setTimeout(() => {
       const input = document.querySelector('input[type="text"]');
       if (input) {
@@ -97,27 +87,23 @@ function TranscriptionPage() {
     }, 0);
   };
 
-  // 处理生成笔记
   const handleGenerateNote = async () => {
     if (!transcriptionContent.trim()) return;
 
     try {
-      // 从 store 获取所有笔记内容并按时间顺序合并
       const storeNotes = useTranscriptStore.getState().notes;
       
-      // 如果没有已生成的笔记，就使用当前转录内容
       const combinedContent = storeNotes.length === 0 
         ? transcriptionContent 
         : storeNotes
-            .sort((a, b) => a.timestamp - b.timestamp)  // 按时间顺序排序
-            .map(note => note.content)                  // 获取所有内容
-            .join('\n');                               // 合并所有内容
+            .sort((a, b) => a.timestamp - b.timestamp)
+            .map(note => note.content)
+            .join('\n');
       
-      // 准备笔记数据
       const noteData = {
         title: noteTitle || getDefaultTitle(),
-        content: combinedContent,                   // 使用合并后的笔记内容
-        transcript: transcriptionContent,           // 保留原始转录文本
+        content: combinedContent,
+        transcript: transcriptionContent,
         segments: transcriptionSegments,
         audioLanguage: transcriptionLanguage,
         noteLanguage: isTranslating ? translationLanguage : transcriptionLanguage,
@@ -126,27 +112,22 @@ function TranscriptionPage() {
         syncStatus: 'pending'
       };
 
-      // 保存到数据库并获取返回的笔记ID
       const noteId = await saveNote(noteData);
 
-      // 清空当前转录内容
       setTranscriptionContent('');
       setTranscriptionSegments([]);
       
-      // 返回生成的笔记ID，这样TranscriptionPanel可以使用它进行导航
       return noteId;
     } catch (error) {
       console.error('Failed to generate note:', error);
       alert('Failed to generate note. Please try again.');
-      throw error; // 抛出错误以便TranscriptionPanel可以处理
+      throw error;
     }
   };
 
-  // 处理页面离开
   useEffect(() => {
     const handleBeforeUnload = async (e) => {
       if (transcriptionContent.trim()) {
-        // 自动保存笔记
         try {
           await handleGenerateNote();
         } catch (error) {
@@ -155,7 +136,6 @@ function TranscriptionPage() {
       }
     };
 
-    // 处理路由变化
     const handleRouteChange = async () => {
       if (transcriptionContent.trim()) {
         try {
@@ -166,12 +146,9 @@ function TranscriptionPage() {
       }
     };
 
-    // 添加事件监听器
     window.addEventListener('beforeunload', handleBeforeUnload);
     
-    // 在组件卸载时清理
     return () => {
-      // 如果有内容，在组件卸载时自动保存
       if (transcriptionContent.trim()) {
         handleGenerateNote().catch(error => {
           console.error('Failed to auto-save note on unmount:', error);
@@ -179,11 +156,11 @@ function TranscriptionPage() {
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [transcriptionContent]); // 依赖项包含 transcriptionContent
+  }, [transcriptionContent]);
 
   return (
     <ErrorBoundary>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gradient-to-br from-[#f8faff] to-[#f2f6ff]">
         {/* Left Sidebar */}
         <Sidebar 
           isOpen={isSidebarOpen} 
@@ -200,25 +177,151 @@ function TranscriptionPage() {
           }}
         >
           <div className="w-full h-full px-4 py-6">
-            <div className="flex justify-between items-center mb-6">
-              {isEditingTitle ? (
-                <input
-                  type="text"
-                  value={noteTitle}
-                  onChange={handleTitleChange}
-                  onKeyDown={handleTitleSubmit}
-                  onBlur={handleTitleSubmit}
-                  className="text-2xl font-bold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none w-full max-w-md"
-                  autoFocus
-                />
-              ) : (
-                <h1 
-                  className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600"
-                  onClick={handleStartEditing}
+            {/* Header Section with Back Button and Title */}
+            <div className="flex items-center gap-6 mb-6">
+              {/* Back Button - 优化设计 */}
+              <button
+                onClick={() => navigate(-1)}
+                className="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl
+                         bg-gradient-to-br from-white/95 to-white/75 hover:from-white hover:to-white/90 
+                         border border-white/60 hover:border-blue-200/80 backdrop-blur-sm
+                         shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
+                         hover:shadow-[0_8px_16px_-4px_rgba(59,130,246,0.15)]
+                         transition-all duration-300 transform hover:-translate-x-0.5
+                         relative overflow-hidden"
+              >
+                {/* 背景光效 */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/0
+                              group-hover:via-blue-500/5 transition-all duration-300" />
+                
+                {/* 装饰性圆点 */}
+                <div className="absolute left-1.5 top-1.5 w-1 h-1 rounded-full bg-blue-500/20 
+                              group-hover:bg-blue-500/40 transition-all duration-300" />
+                <div className="absolute right-1.5 top-1.5 w-1 h-1 rounded-full bg-blue-500/20 
+                              group-hover:bg-blue-500/40 transition-all duration-300" />
+                
+                {/* 返回图标 */}
+                <svg 
+                  className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300
+                            relative z-10" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  strokeWidth={1.75}
                 >
-                  {noteTitle || getDefaultTitle()}
-                </h1>
-              )}
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                    className="group-hover:stroke-dasharray-[30] group-hover:stroke-dashoffset-[30]
+                              transition-all duration-500"
+                  />
+                </svg>
+
+                {/* 文字 */}
+                <span className="text-sm font-medium bg-gradient-to-r from-gray-600 to-gray-500
+                               group-hover:from-blue-600 group-hover:to-blue-500
+                               bg-clip-text text-transparent transition-all duration-300 relative z-10">
+                  Back
+                </span>
+
+                {/* 底部装饰线 */}
+                <div className="absolute bottom-1.5 left-2 right-2 h-px bg-gradient-to-r 
+                              from-transparent via-blue-500/0 to-transparent
+                              group-hover:via-blue-500/30 transition-all duration-500" />
+                
+                {/* 悬浮时的光晕效果 */}
+                <div className="absolute inset-0 rounded-xl bg-blue-400/0 
+                              group-hover:bg-blue-400/5 blur-xl transition-all duration-500" />
+              </button>
+
+              {/* Title Section - 居中显示 */}
+              <div className="flex-1 flex justify-center">
+                {isEditingTitle ? (
+                  <div className="relative group max-w-md">
+                    <div className="absolute -inset-3 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 
+                                  rounded-lg blur-sm group-hover:via-blue-500/10 transition-all duration-500" />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={noteTitle}
+                        onChange={handleTitleChange}
+                        onKeyDown={handleTitleSubmit}
+                        onBlur={handleTitleSubmit}
+                        className="w-full text-2xl font-bold text-gray-800 bg-transparent 
+                                 border-b-2 border-blue-500/20 focus:border-blue-500 
+                                 focus:outline-none px-4 py-2 text-center
+                                 placeholder-gray-400/60
+                                 transition-all duration-300"
+                        placeholder="Enter title..."
+                        autoFocus
+                      />
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r 
+                                    from-transparent via-blue-500/20 to-transparent 
+                                    group-hover:via-blue-500/40 transition-all duration-300" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="group relative inline-block">
+                    {/* 外层装饰框 */}
+                    <div className="absolute -inset-4 bg-gradient-to-br from-blue-500/[0.05] to-blue-600/[0.05] 
+                                  rounded-xl blur-[2px] group-hover:from-blue-500/[0.08] 
+                                  group-hover:to-blue-600/[0.08] transition-all duration-500" />
+                    
+                    {/* 装饰框 - 左上角 */}
+                    <div className="absolute -left-3 -top-3 w-6 h-6">
+                      <div className="absolute left-0 top-0 w-full h-full border-l-[2.5px] border-t-[2.5px] 
+                                   rounded-tl-xl border-blue-500/30 group-hover:border-blue-500/50
+                                   transition-all duration-300" />
+                      <div className="absolute left-[2px] top-[2px] w-2 h-2 bg-blue-500/20 
+                                   group-hover:bg-blue-500/30 rounded-full transition-all duration-300" />
+                    </div>
+                    
+                    {/* 装饰框 - 右上角 */}
+                    <div className="absolute -right-3 -top-3 w-6 h-6">
+                      <div className="absolute right-0 top-0 w-full h-full border-r-[2.5px] border-t-[2.5px] 
+                                   rounded-tr-xl border-blue-500/30 group-hover:border-blue-500/50
+                                   transition-all duration-300" />
+                      <div className="absolute right-[2px] top-[2px] w-2 h-2 bg-blue-500/20 
+                                   group-hover:bg-blue-500/30 rounded-full transition-all duration-300" />
+                    </div>
+                    
+                    {/* 装饰框 - 左下角 */}
+                    <div className="absolute -left-3 -bottom-3 w-6 h-6">
+                      <div className="absolute left-0 bottom-0 w-full h-full border-l-[2.5px] border-b-[2.5px] 
+                                   rounded-bl-xl border-blue-500/30 group-hover:border-blue-500/50
+                                   transition-all duration-300" />
+                      <div className="absolute left-[2px] bottom-[2px] w-2 h-2 bg-blue-500/20 
+                                   group-hover:bg-blue-500/30 rounded-full transition-all duration-300" />
+                    </div>
+                    
+                    {/* 装饰框 - 右下角 */}
+                    <div className="absolute -right-3 -bottom-3 w-6 h-6">
+                      <div className="absolute right-0 bottom-0 w-full h-full border-r-[2.5px] border-b-[2.5px] 
+                                   rounded-br-xl border-blue-500/30 group-hover:border-blue-500/50
+                                   transition-all duration-300" />
+                      <div className="absolute right-[2px] bottom-[2px] w-2 h-2 bg-blue-500/20 
+                                   group-hover:bg-blue-500/30 rounded-full transition-all duration-300" />
+                    </div>
+                    
+                    {/* 标题文本 */}
+                    <h1 
+                      className="relative text-2xl font-bold bg-gradient-to-br from-gray-800 to-gray-700 
+                               bg-clip-text text-transparent cursor-pointer px-4 py-2
+                               group-hover:from-blue-600 group-hover:to-blue-500 
+                               transition-all duration-300"
+                      onClick={handleStartEditing}
+                    >
+                      {noteTitle || getDefaultTitle()}
+                    </h1>
+                    
+                    {/* 底部装饰线 */}
+                    <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r 
+                                  from-transparent via-blue-500/20 to-transparent
+                                  group-hover:via-blue-500/40 transition-all duration-500" />
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Split Container */}
@@ -235,71 +338,11 @@ function TranscriptionPage() {
                 margin: '0 -6px',
                 width: '12px',
                 position: 'relative',
-                transition: 'background-color 0.2s ease',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '0',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '1px',
-                  height: '100%',
-                  backgroundColor: '#e5e7eb',
-                },
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '4px',
-                  height: '80px',
-                  borderRadius: '2px',
-                  backgroundColor: '#d1d5db',
-                  transition: 'all 0.2s ease',
-                },
-                '& .drag-dots': {
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '2px',
-                  height: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  opacity: '0.5',
-                  transition: 'opacity 0.2s ease',
-                },
+                transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: '#e5e7eb',
-                  '&::after': {
-                    backgroundColor: '#9ca3af',
-                    width: '6px',
-                  },
-                  '& .drag-dots': {
-                    opacity: '1',
-                  }
-                },
-                '&:active': {
-                  backgroundColor: '#d1d5db',
-                  '&::after': {
-                    backgroundColor: '#6b7280',
-                  }
                 }
               })}
-              renderGutter={({ index }) => (
-                <div className="gutter-custom">
-                  <div className="drag-dots">
-                    <div className="w-1 h-1 bg-gray-400 rounded-full" />
-                    <div className="w-1 h-1 bg-gray-400 rounded-full" />
-                    <div className="w-1 h-1 bg-gray-400 rounded-full" />
-                  </div>
-                </div>
-              )}
-              snapOffset={20}
-              dragInterval={1}
-              onDrag={handleSplitDrag}
             >
               {/* Left Panel - Live Transcription */}
               <div className={`pr-2 transition-all duration-300 ${
@@ -312,7 +355,9 @@ function TranscriptionPage() {
                 {collapsedPanel === 'left' && (
                   <button
                     onClick={() => setCollapsedPanel(null)}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-blue-500 text-white p-2 rounded-r-lg"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-blue-500 
+                             text-white p-2 rounded-r-lg shadow-lg hover:bg-blue-600 
+                             transition-all duration-300 hover:shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]"
                   >
                     <ChevronRightIcon className="w-5 h-5" />
                   </button>
@@ -327,7 +372,9 @@ function TranscriptionPage() {
                 {collapsedPanel === 'right' && (
                   <button
                     onClick={() => setCollapsedPanel(null)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-500 text-white p-2 rounded-l-lg"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-500 
+                             text-white p-2 rounded-l-lg shadow-lg hover:bg-blue-600 
+                             transition-all duration-300 hover:shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]"
                   >
                     <ChevronLeftIcon className="w-5 h-5" />
                   </button>

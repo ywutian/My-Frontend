@@ -40,7 +40,7 @@ export default function LiveNotes() {
   };
 
   return (
-    <div className="h-full overflow-auto bg-gray-50">
+    <div className="h-full overflow-auto bg-gradient-to-br from-[#f8faff] to-[#f2f6ff]">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -56,9 +56,13 @@ export default function LiveNotes() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm"
+                  className="group p-4 rounded-xl border border-white/60 bg-white/80 backdrop-blur-sm 
+                           shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
+                           hover:shadow-[0_8px_16px_-4px_rgba(59,130,246,0.15)]
+                           hover:border-blue-200/80 hover:bg-white/90
+                           transition-all duration-300"
                 >
-                  <div className="text-sm text-gray-500 mb-2">
+                  <div className="text-sm text-gray-500 mb-2 font-medium tracking-wide">
                     {new Date(note.timestamp).toLocaleTimeString()}
                   </div>
                   <NoteContent
@@ -72,8 +76,32 @@ export default function LiveNotes() {
                 </motion.div>
               ))
             ) : (
-              <div className="text-center text-gray-500 mt-8">
-                No notes generated yet
+              <div className="flex flex-col items-center justify-center text-center h-[300px] mt-8 p-8 
+                            bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-sm rounded-xl 
+                            border border-white/60 hover:border-blue-200/80
+                            shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
+                            hover:shadow-[0_8px_16px_-4px_rgba(59,130,246,0.15)]
+                            transition-all duration-300">
+                <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-blue-500/10 to-blue-600/10 
+                                flex items-center justify-center">
+                  <svg 
+                    className="w-8 h-8 text-blue-500" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={1.5} 
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">No Notes Yet</h3>
+                <p className="text-sm text-gray-500 max-w-[280px]">
+                  Start recording to generate your first note. Your notes will appear here.
+                </p>
               </div>
             )}
           </AnimatePresence>

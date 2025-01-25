@@ -101,69 +101,79 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
 
   return (
     <div 
-      className="group bg-white p-4 rounded-xl border border-gray-200/80 
-                 hover:border-blue-200/80 hover:shadow-lg hover:shadow-blue-100/50
-                 transition-all duration-300 cursor-pointer relative
+      className="group relative bg-gradient-to-br from-white/95 to-white/90 
+                 hover:from-white hover:to-white/95
+                 p-5 rounded-2xl border border-white/60 
+                 hover:border-blue-200/80 hover:shadow-xl hover:shadow-blue-100/30
+                 transition-all duration-300 cursor-pointer
                  backdrop-blur-sm backdrop-filter
-                 w-full h-[200px] flex flex-col"
+                 w-full h-[220px] flex flex-col
+                 before:absolute before:inset-0 before:rounded-2xl 
+                 before:bg-gradient-to-br before:from-blue-500/5 before:to-purple-500/5 
+                 before:opacity-0 hover:before:opacity-100 before:transition-opacity
+                 before:pointer-events-none"
       onClick={onClick}
     >
       {/* Actions Menu Button */}
-      <div className="absolute right-2 top-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute right-3 top-3 z-20">
         <button
           onClick={(e) => {
             e.stopPropagation();
             setShowActions(!showActions);
           }}
-          className="p-1.5 hover:bg-gray-100/80 rounded-lg transition-colors
-                     backdrop-blur-sm backdrop-filter"
+          className="p-2 hover:bg-black/5 rounded-xl transition-colors
+                     opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         >
-          <FiMoreVertical className="w-4 h-4 text-gray-500" />
+          <FiMoreVertical className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
         </button>
 
         {/* Actions Dropdown */}
         {showActions && (
-          <div ref={actionsRef}
-               className="absolute right-0 mt-1 w-48 bg-white/95 border border-gray-200 
-                        rounded-xl shadow-lg py-1 backdrop-blur-sm backdrop-filter
-                        transform origin-top-right transition-all duration-200 z-30"
+          <div 
+            ref={actionsRef}
+            className="absolute right-0 mt-1 w-52 bg-white/95 border border-white/60 
+                      rounded-xl shadow-lg shadow-black/5 backdrop-blur-sm backdrop-filter
+                      transform origin-top-right transition-all duration-200 z-30
+                      overflow-hidden"
           >
             <button
               onClick={(e) => handleActionClick(e, null, 'rename')}
-              className="w-full px-4 py-2 text-left hover:bg-blue-50/50 flex items-center gap-2
-                         text-gray-700 transition-colors"
+              className="w-full px-4 py-2.5 text-left hover:bg-blue-50/80 flex items-center gap-3
+                         text-gray-600 hover:text-gray-900 transition-colors"
             >
               <FiEdit2 className="w-4 h-4" />
-              Rename
+              <span className="font-medium">Rename</span>
             </button>
 
             {!note.folderId ? (
               <button
                 onClick={(e) => handleActionClick(e, null, 'addToFolder')}
-                className="w-full px-4 py-2 text-left hover:bg-blue-50/50 flex items-center gap-2
-                           text-gray-700 transition-colors"
+                className="w-full px-4 py-2.5 text-left hover:bg-blue-50/80 flex items-center gap-3
+                           text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <FiFolder className="w-4 h-4" />
-                Add to Folder
+                <span className="font-medium">Add to Folder</span>
               </button>
             ) : (
               <button
                 onClick={(e) => handleActionClick(e, null, 'removeFromFolder')}
-                className="w-full px-4 py-2 text-left hover:bg-blue-50/50 flex items-center gap-2
-                           text-gray-700 transition-colors"
+                className="w-full px-4 py-2.5 text-left hover:bg-blue-50/80 flex items-center gap-3
+                           text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <FiFolderMinus className="w-4 h-4" />
-                Remove from Folder
+                <span className="font-medium">Remove from Folder</span>
               </button>
             )}
             
+            <div className="h-px bg-gray-100 mx-3 my-1"></div>
+            
             <button
               onClick={(e) => handleActionClick(e, null, 'delete')}
-              className="w-full px-4 py-2 text-left hover:bg-red-50/50 flex items-center gap-2
-                         text-red-600 transition-colors"
+              className="w-full px-4 py-2.5 text-left hover:bg-red-50/80 flex items-center gap-3
+                         text-red-500 hover:text-red-600 transition-colors group/delete"
             >
-              <FiTrash2 className="w-4 h-4" />
-              Delete
+              <FiTrash2 className="w-4 h-4 transition-transform group-hover/delete:rotate-12" />
+              <span className="font-medium">Delete</span>
             </button>
           </div>
         )}
@@ -172,24 +182,28 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
       {/* Note Content */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Note Title */}
-        <h3 className="font-medium text-gray-800 mb-2 pr-8 truncate text-base">
+        <h3 className="font-semibold text-gray-800 mb-2.5 pr-10 truncate text-base
+                     group-hover:text-gray-900 transition-colors">
           {note.title || 'Untitled Note'}
         </h3>
 
         {/* Note Preview */}
         <div 
           className="text-gray-500 text-sm mb-3 flex-1 overflow-hidden
-                     prose prose-sm max-w-none line-clamp-4
-                     [&>*]:text-sm [&>*]:my-0 [&>*]:leading-normal
-                     [&_h1]:text-base [&_h1]:font-medium [&_h1]:text-gray-800 [&_h1]:my-1
-                     [&_h2]:text-sm [&_h2]:font-medium [&_h2]:text-gray-700 [&_h2]:my-1
-                     [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-gray-700 [&_h3]:my-0.5
-                     [&_p]:mb-0.5 [&_p]:line-clamp-2
+                     prose prose-sm max-w-none line-clamp-5
+                     [&>*]:text-sm [&>*]:my-0 [&>*]:leading-relaxed
+                     [&_h1]:text-base [&_h1]:font-semibold [&_h1]:text-gray-700 [&_h1]:my-1
+                     [&_h2]:text-sm [&_h2]:font-medium [&_h2]:text-gray-600 [&_h2]:my-1
+                     [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-gray-600 [&_h3]:my-0.5
+                     [&_p]:mb-1 [&_p]:line-clamp-2 [&_p]:text-gray-500
                      [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:my-0.5
                      [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:my-0.5
-                     [&_li]:my-0
-                     [&_em]:text-gray-600 [&_em]:font-normal [&_em]:not-italic
-                     [&_strong]:font-medium [&_strong]:text-gray-700"
+                     [&_li]:my-0.5 [&_li]:text-gray-500
+                     [&_em]:text-gray-500 [&_em]:font-normal [&_em]:not-italic
+                     [&_strong]:font-medium [&_strong]:text-gray-600
+                     group-hover:[&_p]:text-gray-600
+                     group-hover:[&_li]:text-gray-600
+                     transition-colors duration-300"
           dangerouslySetInnerHTML={{
             __html: note.preview || note.content || '<p>No content</p>'
           }}
@@ -197,19 +211,21 @@ function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFr
       </div>
 
       {/* Note Footer */}
-      <div className="flex items-center justify-between text-xs pt-2 
+      <div className="flex items-center justify-between text-xs pt-3 
                       border-t border-gray-100">
-        <div className="flex items-center text-gray-400 group-hover:text-gray-600 
+        <div className="flex items-center text-gray-400 group-hover:text-gray-500 
                       transition-colors">
-          <FiClock className="w-3 h-3 mr-1" />
+          <FiClock className="w-3.5 h-3.5 mr-1.5 stroke-[1.5]" />
           <span>{formatDate(note.date || note.lastModified)}</span>
         </div>
         
         {note.folderId && (
-          <div className="flex items-center px-1.5 py-0.5 bg-gray-50/80 rounded-full
-                         text-gray-500 group-hover:bg-blue-50/80 transition-colors">
-            <FiFolder className="w-3 h-3 mr-1" />
-            <span className="truncate max-w-[80px]">
+          <div className="flex items-center px-2.5 py-1 bg-gray-50/80 rounded-full
+                         text-gray-500 group-hover:bg-blue-50/80 group-hover:text-blue-600
+                         border border-gray-100/80 group-hover:border-blue-100/80
+                         transition-all duration-300">
+            <FiFolder className="w-3.5 h-3.5 mr-1.5 stroke-[1.5]" />
+            <span className="truncate max-w-[100px] font-medium">
               {note.folderName || 'Folder'}
             </span>
           </div>

@@ -67,54 +67,62 @@ function AiAssistant({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[92vh]">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 ">
+    <div className="flex flex-col h-full min-h-[92vh] bg-gradient-ai">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[80%] rounded-xl p-3.5 ${
                 message.type === 'user'
-                  ? 'bg-gray-100 text-gray-800 text-sm'
-                  : 'bg-white border border-gray-200 text-gray-800'
+                  ? 'user-message-bubble'
+                  : 'ai-message-bubble'
               }`}
             >
               {message.type === 'assistant' ? (
                 <ContentDisplay content={message.content} />
               ) : (
-                <span className="text-sm">{message.content}</span>
+                <span className="text-sm text-gray-700">{message.content}</span>
               )}
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSendMessage} className="p-3 border-t bg-white">
-        <div className="flex gap-2">
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-white/30 bg-white/50 backdrop-blur-sm">
+        <div className="flex gap-2 max-w-[1920px] mx-auto">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg 
-                     focus:outline-none focus:border-blue-300 focus:ring-1 
-                     focus:ring-blue-300 placeholder:text-gray-400 
-                     placeholder:text-sm"
+            className="flex-1 px-4 py-2.5 text-sm rounded-xl
+                     bg-white/80 hover:bg-white/90 focus:bg-white
+                     border border-white/60 hover:border-blue-200/80
+                     focus:border-blue-300/80 focus:ring-1 focus:ring-blue-300/50
+                     placeholder:text-gray-400 placeholder:text-sm
+                     transition-all duration-300 ease-out"
           />
           <button
             type="submit"
-            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 
-                     rounded-lg hover:bg-gray-50 flex items-center gap-1.5 
-                     text-sm transition-colors duration-200 
+            className="group flex items-center gap-2 px-4 py-2.5 rounded-xl
+                     text-gray-700 hover:text-blue-600
+                     bg-gradient-to-br from-white/90 to-white/70
+                     hover:from-white hover:to-white/80
+                     border border-white/60 hover:border-blue-200/80
+                     shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
+                     hover:shadow-[0_8px_16px_-4px_rgba(59,130,246,0.15)]
+                     transform hover:-translate-y-0.5
+                     transition-all duration-300 ease-out
                      disabled:opacity-50 disabled:cursor-not-allowed
-                     group"
+                     disabled:hover:transform-none"
             disabled={!inputMessage.trim()}
           >
-            <FiSend className="w-3.5 h-3.5 group-hover:text-blue-500 
-                            transition-colors duration-200" />
-            <span className="group-hover:text-blue-500">Send</span>
+            <FiSend className="w-4 h-4 transition-transform duration-300 
+                            group-hover:scale-110 group-hover:text-blue-500" />
+            <span className="font-medium tracking-wide">Send</span>
           </button>
         </div>
       </form>

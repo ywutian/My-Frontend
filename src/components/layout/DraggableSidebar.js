@@ -142,8 +142,7 @@ const DraggableSidebar = ({
   const getStyle = () => {
     const baseStyle = {
       transition: isResizing ? 'none' : 'all 0.2s ease-out',
-      background: 'white',
-      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+      background: 'transparent',
       position: 'absolute',
       zIndex: 10,
     };
@@ -155,7 +154,6 @@ const DraggableSidebar = ({
         right: 0,
         width: isCollapsed ? COLLAPSED_SIZE : Math.min(Math.max(size.width, minWidth), maxWidth),
         height: '100%',
-        borderLeft: '1px solid #e5e7eb',
       };
     } else {
       return {
@@ -164,7 +162,6 @@ const DraggableSidebar = ({
         left: 0,
         width: '100vw',
         height: isCollapsed ? COLLAPSED_SIZE : Math.min(Math.max(size.height, minHeight), maxHeight),
-        borderTop: '1px solid #e5e7eb',
       };
     }
   };
@@ -174,8 +171,8 @@ const DraggableSidebar = ({
       onClick={onClick}
       className={`px-6 py-3 font-medium text-sm transition-all relative
         ${isActive 
-          ? 'text-blue-600 bg-white before:absolute before:bottom-0 before:left-0 before:w-full before:h-[2px] before:bg-blue-500' 
-          : 'text-gray-600 hover:text-blue-500 hover:bg-gray-50 before:absolute before:bottom-0 before:left-0 before:w-full before:h-[2px] before:bg-transparent hover:before:bg-blue-200'
+          ? 'text-blue-600 bg-white before:absolute before:bottom-0 before:left-0 before:w-full before:h-0.5 before:bg-blue-500' 
+          : 'text-gray-600 hover:text-blue-500 hover:bg-white/50 before:absolute before:bottom-0 before:left-0 before:w-full before:h-0.5 before:bg-transparent hover:before:bg-blue-200'
         }`}
     >
       {label}
@@ -183,7 +180,7 @@ const DraggableSidebar = ({
   ));
 
   return (
-    <div style={getStyle()} className="flex bg-white shadow-lg">
+    <div style={getStyle()} className="flex bg-gradient-to-br from-[#f8faff] to-[#f2f6ff]">
       {/* Resize Handle */}
       <div
         className={`absolute ${
@@ -197,81 +194,135 @@ const DraggableSidebar = ({
         <div
           className={`absolute ${
             position === 'right'
-              ? 'left-1/2 top-0 w-[2px] h-full -translate-x-1/2'
-              : 'top-1/2 left-0 h-[2px] w-full -translate-y-1/2'
+              ? 'left-1/2 top-0 w-0.5 h-full -translate-x-1/2'
+              : 'top-1/2 left-0 h-0.5 w-full -translate-y-1/2'
           } ${
             isResizing 
               ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' 
-              : 'bg-gray-200 group-hover:bg-blue-400'
+              : 'bg-gray-200/50 group-hover:bg-blue-400'
           } transition-all duration-200`}
         />
         
-        {/* Collapse Button - Centered */}
+        {/* Collapse Button */}
         <button
           onClick={toggleCollapse}
           className={`absolute ${
             position === 'right' 
               ? '-left-3 top-1/2 -translate-y-1/2' 
               : 'left-1/2 -translate-x-1/2 -top-3'
-          } w-7 h-7 bg-white border rounded-full 
+          } w-7 h-7 
+            bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl
+            border border-white/60 hover:border-blue-200/80
+            rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
+            hover:shadow-[0_8px_16px_-4px_rgba(59,130,246,0.15)]
             flex items-center justify-center
-            hover:shadow-md hover:border-blue-400 hover:text-blue-500 
-            active:scale-95 transition-all duration-200
-            ${isResizing ? 'border-blue-400' : 'border-gray-200'}`}
+            hover:text-blue-500 
+            transform hover:-translate-y-0.5 active:scale-95 
+            transition-all duration-300 ease-out
+            ${isResizing ? 'border-blue-400 shadow-lg' : ''}`}
           style={{
-            transform: `rotate(${position === 'right' ? 0 : 90}deg)`,
+            transform: `${position === 'right' ? 'rotate(0deg)' : 'rotate(90deg)'}`,
           }}
         >
           {isCollapsed ? (
-            <FiChevronRight className="w-5 h-5" />
+            <FiChevronRight className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
           ) : (
-            <FiChevronLeft className="w-5 h-5" />
+            <FiChevronLeft className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
           )}
         </button>
       </div>
 
       {/* Content */}
-      {!isCollapsed ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Tabs Header */}
-          <div className="border-b border-gray-200 flex-shrink-0">
-            <div className="flex bg-gray-50/50">
-              {tabs.map((tab) => (
-                <Tab
-                  key={tab.label}
-                  label={tab.label}
-                  isActive={activeTab === tab.label}
-                  onClick={() => setActiveTab(tab.label)}
-                />
-              ))}
+      <div className="flex flex-col h-full w-full bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl">
+        {!isCollapsed ? (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Tabs Header - 更精致的标签栏 */}
+            <div className="border-b border-white/20">
+              <div className="flex bg-gradient-to-b from-white/60 via-white/40 to-white/30 
+                             backdrop-blur-sm px-2 pt-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.label}
+                    onClick={() => setActiveTab(tab.label)}
+                    className={`relative px-5 py-2.5 font-medium text-sm transition-all
+                      ${activeTab === tab.label 
+                        ? 'text-blue-600'
+                        : 'text-gray-600 hover:text-blue-500'}
+                      group mr-1`}
+                  >
+                    {/* 背景高亮 - 改进渐变和圆角 */}
+                    <div
+                      className={`absolute inset-0 rounded-t-xl transition-all duration-300
+                        ${activeTab === tab.label
+                          ? 'bg-gradient-to-b from-white/80 to-white/60 opacity-100'
+                          : 'opacity-0 group-hover:opacity-100 bg-gradient-to-b from-white/40 to-white/20'
+                        }`}
+                    />
+                    
+                    {/* 标签文字 - 添加文字阴影 */}
+                    <span className="relative z-10 tracking-wide">
+                      {tab.label}
+                    </span>
+                    
+                    {/* 活跃状态装饰 */}
+                    {activeTab === tab.label && (
+                      <>
+                        {/* 主要下划线 - 渐变优化 */}
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5
+                                    bg-gradient-to-r from-blue-500/80 via-blue-600 to-blue-500/80" />
+                        
+                        {/* 发光效果 - 增强光晕 */}
+                        <div className="absolute -bottom-[1px] left-0 right-0 h-[3px]
+                                    bg-gradient-to-r from-blue-400/30 via-blue-500/50 to-blue-400/30
+                                    blur-[2px]" />
+                        
+                        {/* 侧边光效 */}
+                        <div className="absolute bottom-0 left-0 top-0 w-[1px]
+                                    bg-gradient-to-b from-white/0 via-blue-400/20 to-blue-500/30" />
+                        <div className="absolute bottom-0 right-0 top-0 w-[1px]
+                                    bg-gradient-to-b from-white/0 via-blue-400/20 to-blue-500/30" />
+                      </>
+                    )}
+                    
+                    {/* 悬浮效果 */}
+                    <div className={`absolute inset-0 rounded-t-xl transition-all duration-300
+                                 bg-gradient-to-t from-blue-50/0 to-blue-50/0
+                                 group-hover:from-blue-50/20 group-hover:to-blue-50/5
+                                 ${activeTab === tab.label ? 'opacity-0' : ''}`} />
+                    
+                    {/* 悬浮时的下划线 */}
+                    <div className={`absolute bottom-0 left-2 right-2 h-0.5
+                                 bg-gradient-to-r from-blue-400/0 via-blue-400/40 to-blue-400/0
+                                 transition-opacity duration-300 scale-x-90
+                                 ${activeTab === tab.label ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`} />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Active Tab Content - New Optimization */}
-          <div className="flex-1 overflow-y-auto min-h-0 p-4">
-            <div className="h-full rounded-lg bg-white">
-              <div className="h-full relative">
+            {/* Active Tab Content */}
+            <div className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-br from-[#f8faff] to-[#f2f6ff]">
+              <div className="h-full">
                 {tabs.find((tab) => tab.label === activeTab)?.content}
               </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center bg-gray-50/50 backdrop-blur-sm">
-          <span
-            className={`text-gray-600 font-medium tracking-wide select-none
-              ${position === 'right' ? 'rotate-180' : ''} 
-              ${position === 'right' ? 'px-2' : 'py-2'}
-              hover:text-blue-500 transition-colors duration-200`}
-            style={{
-              writingMode:
-                position === 'right' ? 'vertical-rl' : 'horizontal-tb',
-            }}
-          >
-            {title}
-          </span>
-        </div>
-      )}
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-sm">
+            <span
+              className={`text-gray-600 font-medium tracking-wide select-none
+                ${position === 'right' ? 'rotate-180' : ''} 
+                ${position === 'right' ? 'px-2' : 'py-2'}
+                hover:text-blue-500 transition-colors duration-200`}
+              style={{
+                writingMode: position === 'right' ? 'vertical-rl' : 'horizontal-tb',
+              }}
+            >
+              {title}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

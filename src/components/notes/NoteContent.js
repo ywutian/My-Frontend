@@ -100,34 +100,39 @@ export default function NoteContent({
 
   return (
     <div 
-      className={`w-full rounded-lg transition-all ${
-        isEditing ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+      className={`rounded-xl transition-all duration-300 ${
+        isEditing 
+          ? 'ring-2 ring-blue-400/50 shadow-[0_0_0_1px_rgba(59,130,246,0.1)]' 
+          : 'hover:ring-1 hover:ring-blue-300/30'
       }`} 
       ref={editorRef}
     >
       <div 
         className={`
-          ${!readOnly && !isEditing && 'cursor-pointer hover:bg-gray-50'} 
-          rounded p-2 transition-colors
-        `}
+          ${!readOnly && !isEditing ? 'hover:bg-white/50 hover:backdrop-blur-sm' : ''} 
+          rounded-xl p-4 sm:p-5 transition-all duration-300`}
         onClick={() => !readOnly && !isEditing && onEdit?.()}
       >
         <EditorContent 
           editor={editor}
           className={`
+            prose prose-sm max-w-none focus:outline-none min-h-[100px]
             prose-headings:font-semibold 
-            prose-h1:text-2xl prose-h1:mb-4 
-            prose-h2:text-xl prose-h2:mb-3 
-            prose-h3:text-lg prose-h3:mb-2 
-            prose-p:mb-2 prose-p:leading-relaxed 
+            prose-h1:text-2xl prose-h1:mb-4 prose-h1:text-gray-800
+            prose-h2:text-xl prose-h2:mb-3 prose-h2:text-gray-800
+            prose-h3:text-lg prose-h3:mb-2 prose-h3:text-gray-800
+            prose-p:mb-2 prose-p:leading-relaxed prose-p:text-gray-600
             prose-ul:ml-4 prose-ul:mb-2 
             prose-ol:ml-4 prose-ol:mb-2
-            prose-li:mb-1
-            prose-blockquote:border-l-4 prose-blockquote:border-gray-200 
-            prose-blockquote:pl-4 prose-blockquote:italic
-            prose-pre:bg-gray-50 prose-pre:p-4 prose-pre:rounded-lg
-            prose-code:bg-gray-50 prose-code:px-1.5 prose-code:py-0.5 
-            prose-code:rounded prose-code:text-sm prose-code:font-mono
+            prose-li:mb-1 prose-li:text-gray-600
+            prose-blockquote:border-l-4 prose-blockquote:border-blue-200/50 
+            prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-500
+            prose-pre:bg-white/60 prose-pre:backdrop-blur-sm prose-pre:p-4 
+            prose-pre:rounded-lg prose-pre:shadow-sm
+            prose-code:bg-white/60 prose-code:backdrop-blur-sm prose-code:px-1.5 
+            prose-code:py-0.5 prose-code:rounded prose-code:text-sm 
+            prose-code:font-mono prose-code:text-gray-600
+            selection:bg-blue-100/50 selection:text-blue-900
           `}
         />
       </div>

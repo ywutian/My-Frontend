@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { transcriptionService } from '../../services/transcriptionService';
+import { FiFileText, FiClock, FiLoader } from 'react-icons/fi';
 
 function Transcription({ videoId }) {
   const [transcription, setTranscription] = useState(null);
@@ -35,32 +36,57 @@ function Transcription({ videoId }) {
     };
   }, [loadTranscription]);
 
-  if (loading)
-    return <div className="text-center py-4">Loading transcription...</div>;
-  if (error)
-    return <div className="text-center py-4 text-red-600">{error}</div>;
-  if (!transcription)
-    return <div className="text-center py-4">No transcription available</div>;
+  if (loading) return (
+    <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-gray-100
+                   flex items-center justify-center h-[200px]">
+      <div className="flex items-center space-x-3 text-gray-500">
+        <FiLoader className="w-5 h-5 animate-spin" />
+        <span>Loading transcription...</span>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-gray-100
+                   flex items-center justify-center h-[200px] text-red-500">
+      {error}
+    </div>
+  );
+
+  if (!transcription) return (
+    <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-gray-100
+                   flex items-center justify-center h-[200px] text-gray-500">
+      No transcription available
+    </div>
+  );
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow">
-      <h2 className="font-semibold mb-4">Transcription</h2>
+    <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-gray-100">
+      <div className="flex items-center space-x-2 mb-6">
+        <FiFileText className="w-5 h-5 text-blue-500" />
+        <h2 className="font-semibold text-gray-800">Transcription</h2>
+      </div>
+
       {transcription.status === 'processing' ? (
-        <div className="text-center py-4">
-          <p>Transcription in progress...</p>
-          <div className="mt-2 w-full h-2 bg-gray-200 rounded-full">
-            <div className="h-2 bg-blue-600 rounded-full animate-pulse"></div>
+        <div className="text-center py-8">
+          <FiLoader className="w-6 h-6 text-blue-500 animate-spin mx-auto mb-3" />
+          <p className="text-gray-600 mb-4">Transcription in progress...</p>
+          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full 
+                         animate-pulse transition-all duration-300"></div>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar">
           {transcription.segments.map((segment, index) => (
-            <div key={index} className="p-2 hover:bg-gray-50">
-              <div className="text-gray-500 text-sm mb-1">
-                {formatTimestamp(segment.start)} -{' '}
-                {formatTimestamp(segment.end)}
+            <div key={index} 
+                 className="p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200
+                          border border-gray-100">
+              <div className="flex items-center text-gray-500 text-sm mb-2">
+                <FiClock className="w-4 h-4 mr-1.5" />
+                {formatTimestamp(segment.start)} - {formatTimestamp(segment.end)}
               </div>
-              <p>{segment.text}</p>
+              <p className="text-gray-700 leading-relaxed">{segment.text}</p>
             </div>
           ))}
         </div>
