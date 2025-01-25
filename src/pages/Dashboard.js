@@ -286,193 +286,253 @@ function Dashboard() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen p-4 md:p-6 bg-[#fafafa] dark:bg-gray-900">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-7xl mx-auto"
-        >
-          <div className={`rounded-3xl shadow-2xl backdrop-blur-xl p-6 md:p-8 
-            ${theme === 'light' 
-              ? 'bg-white/80' 
-              : 'bg-gray-800/80 text-white'}`}
-          >
-            {!showLiveTranscription ? (
-              <>
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center justify-between mb-8"
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-7xl mx-auto py-6 md:py-8"
+      >
+        {!showLiveTranscription ? (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-between mb-8 px-4 md:px-6"
+            >
+              <div className="relative">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1e3d58] to-[#2d5a7c] 
+                  dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
+                  Dashboard
+                </h1>
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.2, 1] 
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                  className="absolute -top-4 -right-4"
                 >
-                  <div className="relative">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1e3d58] to-[#2d5a7c] 
-                      dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
-                      Dashboard
-                    </h1>
-                    <motion.div
-                      animate={{ 
-                        rotate: [0, 10, -10, 0],
-                        scale: [1, 1.2, 1] 
-                      }}
-                      transition={{ 
-                        duration: 2,
-                        repeat: Infinity,
-                        repeatType: "reverse"
-                      }}
-                      className="absolute -top-4 -right-4"
-                    >
-                      <HiSparkles className="text-yellow-400 text-2xl" />
-                    </motion.div>
-                  </div>
+                  <HiSparkles className="text-yellow-400 text-2xl" />
                 </motion.div>
+              </div>
+            </motion.div>
 
-                {/* Input Selection Grid - Updated sizing and spacing */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  {inputOptions.map((option) => (
-                    <motion.button
-                      key={option.id}
-                      whileHover={{ scale: 1.02, y: -3 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleInputSelect(option.id)}
-                      className={`relative p-4 rounded-xl border ${option.borderColor} ${option.bgColor}
-                        text-white text-left group
-                        hover:shadow-lg ${option.glowColor}
-                        backdrop-blur-lg h-[120px]
-                        transform-gpu will-change-transform`}
-                    >
-                      {option.isNew && (
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 
-                            text-white text-[10px] px-2 py-0.5 rounded-full font-semibold shadow-lg"
-                        >
-                          New
-                        </motion.span>
-                      )}
-                      {option.isPro && (
-                        <motion.div
-                          animate={{ 
-                            rotate: [0, 10, -10, 0],
-                            scale: [1, 1.1, 1] 
-                          }}
-                          transition={{ 
-                            duration: 2,
-                            repeat: Infinity,
-                            repeatType: "reverse"
-                          }}
-                          className="absolute top-2 right-2"
-                        >
-                          <RiVipCrownFill className="text-yellow-300 text-sm" />
-                        </motion.div>
-                      )}
-                      <div className="text-2xl mb-2 transform group-hover:scale-110 
-                        transition-transform duration-300">
-                        {option.icon}
-                      </div>
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">{option.title}</h3>
-                      <p className="text-xs text-white/80 line-clamp-2">{option.subtitle}</p>
-                    </motion.button>
-                  ))}
-                </div>
-
-                {/* Recent Notes Section */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-12"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-[#1e3d58] to-[#2d5a7c] 
-                      dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
-                      Recent Notes
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {recentNotes.length > 0 ? (
-                      recentNotes.map((note, index) => (
-                        <motion.div
-                          key={note.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ scale: 1.02, y: -5 }}
-                          className="backdrop-blur-lg"
-                        >
-                          <NoteCard
-                            note={note}
-                            onClick={() => navigate(`/notes/${note.id}`)}
-                            onRename={async (newTitle) => {
-                              try {
-                                await db.notes.update(note.id, {
-                                  title: newTitle,
-                                  lastModified: new Date().toISOString(),
-                                  syncStatus: 'pending'
-                                });
-                                // Refresh the notes list
-                                const updatedNotes = await db.notes
-                                  .orderBy('date')
-                                  .reverse()
-                                  .limit(10)
-                                  .toArray();
-                                setRecentNotes(updatedNotes);
-                              } catch (error) {
-                                console.error('Error renaming note:', error);
-                                alert('Failed to rename note');
-                              }
-                            }}
-                            onDelete={async () => {
-                              if (window.confirm('Are you sure you want to delete this note?')) {
-                                try {
-                                  await db.notes.delete(note.id);
-                                  setRecentNotes(recentNotes.filter(n => n.id !== note.id));
-                                } catch (error) {
-                                  console.error('Error deleting note:', error);
-                                  alert('Failed to delete note');
-                                }
-                              }
-                            }}
-                            onAddToFolder={() => {}}
-                            onRemoveFromFolder={() => {}}
-                          />
-                        </motion.div>
-                      ))
-                    ) : (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="col-span-3 text-center p-12 rounded-2xl 
-                          bg-gradient-to-br from-gray-50/50 to-gray-100/50 
-                          dark:from-gray-700/30 dark:to-gray-800/30 backdrop-blur-xl"
+            {/* Input Selection Grid */}
+            <div className="px-4 md:px-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {inputOptions.map((option) => (
+                  <motion.button
+                    key={option.id}
+                    whileHover={{ scale: 1.02, y: -3 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleInputSelect(option.id)}
+                    className={`relative p-4 rounded-xl border ${option.borderColor} ${option.bgColor}
+                      text-white text-left group
+                      hover:shadow-lg ${option.glowColor}
+                      backdrop-blur-lg h-[120px]
+                      transform-gpu will-change-transform`}
+                  >
+                    {option.isNew && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 
+                          text-white text-[10px] px-2 py-0.5 rounded-full font-semibold shadow-lg"
                       >
-                        <motion.div
-                          animate={{ 
-                            y: [0, -10, 0],
-                          }}
-                          transition={{ 
-                            duration: 2,
-                            repeat: Infinity,
-                            repeatType: "reverse"
-                          }}
-                          className="text-5xl mb-4"
-                        >
-                          📝
-                        </motion.div>
-                        <p className="text-xl font-medium mb-2">No notes yet</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Start your journey by creating your first note
-                        </p>
+                        New
+                      </motion.span>
+                    )}
+                    {option.isPro && (
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1] 
+                        }}
+                        transition={{ 
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "reverse"
+                        }}
+                        className="absolute top-2 right-2"
+                      >
+                        <RiVipCrownFill className="text-yellow-300 text-sm" />
                       </motion.div>
                     )}
-                  </div>
+                    <div className="text-2xl mb-2 transform group-hover:scale-110 
+                      transition-transform duration-300">
+                      {option.icon}
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{option.title}</h3>
+                    <p className="text-xs text-white/80 line-clamp-2">{option.subtitle}</p>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Notes Section */}
+            <div className="mt-16 px-4 md:px-6">
+              <div className="flex items-center gap-4 mb-8">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 
+                  dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                  Recent Notes
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent 
+                  dark:from-gray-700" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recentNotes.map((note, index) => (
+                  <motion.div
+                    key={note.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group/card relative isolate"
+                  >
+                    <div className="relative p-6 rounded-2xl bg-white/90 dark:bg-gray-800/90 
+                      backdrop-blur-xl border border-gray-100/20 dark:border-gray-700/20
+                      group-hover/card:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]
+                      dark:group-hover/card:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)]
+                      transition-all duration-300 group-hover/card:-translate-y-1"
+                    >
+                      {/* 卡片装饰效果 - 仅在真正hover到卡片时触发 */}
+                      <div className="absolute -z-10 inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 
+                        dark:from-blue-900/20 dark:to-purple-900/20 opacity-0 group-hover/card:opacity-100 
+                        transition-opacity rounded-2xl pointer-events-none" />
+                      
+                      {/* 闪光效果 */}
+                      <div className="absolute -z-10 inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity pointer-events-none">
+                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent
+                          -skew-x-12 -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000" />
+                      </div>
+
+                      {/* 卡片内容 */}
+                      <div className="space-y-4">
+                        {/* 标题区域 */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 
+                              line-clamp-2 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400
+                              transition-colors">
+                              {note.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {new Date(note.date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          
+                          {/* 类型标签 */}
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {note.type || 'Note'}
+                          </span>
+                        </div>
+
+                        {/* 预览内容 */}
+                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                          {note.content?.substring(0, 150)}...
+                        </p>
+
+                        {/* 底部操作区 */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                          {/* 左侧元数据 */}
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {note.duration ? `${Math.round(note.duration / 60)}min` : 'N/A'}
+                            </span>
+                            <span className="flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              </svg>
+                              {note.noteLanguage || 'EN'}
+                            </span>
+                          </div>
+
+                          {/* 右侧操作按钮 - 使用新的group命名空间 */}
+                          <div className="flex items-center space-x-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                            <button 
+                              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700
+                                text-gray-500 dark:text-gray-400 transition-colors relative z-10 group/button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // 阻止事件冒泡
+                                // 编辑操作
+                              }}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button 
+                              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700
+                                text-gray-500 dark:text-gray-400 transition-colors relative z-10 group/button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // 阻止事件冒泡
+                                // 删除操作
+                              }}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 点击整体区域跳转 - 调整z-index确保正确的点击顺序 */}
+                      <div 
+                        className="absolute inset-0 cursor-pointer z-0" 
+                        onClick={() => navigate(`/notes/${note.id}`)}
+                      />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {recentNotes.length === 0 && (
+              <motion.div 
+                className="col-span-3 p-16 rounded-3xl bg-gradient-to-br from-gray-50/90 to-white/90 
+                  dark:from-gray-800/90 dark:to-gray-900/90 backdrop-blur-xl border border-gray-100/50
+                  dark:border-gray-700/50 text-center"
+              >
+                <motion.div
+                  animate={{ 
+                    y: [0, -15, 0],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                  className="inline-block text-7xl mb-6"
+                >
+                  ✨
                 </motion.div>
-              </>
-            ) : (
-              <LiveTranscription onClose={() => setShowLiveTranscription(false)} />
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 
+                  dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent mb-3">
+                  Start Your Journey
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                  Create your first note and begin organizing your thoughts in a beautiful way
+                </p>
+              </motion.div>
             )}
-          </div>
-        </motion.div>
-      </div>
+          </>
+        ) : (
+          <LiveTranscription onClose={() => setShowLiveTranscription(false)} />
+        )}
+      </motion.div>
 
       <SubjectSelectionModal
         isOpen={showSubjectModal}
