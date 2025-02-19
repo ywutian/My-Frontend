@@ -1,12 +1,61 @@
-# Getting Started with Create React App
+# Yitian Wu's Portfolio Website
+
+A personal portfolio showcasing innovative AI-powered applications that enhance daily interactions and productivity. This project features mobile applications for social exploration and real-world engagement, alongside a web-based platform for intelligent note-taking and learning enhancement.
+
+## About Me
+
+**Name:** Yitian Wu  
+**Email:** ywu13@scu.edu
+
+My work focuses on combining artificial intelligence with user-centered design to create meaningful experiences. Through these projects, I've developed expertise in both mobile (Flutter) and web (Next.js) development, with a strong focus on AI integration and scalable cloud architecture.
+
+## Featured Projects
+
+### Mobile Applications
+
+#### AI Exploration Companion
+An app that enhances real-world exploration through AI-driven features and gamification.
+
+**Key Features:**
+- Personalized user experience with daily goal setting
+- Interactive exploration with real-world map integration
+- Progress tracking and social challenges
+
+**Tech Stack:** Flutter, Firebase, Kotlin, AI
+
+#### AI Social Explorer
+An AI-powered social exploration app encouraging users to discover new places and engage in meaningful interactions.
+
+**Key Features:**
+- AI-driven exploration with personalized travel planning
+- Social integration with interactive tasks
+- Real-time location tracking
+
+**Tech Stack:** Flutter, OpenAI, Google Cloud, Mapbox, Firebase
+
+### Web Projects
+
+#### AI Meeting & Class Notes Assistant
+A powerful AI-driven note-taking platform that transforms meetings and lectures into structured notes.
+
+**Demo URL:** https://d3a5oz43hbtqzi.cloudfront.net/
+
+**Key Features:**
+- Real-time transcription with live speech-to-text
+- Smart learning tools including flashcard generation
+- Multiple content import options
+
+**Tech Stack:** Next.js, Redux, Node.js, PostgreSQL, MongoDB, OpenAI, AWS, WebRTC, Tailwind CSS
+
+## Getting Started with This React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+### Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+#### `npm start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
@@ -14,12 +63,12 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
-### `npm test`
+#### `npm test`
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
+#### `npm run build`
 
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
@@ -29,7 +78,7 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `npm run eject`
+#### `npm run eject`
 
 **Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
