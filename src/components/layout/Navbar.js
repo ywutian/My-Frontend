@@ -55,28 +55,28 @@ function Navbar() {
                               ${isActive('/') ? 'scale-x-100' : ''}`} />
               </Link>
 
+              <Link
+                to="/dashboard"
+                className={`group relative px-3 py-2 flex items-center space-x-2.5
+                        ${isActive('/dashboard') ? 'text-blue-600' : 'text-gray-600'}`}
+              >
+                <div className={`absolute inset-0 rounded-lg bg-blue-50/0 
+                              group-hover:bg-blue-50/80 transition-colors duration-300
+                              ${isActive('/dashboard') ? 'bg-blue-50' : ''}`} />
+                <FiGrid className={`w-[18px] h-[18px] relative z-10 transition-colors duration-300
+                              ${isActive('/dashboard') ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-500'}`} />
+                <span className="text-[13px] relative z-10 font-medium tracking-wide font-ui
+                             group-hover:text-blue-600 transition-colors duration-300">
+                  Dashboard
+                </span>
+                <div className={`absolute bottom-0 left-0 right-0 mx-auto w-8 h-0.5 rounded-full
+                              bg-blue-500/80 scale-x-0 group-hover:scale-x-100 
+                              transition-transform duration-300 ease-out
+                              ${isActive('/dashboard') ? 'scale-x-100' : ''}`} />
+              </Link>
+
               {isAuthenticated && (
                 <>
-                  <Link
-                    to="/dashboard"
-                    className={`group relative px-3 py-2 flex items-center space-x-2.5
-                              ${isActive('/dashboard') ? 'text-blue-600' : 'text-gray-600'}`}
-                  >
-                    <div className={`absolute inset-0 rounded-lg bg-blue-50/0 
-                                  group-hover:bg-blue-50/80 transition-colors duration-300
-                                  ${isActive('/dashboard') ? 'bg-blue-50' : ''}`} />
-                    <FiGrid className={`w-[18px] h-[18px] relative z-10 transition-colors duration-300
-                                    ${isActive('/dashboard') ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-500'}`} />
-                    <span className="text-[13px] relative z-10 font-medium tracking-wide font-ui
-                                 group-hover:text-blue-600 transition-colors duration-300">
-                      Dashboard
-                    </span>
-                    <div className={`absolute bottom-0 left-0 right-0 mx-auto w-8 h-0.5 rounded-full
-                                  bg-blue-500/80 scale-x-0 group-hover:scale-x-100 
-                                  transition-transform duration-300 ease-out
-                                  ${isActive('/dashboard') ? 'scale-x-100' : ''}`} />
-                  </Link>
-
                   <Link
                     to="/folders"
                     className={`group relative px-3 py-2 flex items-center space-x-2.5

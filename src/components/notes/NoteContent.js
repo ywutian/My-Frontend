@@ -1,9 +1,110 @@
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
 import { useEffect, useRef, useCallback } from 'react';
 import useDebounce from '../../hooks/useDebounce';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Document from '@tiptap/extension-document';
+import Paragraph from '@tiptap/extension-paragraph';
+import Text from '@tiptap/extension-text';
+import Heading from '@tiptap/extension-heading';
+import Bold from '@tiptap/extension-bold';
+import Italic from '@tiptap/extension-italic';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
+import CodeBlock from '@tiptap/extension-code-block';
+
+const MenuBar = ({ editor }) => {
+  if (!editor) {
+    return null;
+  }
+
+  return (
+    <div className="border-b border-gray-200 p-2 flex flex-wrap gap-1">
+      <button
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('heading', { level: 1 })
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        H1
+      </button>
+      <button
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('heading', { level: 2 })
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        H2
+      </button>
+      <button
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('heading', { level: 3 })
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        H3
+      </button>
+      <div className="w-px h-6 bg-gray-200 mx-1" />
+      <button
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('bold')
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        Bold
+      </button>
+      <button
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('italic')
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        Italic
+      </button>
+      <div className="w-px h-6 bg-gray-200 mx-1" />
+      <button
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('bulletList')
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        Bullet List
+      </button>
+      <button
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('orderedList')
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        Ordered List
+      </button>
+      <button
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        className={`px-2 py-1 rounded ${
+          editor.isActive('codeBlock')
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        Code Block
+      </button>
+    </div>
+  );
+};
 
 export default function NoteContent({ 
   content, 
@@ -21,39 +122,31 @@ export default function NoteContent({
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3]
-        },
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-      }),
-      Placeholder.configure({
-        placeholder: '编辑笔记内容...',
-        showOnlyWhenEditable: true,
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
+      StarterKit,
+      Document,
+      Paragraph,
+      Text,
+      Heading,
+      Bold,
+      Italic,
+      BulletList,
+      OrderedList,
+      ListItem,
+      CodeBlock,
     ],
-    content: editContent || content,
+    content: content,
     editable: isEditing,
     autofocus: isEditing ? 'end' : false,
     onUpdate: ({ editor }) => {
-      onEditChange(editor.getHTML());
-    },
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[100px]',
-      },
+      onEditChange?.(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (editor && content) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
 
   useEffect(() => {
     if (editor) {
@@ -108,33 +201,16 @@ export default function NoteContent({
       ref={editorRef}
     >
       <div 
-        className={`
-          ${!readOnly && !isEditing ? 'hover:bg-white/50 hover:backdrop-blur-sm' : ''} 
-          rounded-xl p-4 sm:p-5 transition-all duration-300`}
+        className={`${!readOnly && !isEditing ? 'hover:bg-white/50 hover:backdrop-blur-sm' : ''} rounded-xl transition-all duration-300`}
         onClick={() => !readOnly && !isEditing && onEdit?.()}
       >
-        <EditorContent 
-          editor={editor}
-          className={`
-            prose prose-sm max-w-none focus:outline-none min-h-[100px]
-            prose-headings:font-semibold 
-            prose-h1:text-2xl prose-h1:mb-4 prose-h1:text-gray-800
-            prose-h2:text-xl prose-h2:mb-3 prose-h2:text-gray-800
-            prose-h3:text-lg prose-h3:mb-2 prose-h3:text-gray-800
-            prose-p:mb-2 prose-p:leading-relaxed prose-p:text-gray-600
-            prose-ul:ml-4 prose-ul:mb-2 
-            prose-ol:ml-4 prose-ol:mb-2
-            prose-li:mb-1 prose-li:text-gray-600
-            prose-blockquote:border-l-4 prose-blockquote:border-blue-200/50 
-            prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-500
-            prose-pre:bg-white/60 prose-pre:backdrop-blur-sm prose-pre:p-4 
-            prose-pre:rounded-lg prose-pre:shadow-sm
-            prose-code:bg-white/60 prose-code:backdrop-blur-sm prose-code:px-1.5 
-            prose-code:py-0.5 prose-code:rounded prose-code:text-sm 
-            prose-code:font-mono prose-code:text-gray-600
-            selection:bg-blue-100/50 selection:text-blue-900
-          `}
-        />
+        {isEditing && <MenuBar editor={editor} />}
+        <div className="p-4 sm:p-5">
+          <EditorContent 
+            editor={editor}
+            className="prose prose-sm max-w-none focus:outline-none min-h-[100px] prose-headings:font-semibold prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-gray-800 prose-h2:text-2xl prose-h2:mb-4 prose-h2:text-gray-800 prose-h3:text-xl prose-h3:mb-3 prose-h3:text-gray-800 prose-h4:text-lg prose-h4:mb-2 prose-h4:text-gray-700 prose-p:mb-3 prose-p:leading-relaxed prose-p:text-gray-600 prose-ul:ml-4 prose-ul:mb-3 prose-ol:ml-4 prose-ol:mb-3 prose-li:mb-1 prose-li:text-gray-600 prose-blockquote:border-l-4 prose-blockquote:border-blue-200/50 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-500 selection:bg-blue-100/50 selection:text-blue-900"
+          />
+        </div>
       </div>
     </div>
   );
