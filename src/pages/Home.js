@@ -33,7 +33,7 @@ function Home() {
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-lg mx-auto">
                 <Link
-                  to="/signup"
+                  to="/login"
                   className="px-8 py-4 bg-white text-[#1e3d58] rounded-full font-medium hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl"
                 >
                   Get Started Free →
