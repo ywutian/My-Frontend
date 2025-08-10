@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import LiveTranscription from '../transcription/LiveTranscription';
-import AiAssistant from '../ai/AiAssistant';
+import _AiAssistant from '../ai/AiAssistant';
 
 function TranscriptionView() {
-  const [noteContent, setNoteContent] = useState(''); // 当前笔记内容（可以根据需要动态加载）
+  const [_noteContent, _setNoteContent] = useState(''); // 当前笔记内容（可以根据需要动态加载）
 
   return (
     <div className="p-6 flex gap-4 h-screen">

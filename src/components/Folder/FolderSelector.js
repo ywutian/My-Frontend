@@ -32,7 +32,7 @@ const FolderSelector = ({ onSelect, onClose, onFolderChange }) => {
 
     try {
       setError(null);
-      const id = await createFolder({ name: newFolderName });
+      await createFolder({ name: newFolderName });
       const allFolders = await db.folders.toArray();
       setFolders(allFolders.sort((a, b) => a.name.localeCompare(b.name)));
       setNewFolderName('');

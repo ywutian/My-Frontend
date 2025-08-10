@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect, useMemo, memo, useCallback } from '
 import {
   FiChevronRight,
   FiChevronLeft,
-  FiChevronUp,
-  FiChevronDown,
 } from 'react-icons/fi';
 
 const DraggableSidebar = ({
@@ -27,7 +25,7 @@ const DraggableSidebar = ({
   const [isResizing, setIsResizing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDraggingPosition, setIsDraggingPosition] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0 });
+  const _dragStartRef = useRef({ x: 0, y: 0 });
 
   // 标签页状态
   const tabs = useMemo(() => 
@@ -42,7 +40,7 @@ const DraggableSidebar = ({
   const COLLAPSED_SIZE = 40;
   const POSITION_SWITCH_THRESHOLD = 100;
 
-  const STYLES = {
+  const _STYLES = {
     base: {
       transition: 'all 0.2s ease-out',
       background: 'white',
@@ -63,7 +61,7 @@ const DraggableSidebar = ({
 
   useEffect(() => {
     // Update size when default dimensions change
-    setSize(prev => ({
+    setSize(_prev => ({
       width: Math.min(Math.max(defaultWidth, minWidth), maxWidth),
       height: Math.min(Math.max(defaultHeight, minHeight), maxHeight),
     }));
@@ -132,7 +130,7 @@ const DraggableSidebar = ({
     document.addEventListener('mouseup', handleMouseUp);
   }, [
     isCollapsed, size, minWidth, minHeight, maxWidth, maxHeight,
-    position, defaultWidth, COLLAPSE_THRESHOLD, POSITION_SWITCH_THRESHOLD
+    position, defaultWidth, COLLAPSE_THRESHOLD, POSITION_SWITCH_THRESHOLD, isDraggingPosition
   ]);
 
   const toggleCollapse = () => {
@@ -166,7 +164,7 @@ const DraggableSidebar = ({
     }
   };
 
-  const Tab = memo(({ label, isActive, onClick }) => (
+  const _Tab = memo(({ label, isActive, onClick }) => (
     <button
       onClick={onClick}
       className={`px-6 py-3 font-medium text-sm transition-all relative

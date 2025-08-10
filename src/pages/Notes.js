@@ -3,16 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiEdit2,
-  FiTrash2,
   FiFolder,
   FiChevronDown,
   FiFileText,
   FiX,
   FiPlus,
   FiClock,
-  FiInfo,
-  FiCalendar,
-  FiTag
+  FiInfo
 } from 'react-icons/fi';
 import { db } from '../db/db';
 import {

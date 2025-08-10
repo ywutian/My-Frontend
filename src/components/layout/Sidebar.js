@@ -16,10 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import BillingModal from '../billing/BillingModal';
 import SettingsModal from '../settings/SettingsModal';
-import { folderService } from '../../services/folderService';
-import ConfirmDialog from '../common/ConfirmDialog';
 import { db } from '../../db/db';
-import FolderSelector from '../Folder/FolderSelector';
 
 function Sidebar({ isOpen, onToggle }) {
   const [isFoldersExpanded, setIsFoldersExpanded] = useState(true);
@@ -32,12 +29,12 @@ function Sidebar({ isOpen, onToggle }) {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [showFolderMenu, setShowFolderMenu] = useState(false);
   const [editingFolder, setEditingFolder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [_loading, setLoading] = useState(true);
+  const [_error, setError] = useState(null);
+  const [_showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState(null);
   const [folders, setFolders] = useState([]);
-  const [showFolderSelector, setShowFolderSelector] = useState(false);
+  const [_showFolderSelector, _setShowFolderSelector] = useState(false);
   const settingsMenuRef = useRef(null);
   const folderMenuRef = useRef(null);
 
@@ -117,11 +114,11 @@ function Sidebar({ isOpen, onToggle }) {
     };
   }, []);
 
-  const handleSettingsClick = (e) => {
+  const handleSettingsClick = (_e) => {
     setShowSettingsMenu(!showSettingsMenu);
   };
 
-  const handleDashboardClick = () => {
+  const _handleDashboardClick = () => {
     navigate('/dashboard');
   };
 
@@ -190,7 +187,7 @@ function Sidebar({ isOpen, onToggle }) {
     setShowFolderMenu(false);
   };
 
-  const deleteFolder = async () => {
+  const _deleteFolder = async () => {
     if (!folderToDelete) return;
     
     try {
@@ -210,7 +207,7 @@ function Sidebar({ isOpen, onToggle }) {
     }
   };
 
-  const handleFolderChange = () => {
+  const _handleFolderChange = () => {
     fetchFolders();
   };
 

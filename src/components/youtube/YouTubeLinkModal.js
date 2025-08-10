@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Modal from '../common/Modal';
+import _Modal from '../common/Modal';
 import { youtubeService } from '../../services/youtubeService';
 import { FiYoutube, FiX, FiFileText, FiLoader, FiLink2 } from 'react-icons/fi';
 

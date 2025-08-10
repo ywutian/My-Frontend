@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { generateNote } from '../services/noteGenerationService';
 import { create } from 'zustand';
-import { languages } from '../config/languages';
+import { _languages } from '../config/languages';
 
 // 创建全局状态管理
 export const useTranscriptStore = create((set, get) => ({
@@ -14,11 +14,11 @@ export const useTranscriptStore = create((set, get) => ({
   transcriptionSegments: [], // 转录片段
   isRecording: false,       // 是否正在录音
   setNoteLanguage: (language) => set({ noteLanguage: language }),
-  addNote: (note) => set((state) => ({
-    notes: [...state.notes, note]
+  addNote: (note) => set((_state) => ({
+    notes: [..._state.notes, note]
   })),
-  updateNote: (id, content) => set((state) => ({
-    notes: state.notes.map(note => 
+  updateNote: (id, content) => set((_state) => ({
+    notes: _state.notes.map(note => 
       note.id === id 
         ? { ...note, content: content }
         : note
@@ -28,7 +28,7 @@ export const useTranscriptStore = create((set, get) => ({
   setTranslationLanguage: (language) => set({ translationLanguage: language }),
   setIsTranslating: (isTranslating) => set({ isTranslating }),
   setTranscriptionContent: (content) => set({ transcriptionContent: content }),
-  setTranscriptionSegments: (segments) => set({ transcriptionSegments: segments }),
+  setTranscriptionSegments: (_segments) => set({ transcriptionSegments: _segments }),
   updateTranscription: (content, segments) => set({
     transcriptionContent: content,
     transcriptionSegments: segments
@@ -55,7 +55,7 @@ export const useTranscriptStore = create((set, get) => ({
     notes: []
   },
   // 添加更新转录缓冲区的方法
-  updateTranscriptBuffer: (newBuffer) => set((state) => ({
+  updateTranscriptBuffer: (newBuffer) => set((_state) => ({
     transcriptBuffer: newBuffer
   })),
   // 添加获取完整转录状态的方法
@@ -75,22 +75,22 @@ const convertToHtml = (text) => {
       // 处理标题部分 (以 # 开头)
       const titleMatch = section.match(/#\s*(.*)/);
       if (titleMatch) {
-        html += `<h1>${titleMatch[1].replace(/\*([^\*]+)\*/g, '<em>$1</em>')}</h1>`;
+        html += `<h1>${titleMatch[1].replace(/\*([^*]+)\*/g, '<em>$1</em>')}</h1>`;
       }
     } else {
       // 处理其他部分
       const lines = section.split('\n');
       const sectionTitle = lines[0].trim();
-      html += `<h2>${sectionTitle.replace(/\*([^\*]+)\*/g, '<em>$1</em>')}</h2>`;
+      html += `<h2>${sectionTitle.replace(/\*([^*]+)\*/g, '<em>$1</em>')}</h2>`;
 
       // 处理列表项和段落，同时处理强调语法
       const content = lines.slice(1).join('\n')
         .replace(/^\s*-\s*(.*)/gm, (match, p1) => 
-          `<li>${p1.replace(/\*([^\*]+)\*/g, '<em>$1</em>')}</li>`) // 处理无序列表
+          `<li>${p1.replace(/\*([^*]+)\*/g, '<em>$1</em>')}</li>`) // 处理无序列表
         .replace(/^\s*\d+\.\s*(.*)/gm, (match, p1) => 
-          `<li>${p1.replace(/\*([^\*]+)\*/g, '<em>$1</em>')}</li>`) // 处理有序列表
-        .replace(/(^|\n)([^<].*[^>])($|\n)/g, (match, p1, p2, p3) => 
-          `<p>${p2.replace(/\*([^\*]+)\*/g, '<em>$1</em>')}</p>`); // 处理普通段落
+          `<li>${p1.replace(/\*([^*]+)\*/g, '<em>$1</em>')}</li>`) // 处理有序列表
+        .replace(/(^|\n)([^<].*[^>])($|\n)/g, (_match, _p1, p2, _p3) => 
+          `<p>${p2.replace(/\*([^*]+)\*/g, '<em>$1</em>')}</p>`); // 处理普通段落
 
       if (content.includes('<li>')) {
         html += `<ul>${content}</ul>`;
@@ -126,8 +126,8 @@ export function useTranscripts() {
     const hasMinWords = segment.wordCount >= MIN_WORDS;
     const lastText = segment.texts[segment.texts.length - 1]?.text || '';
     const endsWithPunctuation = /[.!?。！？]$/.test(lastText.trim());
-    const newText = newTranscript.text || '';
-    const startsWithCapital = /^[A-Z]/.test(newText.trim());
+    const _newText = newTranscript.text || '';
+    const _startsWithCapital = /^[A-Z]/.test(_newText.trim());
 
     return hasMinWords && endsWithPunctuation;
   }, []);

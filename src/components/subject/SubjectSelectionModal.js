@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { _motion, _AnimatePresence } from 'framer-motion';
 
 function SubjectSelectionModal({ isOpen, onClose, onSelect }) {
   if (!isOpen) return null;

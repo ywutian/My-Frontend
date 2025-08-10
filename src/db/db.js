@@ -90,7 +90,9 @@ export const processSyncQueue = async () => {
             item.data.flashcards,
           );
           break;
-        // ... 其他操作
+        default:
+          console.warn('Unknown operation:', item.operation);
+          break;
       }
       // 同步成功后删除队列项
       await db.syncQueue.delete(item.id);

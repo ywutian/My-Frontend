@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useDeepgramTranscription } from '../../hooks/useDeepgramTranscription';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTranscripts } from '../../hooks/useTranscripts';
@@ -14,10 +14,10 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
   const isTranslating = useTranscriptStore(state => state.isTranslating);
   
   const { error, startRecording, stopRecording } = useDeepgramTranscription();
-  const { translateText } = useTranslation();
+  const { _translateText } = useTranslation();
   const {
     updateLatestTranscript,
-    updateTranscriptTranslations,
+    _updateTranscriptTranslations,
   } = useTranscripts();
 
   const prevInterimRef = useRef('');
@@ -33,7 +33,7 @@ export default function LiveTranscription({ onTranscriptionUpdate, isRecording }
   }, [isRecording, startRecording, stopRecording, updateLatestTranscript, transcriptionLanguage]);
 
   // 使用工具函数计算历史文本和新增文本
-  const { historicalText, incrementalText } = useMemo(() => {
+  const { _historicalText, _incrementalText } = useMemo(() => {
     const { segments, currentSegment, interimResult } = transcriptBuffer;
     return getTranscriptText(
       [...segments, currentSegment], 

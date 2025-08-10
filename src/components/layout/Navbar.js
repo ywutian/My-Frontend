@@ -6,14 +6,12 @@ import {
   FiGrid, 
   FiLogOut, 
   FiLogIn, 
-  FiFolder,
-  FiBookmark,
-  FiArchive 
+  FiFolder
 } from 'react-icons/fi';
 
 function Navbar() {
   const { isAuthenticated, logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [_mobileMenuOpen, _setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;

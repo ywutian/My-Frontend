@@ -7,11 +7,11 @@ import { useTranscriptStore } from '../../hooks/useTranscripts';
 
 const TranscriptionPanel = ({
   isRecording,
-  isTranslating,
-  transcriptionLanguage,
-  translationLanguage,
-  onTranscriptionLanguageChange,
-  onTranslationLanguageChange,
+  _isTranslating,
+  _transcriptionLanguage,
+  _translationLanguage,
+  _onTranscriptionLanguageChange,
+  _onTranslationLanguageChange,
   onRecordingToggle,
   onTranslationToggle,
   onGenerateNote,
@@ -25,7 +25,7 @@ const TranscriptionPanel = ({
     isTranslating: storeIsTranslating,
     setTranscriptionLanguage,
     setTranslationLanguage,
-    setIsTranslating
+    _setIsTranslating
   } = useTranscriptStore();
 
   const noteLanguage =useTranscriptStore(state=>state.noteLanguage);

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import VideoUpload from '../components/video/VideoUpload';
+import _VideoUpload from '../components/video/VideoUpload';
 import SubjectSelectionModal from '../components/subject/SubjectSelectionModal';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import LiveTranscription from '../components/transcription/LiveTranscription';
 import SettingsModal from '../components/settings/SettingsModal';
-import NoteCard from '../components/notes/NoteCard';
+import _NoteCard from '../components/notes/NoteCard';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import AudioUploadModal from '../components/audio/AudioUploadModal';
@@ -20,15 +20,15 @@ import { RiVipCrownFill } from 'react-icons/ri';
 import { FiUpload, FiFile, FiX, FiLoader, FiGlobe } from 'react-icons/fi';
 
 function Dashboard() {
-  const [selectedInput, setSelectedInput] = useState(null);
+  const [_selectedInput, setSelectedInput] = useState(null);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [showLiveTranscription, setShowLiveTranscription] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { _theme } = useTheme();
+  const [_isLoading, _setIsLoading] = useState(false);
+  const [_error, _setError] = useState(null);
   const [recentNotes, setRecentNotes] = useState([]);
   const location = useLocation();
   const [showAudioUpload, setShowAudioUpload] = useState(false);
@@ -170,7 +170,7 @@ function Dashboard() {
     }
   };
 
-  const handleYouTubeSubmit = async (data) => {
+  const handleYouTubeSubmit = async (_data) => {
     try {
       setIsProcessing(true);
       setShowProgress(true);
@@ -182,11 +182,11 @@ function Dashboard() {
       setShowYouTubeModal(false);
     } catch (error) {
       // Show error notification
-      const errorNotification = document.createElement('div');
-      errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
-      errorNotification.textContent = error.message;
-      document.body.appendChild(errorNotification);
-      setTimeout(() => errorNotification.remove(), 3000);
+      const _errorNotification = document.createElement('div');
+      _errorNotification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
+      _errorNotification.textContent = error.message;
+      document.body.appendChild(_errorNotification);
+      setTimeout(() => _errorNotification.remove(), 3000);
     } finally {
       setIsProcessing(false);
       setShowProgress(false);
@@ -272,7 +272,7 @@ function Dashboard() {
     } catch (error) {
       console.error('Error uploading document:', error);
       // 显示错误提示
-      const errorMessage = error.message || 'Failed to process document';
+      const _errorMessage = error.message || 'Failed to process document';
       // TODO: 使用统一的错误提示组件
     } finally {
       setIsProcessing(false);

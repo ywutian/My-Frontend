@@ -2,35 +2,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FiEdit2,
-  FiShare2,
-  FiPlus,
   FiDownload,
   FiArrowLeft,
-  FiSend,
-  FiChevronRight,
-  FiChevronLeft,
-  FiSave,
   FiCheck,
 } from 'react-icons/fi';
 import QuizPanel from '../components/quiz/QuizPanel';
 import FlashcardPanel from '../components/flashcards/FlashcardPanel';
 import { db } from '../db/db';
 import React from 'react';
-import MarkdownViewer from '../components/MarkdownViewer';
 import DraggableSidebar from '../components/layout/DraggableSidebar';
 import AiAssistant from '../components/ai/AiAssistant';
 import MindmapPanel from '../components/mindmap/MindmapPanel';
 import { generateNote } from '../services/noteGenerationService';
 import html2pdf from 'html2pdf.js';
 import MarkdownIt from 'markdown-it';
-import MDEditor from '@uiw/react-md-editor';
-import '@uiw/react-md-editor/markdown-editor.css';
-import rehypeSanitize from "rehype-sanitize"; // 用于安全处理
 import NoteContent from '../components/notes/NoteContent';
 import { updateNote } from '../db/db';
 import '../styles/gradients.css';
 
-function getYouTubeVideoId(url) {
+function _getYouTubeVideoId(url) {
   try {
     const urlObj = new URL(url);
     if (urlObj.hostname === 'youtu.be') {
@@ -60,7 +50,6 @@ function NoteDetail() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [editContent, setEditContent] = useState('');
-  const [shouldRender, setShouldRender] = useState(true);
   const [sidebarState, setSidebarState] = useState({
     isCollapsed: false,
     size: { width: 300 },
@@ -70,11 +59,11 @@ function NoteDetail() {
   const [availableNotes, setAvailableNotes] = useState([]);
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [isCombining, setIsCombining] = useState(false);
-  const [selectedNoteTranscript, setSelectedNoteTranscript] = useState(null);
-  const [isExporting, setIsExporting] = useState(false);
-  const [copyStatus, setCopyStatus] = useState('idle'); // 'idle' | 'copied' | 'error'
+  const [_selectedNoteTranscript, setSelectedNoteTranscript] = useState(null);
+  const [_isExporting, setIsExporting] = useState(false);
+  const [_copyStatus, setCopyStatus] = useState('idle'); // 'idle' | 'copied' | 'error'
   const [attachments, setAttachments] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [_isUploading, setIsUploading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, attachmentId: null });
 
   const tabs = ['Note', 'Quiz', 'Flashcards', 'Mindmap', 'About'];
@@ -131,7 +120,7 @@ function NoteDetail() {
     }
   };
 
-  const handleShare = () => {
+  const _handleShare = () => {
     // 实现分享能
     const shareUrl = `${window.location.origin}/notes/${noteId}`;
     navigator.clipboard.writeText(shareUrl);
@@ -181,7 +170,7 @@ function NoteDetail() {
     }
   };
 
-  const handleSendMessage = (e) => {
+  const _handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
@@ -207,7 +196,7 @@ function NoteDetail() {
   };
 
   // 添加一个安全的内容获取函数
-  const getSafeContent = () => {
+  const _getSafeContent = () => {
     try {
       return note?.content || '';
     } catch (error) {
@@ -217,7 +206,7 @@ function NoteDetail() {
   };
 
   // Add this function to fetch available notes
-  const fetchAvailableNotes = useCallback(async () => {
+  const _fetchAvailableNotes = useCallback(async () => {
     try {
       const notes = await db.notes
         .where('id')
@@ -284,7 +273,7 @@ function NoteDetail() {
     setSelectedNoteTranscript(null);
   };
 
-  const handleCopyTranscript = async () => {
+  const _handleCopyTranscript = async () => {
     try {
       const textToCopy = typeof note.transcript === 'object'
         ? JSON.stringify(note.transcript, null, 2)
@@ -324,7 +313,7 @@ function NoteDetail() {
   }, [note]);
 
   // Add these handler functions
-  const handleFileUpload = async (event) => {
+  const _handleFileUpload = async (event) => {
     const files = event.target.files;
     if (!files.length) return;
 

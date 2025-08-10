@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { FiX, FiMoon, FiSun, FiGlobe, FiLock, FiCreditCard } from 'react-icons/fi';
+import { FiX, FiMoon, FiSun, FiLock } from 'react-icons/fi';
 import { useTheme } from '../../context/ThemeContext';
 
 function SettingsModal({ isOpen, onClose }) {

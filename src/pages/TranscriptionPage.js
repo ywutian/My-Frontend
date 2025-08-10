@@ -26,8 +26,8 @@ function TranscriptionPage() {
   const COLLAPSE_THRESHOLD = 200;
   const [noteTitle, setNoteTitle] = useState(getDefaultTitle());
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const addNote = useTranscriptStore(state => state.addNote);
-  const notes = useTranscriptStore(state => state.notes);
+  const _addNote = useTranscriptStore(state => state.addNote);
+  const _notes = useTranscriptStore(state => state.notes);
   const [transcriptionLanguage, setTranscriptionLanguage] = useState('en-US');
   const [translationLanguage, setTranslationLanguage] = useState('en-US');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -42,7 +42,7 @@ function TranscriptionPage() {
     setIsRecording(prev => !prev);
   }, []);
 
-  const handleSplitDrag = (sizes) => {
+  const _handleSplitDrag = (sizes) => {
     const [leftSize, rightSize] = sizes;
     const leftWidth = window.innerWidth * (leftSize / 100);
     const rightWidth = window.innerWidth * (rightSize / 100);
@@ -87,7 +87,7 @@ function TranscriptionPage() {
     }, 0);
   };
 
-  const handleGenerateNote = async () => {
+  const handleGenerateNote = useCallback(async () => {
     if (!transcriptionContent.trim()) return;
 
     try {
@@ -123,10 +123,10 @@ function TranscriptionPage() {
       alert('Failed to generate note. Please try again.');
       throw error;
     }
-  };
+  }, [transcriptionContent, noteTitle, transcriptionSegments, transcriptionLanguage, isTranslating, translationLanguage]);
 
   useEffect(() => {
-    const handleBeforeUnload = async (e) => {
+    const handleBeforeUnload = async (_e) => {
       if (transcriptionContent.trim()) {
         try {
           await handleGenerateNote();
@@ -136,7 +136,7 @@ function TranscriptionPage() {
       }
     };
 
-    const handleRouteChange = async () => {
+    const _handleRouteChange = async () => {
       if (transcriptionContent.trim()) {
         try {
           await handleGenerateNote();
@@ -156,7 +156,7 @@ function TranscriptionPage() {
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [transcriptionContent]);
+  }, [transcriptionContent, handleGenerateNote]);
 
   return (
     <ErrorBoundary>

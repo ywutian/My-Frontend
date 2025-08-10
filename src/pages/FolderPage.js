@@ -65,7 +65,7 @@ function FolderPage() {
     }
   };
 
-  const handleNoteClick = (note) => {
+  const handleNoteClick = (_note) => {
     // Add navigation logic here
   };
 

@@ -44,7 +44,7 @@
     "dexie": "^4.0.10",
     "dotenv": "^16.4.5",
     "framer-motion": "^11.18.2",
-    "html2pdf.js": "^0.10.2",
+    "html2pdf.js": "^0.10.3",
     "katex": "^0.16.21",
     "markmap-lib": "^0.17.2",
     "markmap-view": "^0.17.2",
@@ -71,9 +71,9 @@
     "youtube-transcript": "^1.2.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "GENERATE_SOURCEMAP=false react-scripts start",
     "dev": "nodemon --exec 'npm start' --signal SIGTERM",
-    "build": "react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

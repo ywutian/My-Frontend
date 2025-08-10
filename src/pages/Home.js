@@ -84,7 +84,7 @@ const features = [
   }
 ];
 
-const steps = [
+const _steps = [
   {
     title: 'Upload Video',
     description: 'Simply drag and drop your video file or browse to upload.'
@@ -99,7 +99,7 @@ const steps = [
   }
 ];
 
-const pricingPlans = [
+const _pricingPlans = [
   {
     name: 'Basic',
     price: '0',

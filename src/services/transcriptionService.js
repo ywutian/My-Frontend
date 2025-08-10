@@ -1,6 +1,6 @@
-import axios from 'axios';
+import _axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const _API_URL = process.env.REACT_APP_API_URL;
 const DEEPGRAM_API_KEY = process.env.REACT_APP_DEEPGRAM_API_KEY;
 
 export const transcribeAudio = async (formData) => {

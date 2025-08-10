@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { db } from '../../db/db';
 
-function NoteCard({ note, onClick, onRename, onDelete, onAddToFolder, onRemoveFromFolder }) {
+function NoteCard({ note, onClick, onRename, _onDelete, onAddToFolder, onRemoveFromFolder }) {
   const [showActions, setShowActions] = useState(false);
   const actionsRef = useRef(null);
 

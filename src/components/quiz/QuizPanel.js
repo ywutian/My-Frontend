@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiChevronRight, FiPlay, FiCheck, FiX, FiClock, FiRotateCcw, FiArrowLeft, FiBook, FiFlag, FiPercent, FiHelpCircle, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { generateQuiz, saveQuizResult, getQuizHistory } from '../../services/quizGenerationService';
 
@@ -13,24 +13,9 @@ const QuizPanel = ({ noteContent, noteId }) => {
   const [quizHistory, setQuizHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [currentQuizId, setCurrentQuizId] = useState(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [_isTransitioning, _setIsTransitioning] = useState(false);
 
-  useEffect(() => {
-    if (noteId) {
-      console.log('Initial load of quiz history for noteId:', noteId);
-      loadQuizHistory();
-    }
-  }, [noteId]);
-
-  // 在组件开始时添加检查
-  useEffect(() => {
-    console.log('QuizPanel received noteId:', noteId);
-    if (!noteId) {
-      console.warn('QuizPanel: noteId is missing or invalid');
-    }
-  }, [noteId]);
-
-  const loadQuizHistory = async () => {
+  const loadQuizHistory = useCallback(async () => {
     try {
       console.log('Loading quiz history for noteId:', noteId);
       const history = await getQuizHistory(noteId);
@@ -39,7 +24,22 @@ const QuizPanel = ({ noteContent, noteId }) => {
     } catch (error) {
       console.error('Failed to load quiz history:', error);
     }
-  };
+  }, [noteId]);
+
+  useEffect(() => {
+    if (noteId) {
+      console.log('Initial load of quiz history for noteId:', noteId);
+      loadQuizHistory();
+    }
+  }, [noteId, loadQuizHistory]);
+
+  // 在组件开始时添加检查
+  useEffect(() => {
+    console.log('QuizPanel received noteId:', noteId);
+    if (!noteId) {
+      console.warn('QuizPanel: noteId is missing or invalid');
+    }
+  }, [noteId]);
 
   const startQuiz = async () => {
     setIsLoading(true);
